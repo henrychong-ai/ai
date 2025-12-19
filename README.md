@@ -10,7 +10,7 @@ Autonomous domain specialists that handle complex, multi-step tasks. Copy to `~/
 
 | Agent | Description |
 |-------|-------------|
-| [codex](claude-code/agents/codex.md) | OpenAI Codex MCP integration for routing requests to gpt-5.1-codex models |
+| [codex](claude-code/agents/codex.md) | OpenAI Codex MCP integration for gpt-5.2-codex and gpt-5.2 models |
 | [file-converter](claude-code/agents/file-converter.md) | Intelligent file format conversion with auto-detection (PDF, Markdown, DOCX, HTML, Mermaid, images) |
 | [instruction-creator](claude-code/agents/instruction-creator.md) | Master architect for creating Claude instruction files (agents, skills, commands) |
 | [media-downloader](claude-code/agents/media-downloader.md) | Download videos/audio from web URLs using yt-dlp with smart tool selection |
@@ -41,7 +41,7 @@ Step-by-step installation guides for MCP servers. Claude Code can read and execu
 
 | Guide | Description |
 |-------|-------------|
-| [codex-mcp-setup](claude-code/mcp/codex-mcp-setup.md) | Install OpenAI Codex MCP for gpt-5.1-codex model integration |
+| [codex-mcp-setup](claude-code/mcp/codex-mcp-setup.md) | Install OpenAI Codex MCP for gpt-5.2-codex model integration |
 | [mcp-neo4j-knowledge-graph-setup](claude-code/mcp/mcp-neo4j-knowledge-graph-setup.md) | Set up Neo4j-backed Knowledge Graph with embeddings |
 | [sequential-thinking-mcp-setup](claude-code/mcp/sequential-thinking-mcp-setup.md) | Install Sequential Thinking MCP for structured problem-solving |
 
@@ -165,8 +165,15 @@ Convert this PDF to markdown
 # Media download (auto-triggers on URLs)
 Download this video: https://youtube.com/watch?v=...
 
-# Codex integration (explicit trigger)
+# Codex integration (gpt-5.2-codex with high reasoning)
 use codex to optimize this function
+
+# Codex with different reasoning levels
+use codex xhigh to architect this system    # maximum reasoning
+use codex low to format this code           # fast, lightweight
+
+# General purpose model (gpt-5.2)
+use codex -g to analyze this research paper
 ```
 
 ### Using Skills
