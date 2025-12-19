@@ -1,0 +1,10 @@
+{
+  "name": "statusline",
+  "description": "Statusline configuration showing model, costs, context usage, and rate limit metrics",
+  "author": {
+    "name": "Henry Chong",
+    "email": "henrychong-ai@gmail.com"
+  },
+  "version": "1.0.0",
+  "keywords": ["statusline", "monitoring", "costs", "usage"]
+}
