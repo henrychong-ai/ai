@@ -1,0 +1,111 @@
+# Statusline Plugin
+
+A Claude Code statusline configuration that displays comprehensive session metrics.
+
+## Output Format
+
+```
+repos │ main │ 🤖 Opus | 💰 $21.13 today / $21.13 block (4h 25m) | 🧠 146k/200k (73%) | 📊 5h: 25% / 7d: 21% / son: 2%
+```
+
+| Component | Description |
+|-----------|-------------|
+| `repos` | Current directory name |
+| `main` | Git branch (if in repo) |
+| `🤖 Opus` | Current model |
+| `💰 $21.13 today` | Today's accumulated cost |
+| `$21.13 block` | Current billing block cost |
+| `(4h 25m)` | Time remaining in 5h block |
+| `🧠 146k/200k (73%)` | Context window usage |
+| `📊 5h: 25%` | 5-hour utilization |
+| `7d: 21%` | 7-day utilization |
+| `son: 2%` | Sonnet-specific utilization |
+
+## Requirements
+
+### Platform
+- **macOS only** - Uses macOS Keychain and BSD utilities
+
+### Dependencies
+
+| Dependency | Purpose | Install |
+|------------|---------|---------|
+| `jq` | JSON parsing | `brew install jq` |
+| `ccusage` | Cost tracking | `npm install -g ccusage` |
+| `curl` | API calls | Pre-installed |
+
+### Authentication
+- **Claude Max subscription** with OAuth login required for usage metrics
+- API key users will see partial data (no OAuth utilization metrics)
+
+## Installation
+
+### Option 1: Via Plugin System (Recommended)
+
+1. Add the plugin marketplace to your settings (one-time):
+   ```json
+   // ~/.claude/settings.json
+   {
+     "extraKnownMarketplaces": [
+       "file:///path/to/plugins"
+     ]
+   }
+   ```
+
+2. Install the plugin:
+   ```
+   /plugin install statusline
+   ```
+
+3. Run the installer:
+   ```
+   /install-statusline
+   ```
+
+### Option 2: Direct Installation
+
+```bash
+/path/to/statusline/scripts/install.sh
+```
+
+### Option 3: Manual Installation
+
+Copy the `statusLine` object from `configs/statusline.json` into your `~/.claude/settings.json`.
+
+## Caching
+
+The statusline uses 60-second caches to prevent slowdowns:
+
+- `/tmp/claude-ccusage-cache.json` - Cost data from ccusage
+- `/tmp/claude-usage-cache.json` - OAuth utilization data
+- `/tmp/claude-usage-log.csv` - Historical usage log
+
+## Troubleshooting
+
+### Statusline not showing
+- Restart Claude Code after installation
+- Check `~/.claude/settings.json` contains the `statusLine` key
+
+### Missing cost data
+- Verify ccusage is installed: `which ccusage`
+- Run `ccusage daily` manually to check for errors
+
+### Missing usage percentages
+- Requires Claude Max with OAuth login (not API keys)
+- Check OAuth token: `security find-generic-password -s "Claude Code-credentials" -w | jq .claudeAiOauth`
+
+### Slow statusline refresh
+- Normal on first run or after 60s cache expiry
+- ccusage refresh takes ~5s, OAuth refresh takes ~0.3s
+
+## Uninstallation
+
+Remove the `statusLine` key from `~/.claude/settings.json`:
+
+```bash
+jq 'del(.statusLine)' ~/.claude/settings.json > tmp.json && mv tmp.json ~/.claude/settings.json
+```
+
+## Version History
+
+- **1.0.0** (2025-12-19): Initial release

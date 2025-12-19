@@ -86,16 +86,13 @@ If no uncommitted changes exist (`git status --porcelain` is empty):
 3. If no commits to push: display "❌ No changes to commit or push. Everything is up to date." and stop.
 
 ### 1.5. Repository-Specific Git Configuration
-**Auto-configure git user settings based on repository remote:**
+**Verify git user settings are configured for the repository:**
 
-**For Fusang Team Bitbucket (bitbucket.org/fusang_apps):**
-- Detect remote URL contains `bitbucket.org/fusang_apps` 
-- Set: `git config user.email [team-member]@fusang.co`
-- Set: `git config user.name "[bitbucket-username]"`
-- Note: Team members should configure their Bitbucket username in git config
-
-**For Other Repositories:**
-- Use existing git config without changes
+- Check current config: `git config user.email` and `git config user.name`
+- If not configured, prompt user to set them:
+  - `git config user.email "your-email@example.com"`
+  - `git config user.name "Your Name"`
+- Note: Users with multiple git identities can configure per-repository settings using `git config` (without `--global`)
 
 ### 2. Pipeline Detection
 Check for deployment pipeline configurations:

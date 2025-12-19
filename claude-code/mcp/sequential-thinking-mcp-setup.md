@@ -1,10 +1,10 @@
 # Sequential Thinking MCP Server Installation Guide
-*Complete Auto-Executable Installation for Fusang Technology Team*
+*Complete Auto-Executable Installation Guide*
 
 ## 🎯 Mission
-This document provides complete, auto-executable instructions for any Fusang Technology Team member to install the Sequential Thinking MCP server on their Claude Code and Claude Desktop instances. Claude Code can read this file and perform the entire installation process autonomously.
+This document provides complete, auto-executable instructions for any developer to install the Sequential Thinking MCP server on their Claude Code and Claude Desktop instances. Claude Code can read this file and perform the entire installation process autonomously.
 
-The Sequential Thinking MCP server enables structured problem-solving, systematic analysis, and collaborative reasoning workflows essential for complex development, architecture decisions, and technical planning at Fusang.
+The Sequential Thinking MCP server enables structured problem-solving, systematic analysis, and collaborative reasoning workflows essential for complex development, architecture decisions, and technical planning.
 
 ## 📋 Prerequisites Verification
 
@@ -282,7 +282,7 @@ echo "s_clear"
 
 ## 🧮 Team Usage Patterns
 
-**FUSANG TECHNOLOGY TEAM INTEGRATION**:
+**TEAM INTEGRATION**:
 
 ### Architecture Decision Making
 Use sequential thinking for systematic technical decisions:
@@ -548,16 +548,16 @@ npx -y @modelcontextprotocol/server-sequential-thinking --version
 - [MCP Sequential Thinking Source](https://github.com/modelcontextprotocol/server-sequential-thinking) - Official server repository
 - [Sequential Thinking NPM Package](https://www.npmjs.com/package/@modelcontextprotocol/server-sequential-thinking)
 - [Claude Code MCP Documentation](https://docs.anthropic.com/en/docs/claude-code/mcp)
-- [Fusang CLAUDE.md Thinking Patterns](../../CLAUDE.md) - Integration with existing s1/s2/s3 patterns
+- Your CLAUDE.md Thinking Patterns - Integration with existing s1/s2/s3 patterns
 
 **Team Support**:
 - For installation issues: Contact Claude Code setup support team
-- For usage patterns: Reference Fusang Technology Team best practices
+- For usage patterns: Reference your team's best practices
 - For advanced workflows: Collaborate with team on sequential thinking integration patterns
 
 **Related Tools**:
 - [Knowledge Graph MCP Setup](./knowledge-graph-mcp-setup.md) - Complementary knowledge capture system
-- [Fusang Shared Commands](../commands/) - Additional workflow automation tools
+- Shared Commands - Additional workflow automation tools
 
 ## 🔧 Development Team Benefits
 
@@ -589,7 +589,7 @@ npx -y @modelcontextprotocol/server-sequential-thinking --version
 
 **INSTALLATION EXECUTION PROTOCOL FOR CLAUDE CODE**:
 
-When a Fusang Technology Team member requests "read sequential-thinking-mcp-setup.md and install the sequential thinking MCP server", Claude Code should:
+When a developer requests "read sequential-thinking-mcp-setup.md and install the sequential thinking MCP server", Claude Code should:
 
 1. **Read this file completely**
 2. **Execute prerequisites verification**  
@@ -604,14 +604,14 @@ When a Fusang Technology Team member requests "read sequential-thinking-mcp-setu
 11. **Provide usage guidance specific to team workflows**
 12. **Document integration with existing tools (Knowledge Graph, etc.)**
 
-This document serves as both documentation and executable specification for autonomous installation by Claude Code instances across the Fusang Technology Team.
+This document serves as both documentation and executable specification for autonomous installation by Claude Code instances across development teams.
 
 **KEY COMPONENTS OF EFFECTIVE SETUP INSTRUCTIONS**:
 
 1. **Auto-Executable Design**: Every command and configuration step can be performed programmatically by Claude Code
 2. **Complete Coverage**: Both Claude Code and Claude Desktop installation with all necessary steps
 3. **Comprehensive Verification**: Multiple test layers to ensure functionality at basic, intermediate, and advanced levels  
-4. **Team Integration**: Clear patterns for how this tool enhances existing Fusang workflows
+4. **Team Integration**: Clear patterns for how this tool enhances existing workflows
 5. **Troubleshooting**: Anticipation of common issues with specific diagnostic and resolution steps
 6. **Maintenance Guidance**: Ongoing care and optimization recommendations
 7. **Success Criteria**: Unambiguous verification that installation is complete and functional

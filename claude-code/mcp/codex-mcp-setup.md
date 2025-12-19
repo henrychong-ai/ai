@@ -1,23 +1,23 @@
 # Codex MCP Server Installation Guide
-*Complete Auto-Executable Installation for Fusang Technology Team*
+*Complete Auto-Executable Installation Guide*
 
 ## 🎯 Mission
 
-This document provides complete, auto-executable instructions for any Fusang Technology Team member to install the Codex MCP server on their Claude Code and Claude Desktop instances. Claude Code can read this file and perform the entire installation process autonomously.
+This document provides complete, auto-executable instructions for any developer to install the Codex MCP server on their Claude Code and Claude Desktop instances. Claude Code can read this file and perform the entire installation process autonomously.
 
 **HOW TO USE THIS GUIDE**:
 1. **In Claude Code**: Simply reference this file in your conversation
    - Example: "Please read and execute the setup from claude-code/shared/mcp/codex-mcp-setup.md"
    - Claude Code will then automatically execute all the installation steps
 
-The Codex MCP server integrates OpenAI's most advanced coding model (gpt-5-codex) with Claude Code, providing multi-step reasoning capabilities with configurable effort levels (low/medium/high) for complex technical challenges, architectural decisions, and performance optimization critical to Fusang's fintech and blockchain development.
+The Codex MCP server integrates OpenAI's most advanced coding model (gpt-5-codex) with Claude Code, providing multi-step reasoning capabilities with configurable effort levels (low/medium/high) for complex technical challenges, architectural decisions, and performance optimization.
 
 **KEY VALUE PROPOSITIONS**:
-- **Enhanced Reasoning**: Multi-step problem decomposition for settlement logic and smart contracts
+- **Enhanced Reasoning**: Multi-step problem decomposition for complex logic and architecture
 - **Second Opinion**: Validate Claude's solutions with an alternative advanced AI perspective
 - **Configurable Depth**: Adjust reasoning effort based on task complexity (low/medium/high)
 - **Parallel Processing**: Run multiple Codex sessions concurrently for comprehensive analysis
-- **Team Collaboration**: Shared configuration and usage patterns across Fusang developers
+- **Team Collaboration**: Shared configuration and usage patterns across your development team
 
 ## 📋 Prerequisites Verification
 
@@ -116,10 +116,10 @@ codex exec "echo 'Authentication successful!'"
 # Create Codex config directory if it doesn't exist
 mkdir -p ~/.codex
 
-# Create optimized config for Fusang development
+# Create optimized config
 cat > ~/.codex/config.toml << 'EOF'
-# Codex Configuration for Fusang Technology Team
-# Optimized for fintech and blockchain development
+# Codex Configuration
+# Optimized for development workflows
 
 [model]
 default = "gpt-5-codex"
@@ -143,13 +143,6 @@ show_thinking = true
 # Maintain context across interactions
 preserve_context = true
 max_context_length = 128000
-
-# Fusang-specific optimizations
-[fusang]
-# Common patterns for our tech stack
-languages = ["go", "typescript", "solidity", "python"]
-frameworks = ["gin", "react", "nextjs", "ethers", "hardhat"]
-focus_areas = ["settlement", "blockchain", "defi", "compliance", "security"]
 EOF
 
 echo "Codex configuration created at ~/.codex/config.toml"
@@ -253,7 +246,7 @@ User: Test Codex connection with: mcp__codex__codex({"prompt": "Hello Codex, con
 ```
 User: use codex low: Write a simple hello world function in Go
 User: use codex medium: Design a rate limiting algorithm for our API gateway
-User: use codex high: Architect a distributed settlement system with ACID guarantees
+User: use codex high: Architect a distributed data processing system with ACID guarantees
 ```
 
 ### Step 3: Test Conversation Continuity
@@ -265,8 +258,8 @@ User: Continue with: mcp__codex__codex-reply({"conversationId": "[id]", "prompt"
 
 ### Step 4: Verify Trigger Detection
 ```
-User: use codex to analyze our smart contract architecture
-User: use codex high to review this complex settlement logic
+User: use codex to analyze our application architecture
+User: use codex high to review this complex business logic
 User: use codex medium for debugging this race condition
 ```
 
@@ -409,31 +402,31 @@ else
 fi
 ```
 
-## 💡 Fusang-Specific Usage Patterns
+## 💡 Example Usage Patterns
 
-### Settlement System Architecture
+### System Architecture Review
 ```
-use codex high: Review our settlement engine architecture for race conditions and suggest optimizations for handling 10,000 TPS
-```
-
-### Smart Contract Security
-```
-use codex high: Audit this FSC20 token contract for vulnerabilities and gas optimization opportunities
+use codex high: Review our system architecture for race conditions and suggest optimizations for high throughput
 ```
 
-### Microservice Debugging
+### Security Audit
 ```
-use codex medium: Debug this Go actor system deadlock in the Hollywood framework
+use codex high: Audit this code for security vulnerabilities and suggest improvements
+```
+
+### Debugging Complex Issues
+```
+use codex medium: Debug this concurrency issue and identify the root cause
 ```
 
 ### Performance Analysis
 ```
-use codex: Profile this database query and suggest indexing strategies for our PostgreSQL trading ledger
+use codex: Profile this database query and suggest indexing strategies
 ```
 
-### Compliance Code Review
+### Code Review
 ```
-use codex high: Review this KYC implementation for regulatory compliance with Singapore MAS requirements
+use codex high: Review this implementation for best practices and potential issues
 ```
 
 ### Parallel Analysis Example
@@ -608,15 +601,12 @@ mcp__codex__codex({"prompt": "...", "config": {"model_reasoning_effort": "high"}
 ```
 
 **Next Steps**:
-1. Test Codex with a real Fusang development task
-2. Document useful patterns in team knowledge base
+1. Test Codex with a real development task
+2. Document useful patterns in your knowledge base
 3. Optimize workflows with parallel Codex sessions
 
 ---
 
-**MCP Setup Guide maintained by the Fusang Technology Team**
+*Enhancing Claude Code with OpenAI's most advanced coding model*
 
-*Enhancing Claude Code with OpenAI's most advanced coding model for superior fintech and blockchain development*
-
-*Created: 2025-09-24*
 *Version: 1.0.0*
