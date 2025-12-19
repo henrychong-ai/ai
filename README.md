@@ -55,24 +55,39 @@ Full plugins with installers for easy distribution. See plugin-specific READMEs 
 
 ## Installation
 
-### Quick Install
+### Option 1: Automated Installer (Recommended)
 
 ```bash
-# Clone the repository
+# Clone and run the installer
 git clone https://github.com/henrychong-ai/ai.git
-cd ai
-
-# Copy agents
-cp claude-code/agents/*.md ~/.claude/agents/
-
-# Copy skills (entire folders)
-cp -r claude-code/skills/* ~/.claude/skills/
-
-# Copy commands
-cp claude-code/commands/*.md ~/.claude/commands/
+cd ai/claude-code
+./scripts/install.sh
 ```
 
-### Manual Install
+The installer will:
+- Copy all agents to `~/.claude/agents/`
+- Copy all skills to `~/.claude/skills/`
+- Copy all commands to `~/.claude/commands/`
+- Backup any existing files before overwriting
+
+**Installer options:**
+```bash
+./scripts/install.sh --agents-only    # Install only agents
+./scripts/install.sh --skills-only    # Install only skills
+./scripts/install.sh --commands-only  # Install only commands
+./scripts/install.sh --no-backup      # Skip backing up existing files
+```
+
+### Option 2: Plugin Marketplace
+
+Add this repository as a plugin marketplace source, then install via Claude Code:
+
+```bash
+# In Claude Code, run:
+/install-extensions
+```
+
+### Option 3: Manual Install
 
 1. **Agents**: Copy individual `.md` files to `~/.claude/agents/`
 2. **Skills**: Copy entire skill folder (with `SKILL.md` and `references/`) to `~/.claude/skills/`
@@ -95,6 +110,10 @@ Claude Code will automatically execute all installation steps.
 ```
 ai/
 └── claude-code/
+    ├── .claude-plugin/   # Plugin metadata
+    │   └── plugin.json
+    ├── scripts/          # Installation scripts
+    │   └── install.sh
     ├── agents/           # Autonomous domain specialists
     │   ├── codex.md
     │   ├── file-converter.md
@@ -107,13 +126,10 @@ ai/
     │   ├── codex-mcp-setup.md
     │   ├── mcp-neo4j-knowledge-graph-setup.md
     │   └── sequential-thinking-mcp-setup.md
-    ├── plugins/          # Full plugins with installers
+    ├── plugins/          # Nested plugins
     │   └── statusline/
-    │       ├── .claude-plugin/
-    │       ├── commands/
-    │       ├── configs/
-    │       ├── scripts/
-    │       └── README.md
+    ├── plugin-commands/  # Plugin-specific commands
+    │   └── install-extensions.md
     └── skills/           # Bundled knowledge packages
         ├── 1password/
         ├── ffmpeg/
