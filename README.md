@@ -12,6 +12,7 @@ Autonomous domain specialists that handle complex, multi-step tasks. Copy to `~/
 |-------|-------------|
 | [codex](claude-code/agents/codex.md) | OpenAI Codex MCP integration for gpt-5.2-codex and gpt-5.2 models |
 | [file-converter](claude-code/agents/file-converter.md) | Intelligent file format conversion with auto-detection (PDF, Markdown, DOCX, HTML, Mermaid, images) |
+| [gemini-gem-converter](claude-code/agents/gemini-gem-converter.md) | Convert Claude Code agents/skills to Google Gemini Custom Gem format |
 | [instruction-creator](claude-code/agents/instruction-creator.md) | Master architect for creating Claude instruction files (agents, skills, commands) |
 | [media-downloader](claude-code/agents/media-downloader.md) | Download videos/audio from web URLs using yt-dlp with smart tool selection |
 
@@ -23,6 +24,8 @@ Bundled knowledge packages with reference materials. Copy entire folder to `~/.c
 |-------|-------------|
 | [1password](claude-code/skills/1password/) | 1Password CLI, secrets management, op run setup, GitHub Actions integration |
 | [ffmpeg](claude-code/skills/ffmpeg/) | Video/audio processing with hardware acceleration on Apple Silicon |
+| [gemini-gem-creator](claude-code/skills/gemini-gem-creator/) | Create Google Gemini Custom Gems using the 4-component framework |
+| [images](claude-code/skills/images/) | Image manipulation with ImageMagick (resize, crop, convert, collage) |
 | [instruction-creator](claude-code/skills/instruction-creator/) | Quick reference for instruction file formats, templates, and best practices |
 | [pdf](claude-code/skills/pdf/) | PDF manipulation: extraction, merging, forms, creating fillable templates |
 
@@ -117,6 +120,7 @@ ai/
     ├── agents/           # Autonomous domain specialists
     │   ├── codex.md
     │   ├── file-converter.md
+    │   ├── gemini-gem-converter.md
     │   ├── instruction-creator.md
     │   └── media-downloader.md
     ├── commands/         # Custom slash commands
@@ -133,6 +137,8 @@ ai/
     └── skills/           # Bundled knowledge packages
         ├── 1password/
         ├── ffmpeg/
+        ├── gemini-gem-creator/
+        ├── images/
         ├── instruction-creator/
         └── pdf/
 ```
@@ -147,10 +153,11 @@ ai/
 
 | Skill/Plugin | Dependencies |
 |--------------|--------------|
-| ffmpeg | `brew install ffmpeg` |
-| pdf | `uv pip install pypdf pdfplumber` |
-| statusline | `brew install jq`, `npm install -g ccusage` |
 | 1password | 1Password CLI (`op`) |
+| ffmpeg | `brew install ffmpeg` |
+| images | `brew install imagemagick` |
+| pdf | `uv pip install pypdf pdfplumber` |
+| statusline | `brew install jq`, `bun install -g ccusage` |
 
 ## Usage Examples
 
