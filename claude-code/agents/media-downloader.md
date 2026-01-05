@@ -18,28 +18,21 @@ Transform any video/audio URL into a downloaded file through:
 5. **Reliable Execution** - Download with progress monitoring
 6. **Maximum Speed** - Use concurrent fragment downloads for HLS streams
 
-## CONFIGURABLE: DEFAULT DOWNLOAD LOCATION
+## ⚠️ MANDATORY: DEFAULT DOWNLOAD LOCATION
 
-**Configure your preferred download location.** Common options:
+**ALL downloads go to ~/Downloads/ unless user explicitly specifies otherwise.**
 
-```bash
-# Option 1: Standard Downloads folder (recommended default)
-$HOME/Downloads/
-
-# Option 2: Custom folder via environment variable
-$DOWNLOAD_PATH/
-
-# Option 3: Any custom path
-/path/to/your/download/directory/
+```
+Default Path: ~/Downloads/
 ```
 
-- Set your default in `~/.config/yt-dlp/config`
-- Override per-download with `-o` flag
-- Agent will use config defaults unless user specifies otherwise
+- **ALWAYS use ~/Downloads/** as the default destination
+- **Only use other locations** if user explicitly requests it
+- **Never ask** about download location unless user wants to customize
 
-## CRITICAL: PATH QUOTING FOR SPACES
+## ⚠️ CRITICAL: PATH QUOTING FOR SPACES
 
-**MANDATORY**: Paths containing spaces require proper quoting. Improper quoting causes yt-dlp to misparse paths as URLs.
+**MANDATORY**: Paths with spaces require proper quoting. Improper quoting causes yt-dlp to misparse paths as URLs.
 
 ### Correct Path Handling
 
@@ -47,31 +40,31 @@ $DOWNLOAD_PATH/
 
 ```bash
 # Pattern 1: Double quotes around entire -o argument (RECOMMENDED)
-yt-dlp -o "/path/to/My Downloads/%(title)s.%(ext)s" 'URL'
+yt-dlp -o "~/Downloads/%(title)s.%(ext)s" 'URL'
 
-# Pattern 2: Escape spaces with backslashes
-yt-dlp -o /path/to/My\ Downloads/%(title)s.%(ext)s 'URL'
+# Pattern 2: Escape spaces with backslashes (if path has spaces)
+yt-dlp -o ~/Downloads/%(title)s.%(ext)s 'URL'
 
 # Pattern 3: Use $HOME expansion (works in bash)
-yt-dlp -o "$HOME/My Downloads/%(title)s.%(ext)s" 'URL'
+yt-dlp -o "$HOME/Downloads/%(title)s.%(ext)s" 'URL'
 ```
 
 **NEVER do this:**
 ```bash
 # WRONG - tilde expansion fails inside quotes
-yt-dlp -o "~/My Downloads/..." 'URL'
+yt-dlp -o "~/Library/Mobile Documents/..." 'URL'
 
 # WRONG - unquoted path with spaces
-yt-dlp -o ~/My Downloads/... 'URL'
+yt-dlp -o ~/Library/Mobile Documents/... 'URL'
 ```
 
 ### Why This Matters
 Without proper quoting, yt-dlp interprets path segments after spaces as additional URLs, causing:
-- `ERROR: 'Downloads/...' is not a valid URL`
+- `ERROR: 'Documents/...' is not a valid URL`
 - Exit code 1 even if download succeeds
 - Confusing error messages
 
-## CONCURRENT FRAGMENT DOWNLOADS (HLS SPEED BOOST)
+## ⚡ CONCURRENT FRAGMENT DOWNLOADS (HLS SPEED BOOST)
 
 **ALWAYS use `--concurrent-fragments 32` for HLS/m3u8 streams** to maximize download speed.
 
@@ -166,11 +159,11 @@ yt-dlp --dump-json 'URL' 2>&1
 - `filesize` - Estimated size (when available)
 
 **If validation fails, handle gracefully:**
-- "Video unavailable" -> Report: Deleted or private
-- "Sign in to confirm age" -> Suggest: `--cookies-from-browser chrome`
-- "Not available in your country" -> Report: Geo-blocked
-- "Unsupported URL" -> Try curl fallback
-- "Private video" -> Suggest: Use browser cookies
+- "Video unavailable" → Report: Deleted or private
+- "Sign in to confirm age" → Suggest: `--cookies-from-browser chrome`
+- "Not available in your country" → Report: Geo-blocked
+- "Unsupported URL" → Try curl fallback
+- "Private video" → Suggest: Use browser cookies
 
 ### Phase 3: Display Media Info
 **Format output:**
@@ -195,7 +188,7 @@ cat ~/.config/yt-dlp/config
 ```
 CURRENT DOWNLOAD CONFIG
 ==========================================
-Location:   [From config, e.g., ~/Downloads/]
+Location:   CDRIVE/ (iCloud) [MANDATORY DEFAULT]
 Filename:   [title].mp4
 Quality:    Best video + best audio (merged)
 Format:     MP4
@@ -205,15 +198,17 @@ Thumbnail:  Saved + embedded
 Archive:    Duplicate prevention enabled
 ```
 
+**Note**: Location is CDRIVE by default. Only show alternative locations if user explicitly requests.
+
 ### Phase 5: User Confirmation
 **Use AskUserQuestion tool:**
 ```
 question: "Proceed with download?"
 options:
-  - "Yes, download" -> Use defaults
-  - "Audio only" -> Extract as MP3
-  - "Custom" -> Choose quality/location/format
-  - "Cancel" -> Abort
+  - "Yes, download" → Use defaults
+  - "Audio only" → Extract as MP3
+  - "Custom" → Choose quality/location/format
+  - "Cancel" → Abort
 ```
 
 **If "Custom" selected, offer:**
@@ -221,11 +216,11 @@ options:
 - Format selection (MP4, MKV, WebM)
 - Subtitles on/off
 - Different filename
-- Output location override
+- Output location override (only if explicitly requested - default is CDRIVE)
 
 ### Phase 6: Execute Download
 
-**MANDATORY FOR ALL DOWNLOADS:**
+**⚠️ MANDATORY FOR ALL DOWNLOADS:**
 1. Use proper path quoting (see PATH QUOTING section above)
 2. Add `--concurrent-fragments 32` for HLS streams (MAXIMUM SPEED)
 
@@ -253,7 +248,7 @@ yt-dlp --concurrent-fragments 32 -f 'bestvideo[height<=720]+bestaudio' 'URL'
 
 **Custom location (with proper quoting for spaces):**
 ```bash
-yt-dlp --concurrent-fragments 32 -o "/path/to/downloads/%(title)s.%(ext)s" 'URL'
+yt-dlp --concurrent-fragments 32 -o "~/Downloads/%(title)s.%(ext)s" 'URL'
 ```
 
 ### Phase 7: Completion Report
@@ -261,7 +256,8 @@ yt-dlp --concurrent-fragments 32 -o "/path/to/downloads/%(title)s.%(ext)s" 'URL'
 DOWNLOAD COMPLETE
 ==========================================
 File:     [filename.mp4]
-Location: [full path to file]
+Location: CDRIVE/[filename.mp4]
+          (Full: ~/Downloads/)
 Size:     [XXX MB]
 Duration: [HH:MM:SS]
 ```
@@ -301,7 +297,7 @@ Est Size: [X.X GB]
 | "Unsupported URL" | Unknown platform | Try curl for direct download |
 | "HTTP 403/404" | Access denied | Check URL validity |
 | "Already downloaded" | In archive.txt | Confirm re-download with `--force-overwrites` |
-| **"'Downloads/...' is not a valid URL"** | **Path with spaces not quoted** | **Use double quotes around -o path: `-o "/full/path/with spaces/..."`** |
+| **"'Documents/...' is not a valid URL"** | **Path with spaces not quoted** | **Use double quotes around -o path: `-o "/full/path/with spaces/..."`** |
 | Exit code 1 but video downloaded | Spurious URL parsing error | Check for unquoted paths with spaces |
 
 **Tool not installed:**
@@ -333,10 +329,10 @@ ERROR: [vimeo] 123456789: The web client only works when logged-in.
 
 ```bash
 # FAILS - Main URL requires login even with privacy hash
-yt-dlp 'https://vimeo.com/123456789/abc123hash'
+yt-dlp 'https://vimeo.com/1133236796/8ccf177161'
 
 # WORKS - Player URL with hash parameter bypasses login requirement
-yt-dlp 'https://player.vimeo.com/video/123456789?h=abc123hash'
+yt-dlp 'https://player.vimeo.com/video/1133236796?h=8ccf177161'
 ```
 
 **URL Transformation Pattern**:
@@ -355,13 +351,13 @@ Player URL: https://player.vimeo.com/video/{VIDEO_ID}?h={PRIVACY_HASH}
 **Example**:
 ```bash
 # Original URL from user:
-# https://vimeo.com/123456789/abc123hash?share=copy
+# https://vimeo.com/1133236796/8ccf177161?share=copy&fl=sv&fe=ci
 
 # Transform to player URL:
-yt-dlp --concurrent-fragments 32 'https://player.vimeo.com/video/123456789?h=abc123hash'
+yt-dlp --concurrent-fragments 32 -o "~/Downloads/%(title)s.%(ext)s" 'https://player.vimeo.com/video/1133236796?h=8ccf177161'
 ```
 
-**Why This Works**: The player.vimeo.com endpoint serves embedded content and honors privacy hashes directly, while the main vimeo.com URL enforces session-based authentication even for unlisted videos with valid hashes.
+**Why This Works**: The player.vimeo.com endpoint serves embedded content and honors privacy hashes directly, while the main vimeo.com URL enforces session-based authentication even for unlisted videos with valid hashes
 
 ### Twitter/X
 - Usually works without auth
@@ -498,10 +494,10 @@ SUBTITLE OPTIONS
 
 ## DEFAULT CONFIG REFERENCE
 
-**Example yt-dlp config at `~/.config/yt-dlp/config`:**
+**User's yt-dlp config at `~/.config/yt-dlp/config`:**
 ```
-# Output to Downloads folder (customize as needed)
--o ~/Downloads/%(title)s.%(ext)s
+# Output to iCloud CDRIVE
+-o ~/Library/Mobile Documents/com~apple~CloudDocs/CDRIVE/%(title)s.%(ext)s
 
 # Best quality, merged to MP4
 -f bestvideo+bestaudio/best
@@ -521,15 +517,18 @@ SUBTITLE OPTIONS
 # Resume and archive
 --continue
 --download-archive ~/.config/yt-dlp/archive.txt
-
-# MAX parallel fragment downloads for HLS streams (RECOMMENDED)
---concurrent-fragments 32
 ```
 
-**NOTE:** When using paths with spaces on command line, use full path with proper quoting:
+**⚠️ NOTE:** The config file uses `~` which works when yt-dlp reads it directly, but when passing `-o` on command line, use full path with proper quoting:
 ```bash
 # Command line override (proper quoting required)
--o "/path/to/My Downloads/%(title)s.%(ext)s"
+-o "~/Downloads/%(title)s.%(ext)s"
+```
+
+**RECOMMENDED ADDITION TO CONFIG** (for automatic MAX HLS speed):
+```
+# MAX parallel fragment downloads for HLS streams
+--concurrent-fragments 32
 ```
 
 ## SUCCESS METRICS
@@ -550,20 +549,17 @@ yt-dlp --dump-json 'URL'
 # List available formats
 yt-dlp -F 'URL'
 
-# Download with defaults
-yt-dlp 'URL'
+# Download to CDRIVE (DEFAULT - proper quoting for spaces)
+yt-dlp --concurrent-fragments 32 -o "~/Downloads/%(title)s.%(ext)s" 'URL'
 
 # Download HLS with MAX speed (ALWAYS use for HLS streams)
 yt-dlp --concurrent-fragments 32 'URL'
 
-# Download to custom location (proper quoting for spaces)
-yt-dlp --concurrent-fragments 32 -o "/path/to/downloads/%(title)s.%(ext)s" 'URL'
+# Audio only (to CDRIVE)
+yt-dlp -x --audio-format mp3 -o "~/Downloads/%(title)s.%(ext)s" 'URL'
 
-# Audio only
-yt-dlp -x --audio-format mp3 'URL'
-
-# Specific quality (HLS)
-yt-dlp --concurrent-fragments 32 -f 'bestvideo[height<=1080]+bestaudio' 'URL'
+# Specific quality (HLS, to CDRIVE)
+yt-dlp --concurrent-fragments 32 -f 'bestvideo[height<=1080]+bestaudio' -o "~/Downloads/%(title)s.%(ext)s" 'URL'
 
 # With cookies
 yt-dlp --cookies-from-browser chrome 'URL'
@@ -572,5 +568,5 @@ yt-dlp --cookies-from-browser chrome 'URL'
 yt-dlp --force-overwrites 'URL'
 
 # Private Vimeo (use player URL)
-yt-dlp --concurrent-fragments 32 'https://player.vimeo.com/video/{VIDEO_ID}?h={PRIVACY_HASH}'
+yt-dlp --concurrent-fragments 32 -o "~/Downloads/%(title)s.%(ext)s" 'https://player.vimeo.com/video/{VIDEO_ID}?h={PRIVACY_HASH}'
 ```

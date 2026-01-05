@@ -55,9 +55,12 @@ op read "op://Personal/SSH/private-key" > ~/.ssh/id_rsa
 
 # With output format
 op read "op://Personal/Certificate/cert" --out-file=cert.pem
+
+# Pipe to remote command via SSH (e.g., docker login)
+op read "op://Personal/GitHub/personal-access-token" | ssh user@server "docker login ghcr.io -u YOUR_USERNAME --password-stdin"
 ```
 - Reads one secret at a time
-- Good for: shell scripts, one-off retrieval
+- Good for: shell scripts, one-off retrieval, remote authentication
 
 ### op inject (Template Substitution)
 ```bash
