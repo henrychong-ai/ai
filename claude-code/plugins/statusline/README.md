@@ -72,13 +72,26 @@ repos │ main │ 🤖 Opus | 💰 $21.13 today / $21.13 block (4h 25m) | 🧠 
 
 Copy the `statusLine` object from `configs/statusline.json` into your `~/.claude/settings.json`.
 
-## Caching
+## Caching & Non-Blocking Design
 
-The statusline uses 60-second caches to prevent slowdowns:
+The statusline uses a **non-blocking architecture** that never waits for network calls:
+
+1. **Read cache first** - Always displays last-known-good values instantly
+2. **Display immediately** - Statusline renders in ~0.2s regardless of network
+3. **Background refresh** - If cache is stale (>60s), triggers async refresh for next call
+
+### Cache Files
 
 - `/tmp/claude-ccusage-cache.json` - Cost data from ccusage
 - `/tmp/claude-usage-cache.json` - OAuth utilization data
 - `/tmp/claude-usage-log.csv` - Historical usage log
+
+### Atomic Write Pattern
+
+Cache updates use atomic writes to prevent corruption:
+1. Write to temp file (`cache.tmp.$$`)
+2. Validate JSON with `jq -e`
+3. Atomic replace with `mv` (or discard if invalid)
 
 ## Troubleshooting
 
@@ -95,8 +108,9 @@ The statusline uses 60-second caches to prevent slowdowns:
 - Check OAuth token: `security find-generic-password -s "Claude Code-credentials" -w | jq .claudeAiOauth`
 
 ### Slow statusline refresh
-- Normal on first run or after 60s cache expiry
-- ccusage refresh takes ~5s, OAuth refresh takes ~0.3s
+- First run shows 0% values while background refresh populates cache
+- Subsequent runs always instant (~0.2s) - refresh happens in background
+- If consistently slow, check for shell startup issues
 
 ## Uninstallation
 
@@ -108,4 +122,5 @@ jq 'del(.statusLine)' ~/.claude/settings.json > tmp.json && mv tmp.json ~/.claud
 
 ## Version History
 
+- **1.1.0** (2026-01-05): Non-blocking architecture - read cache first, background refresh, atomic writes
 - **1.0.0** (2025-12-19): Initial release
