@@ -201,7 +201,7 @@ For comprehensive information, see `references/` directory:
 
 ```bash
 # 1. Download with media-downloader agent
-# (uses yt-dlp, saves to configured output directory)
+# (uses yt-dlp, saves to CDRIVE)
 
 # 2. Process with ffmpeg
 # Compress large download:

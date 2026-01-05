@@ -769,13 +769,46 @@ Transform personal/proprietary agents into professional team-ready versions whil
 - Tool usage patterns and integrations intact
 - Operational workflows fully functional
 
-### **Quality Assurance Checklist**:
-- All personal references removed or generalized
-- Proprietary methodologies stripped or replaced
-- Professional communication tone throughout
-- Core technical functionality preserved
-- Business applicability confirmed
-- Team distribution readiness verified
+### **Sanitization Triggers and Integration**
+
+**Auto-Invoke Triggers**:
+- User mentions: "sanitize", "team sharing", "remove personal", "team distribution"
+- User requests: "clean up agent", "make professional", "prepare for sharing"
+- Context indicators: "team use", "organizational distribution", "collaborative agent"
+
+**Operational Integration**:
+- Can be invoked as standalone operation or integrated into creation workflow
+- Always create sanitized versions (preserve originals)
+- Maintain version tracking with clear before/after documentation
+- Integrate with existing architectural validation system
+
+**Quality Assurance Checklist**:
+- ✅ All personal references removed or generalized
+- ✅ Proprietary methodologies stripped or replaced
+- ✅ Professional communication tone throughout
+- ✅ Core technical functionality preserved
+- ✅ Business applicability confirmed
+- ✅ Team distribution readiness verified
+
+### **Success Metrics for Sanitization**
+
+**Technical Validation**:
+- Core functionality operates identically to original
+- All architectural compliance maintained
+- Token efficiency and performance preserved
+- Integration patterns remain functional
+
+**Professional Standards**:
+- Content suitable for any team member use
+- Business-focused language and success metrics
+- Universal applicability across organizational contexts
+- Professional presentation quality maintained
+
+**Distribution Readiness**:
+- Agent ready for immediate team deployment
+- Clear operational documentation included
+- No personal or proprietary content remains
+- Standard business value proposition articulated
 
 ## **ARCHITECTURAL VALIDATION SYSTEM**
 
