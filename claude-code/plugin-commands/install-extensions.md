@@ -12,12 +12,15 @@ Install the complete set of Claude Code extensions including agents, skills, and
 **Agents** (to `~/.claude/agents/`):
 - codex - OpenAI Codex MCP integration
 - file-converter - Intelligent file format conversion
+- gemini-gem-converter - Claude Code to Gemini Gem converter
 - instruction-creator - Claude instruction file architect
 - media-downloader - Video/audio download from URLs
 
 **Skills** (to `~/.claude/skills/`):
 - 1password - Secrets management and op CLI
 - ffmpeg - Video/audio processing
+- gemini-gem-creator - Google Gemini Custom Gem creator
+- images - Image manipulation with ImageMagick
 - instruction-creator - Instruction file reference guide
 - pdf - PDF manipulation toolkit
 
