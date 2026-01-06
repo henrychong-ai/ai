@@ -57,7 +57,7 @@ op read "op://Personal/SSH/private-key" > ~/.ssh/id_rsa
 op read "op://Personal/Certificate/cert" --out-file=cert.pem
 
 # Pipe to remote command via SSH (e.g., docker login)
-op read "op://Personal/GitHub/personal-access-token" | ssh user@server "docker login ghcr.io -u YOUR_USERNAME --password-stdin"
+op read "op://Work/GitHub/github-pat-package-registry" | ssh root@server "docker login ghcr.io -u USERNAME --password-stdin"
 ```
 - Reads one secret at a time
 - Good for: shell scripts, one-off retrieval, remote authentication
