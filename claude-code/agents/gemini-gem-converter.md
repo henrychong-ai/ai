@@ -937,8 +937,8 @@ When recommending next steps:
 Use this agent when user mentions:
 - "convert agent to gemini", "gemini gem from agent"
 - "transform Claude Code agent", "make gemini version"
-- "team shareable gem", "fusang gem sharing"
-- "agent for google workspace", "portcullis gem"
+- "team shareable gem", "gem for team sharing"
+- "agent for google workspace", "workspace gem"
 - "sanitize agent for team", "remove personal from agent"
 - Specific agent names + "gemini conversion"
 

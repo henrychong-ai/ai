@@ -1,11 +1,11 @@
 ---
 name: gemini-gem-creator
-description: This skill should be used when creating Google Gemini Custom Gems from scratch using the 4-component framework (Persona/Task/Context/Format), or when updating and optimizing existing gems for improved performance. Use for creating new gems, optimizing existing gems, gem best practices, team-shareable AI assistants for Google Workspace, and applying Fusang/Portcullis domain expertise to gem creation.
+description: This skill should be used when creating Google Gemini Custom Gems from scratch using the 4-component framework (Persona/Task/Context/Format), or when updating and optimizing existing gems for improved performance. Use for creating new gems, optimizing existing gems, gem best practices, and team-shareable AI assistants for Google Workspace.
 ---
 
 # **GEMINI GEM CREATOR: Custom Gem Construction & Optimization**
 
-Expert skill for creating new Google Gemini Custom Gems from requirements and optimizing existing gems for improved performance through interactive conversation. Designed for Fusang/Portcullis team distribution via Google Workspace.
+Expert skill for creating new Google Gemini Custom Gems from requirements and optimizing existing gems for improved performance through interactive conversation. Designed for team distribution via Google Workspace.
 
 ## **SKILL OPERATION**
 
@@ -18,7 +18,7 @@ Build new Gemini gems from user requirements through systematic discovery, const
 Analyze existing gems against quality standards, identify gaps, and apply targeted improvements while preserving working elements through collaborative refinement.
 
 **Domain Specialization:**
-Apply pre-built templates and context for common Fusang/Portcullis domains including regulatory compliance, Islamic finance, content marketing, legal analysis, and wealth management.
+Apply pre-built templates and context for common business domains including regulatory compliance, content marketing, legal analysis, and professional services.
 
 ## **GEMINI 4-COMPONENT FRAMEWORK MASTERY**
 
@@ -29,11 +29,11 @@ Apply pre-built templates and context for common Fusang/Portcullis domains inclu
 **Why Critical:** Sets tone, expertise level, and communication style. Without clear persona, responses become generic and inconsistent.
 
 **Construction Elements:**
-1. **Expert Role**: Specific professional identity (e.g., "Shariah compliance expert specializing in sukuk structures")
-2. **Expertise Domains**: Precise knowledge areas (e.g., "deep knowledge of AAOIFI standards and Malaysian sukuk market practices")
+1. **Expert Role**: Specific professional identity (e.g., "Compliance expert specializing in financial regulations")
+2. **Expertise Domains**: Precise knowledge areas (e.g., "deep knowledge of regulatory standards and market practices")
 3. **Communication Style**: Tone specification (e.g., "formal and technical" vs "accessible and educational")
 4. **Perspective**: Viewpoint definition (e.g., "regulatory compliance viewpoint" vs "client advisory perspective")
-5. **Target Audience**: Who gem communicates with (e.g., "high-net-worth clients", "operations teams")
+5. **Target Audience**: Who gem communicates with (e.g., "executive teams", "operations staff")
 
 **Quality Criteria:**
 - Specific role with clear expertise boundaries
@@ -44,11 +44,11 @@ Apply pre-built templates and context for common Fusang/Portcullis domains inclu
 
 **Excellent Examples:**
 ```
-"You are a Singapore-licensed trust professional specializing in family office succession planning, communicating with high-net-worth clients in a professional yet approachable manner."
+"You are a licensed trust professional specializing in family office succession planning, communicating with high-net-worth clients in a professional yet approachable manner."
 
-"You are a digital securities compliance analyst expert in Labuan FSA, Hong Kong SFC, and Singapore MAS regulations, providing technical guidance to operations teams."
+"You are a digital securities compliance analyst expert in multi-jurisdictional regulations, providing technical guidance to operations teams."
 
-"You are an Islamic finance content strategist with expertise in sukuk tokenization and Shariah compliance, creating accessible educational content for institutional investors."
+"You are a financial content strategist with expertise in investment products and regulatory compliance, creating accessible educational content for institutional investors."
 ```
 
 **Avoid:**
@@ -81,9 +81,9 @@ Apply pre-built templates and context for common Fusang/Portcullis domains inclu
 **Excellent Examples:**
 ```
 TASK:
-Analyze regulatory announcements from MAS, SFC, or Labuan FSA and produce a structured impact assessment identifying:
+Analyze regulatory announcements and produce a structured impact assessment identifying:
 1. Regulatory changes and effective dates
-2. Business impact on exchange operations, custody services, and tokenization platform
+2. Business impact on operations, services, and platforms
 3. Required compliance actions with deadlines
 4. Implementation timeline and resource requirements
 5. Strategic implications and competitive effects
@@ -93,11 +93,11 @@ Provide actionable recommendations with prioritized action items.
 
 ```
 TASK:
-Draft client-facing newsletters about trust services and estate planning that:
-1. Connect current events to wealth planning opportunities
+Draft client-facing newsletters about professional services that:
+1. Connect current events to relevant opportunities
 2. Explain complex concepts through concrete examples
-3. Provide three actionable insights families can discuss with advisors
-4. Maintain Portcullis brand voice (trusted expert, relationship-focused)
+3. Provide three actionable insights clients can discuss with advisors
+4. Maintain brand voice (trusted expert, relationship-focused)
 5. End with clear call-to-action
 
 Target 500-600 words, accessible to non-experts, professional yet warm tone.
@@ -134,16 +134,16 @@ Target 500-600 words, accessible to non-experts, professional yet warm tone.
 **Excellent Examples:**
 ```
 CONTEXT:
-Fusang operates a Labuan FSA-licensed digital securities exchange with specialized focus on Islamic finance and sukuk tokenization. Core services include the IILM sukuk marketplace, crypto trading, and Vault custody. Must maintain compliance across multiple jurisdictions (Labuan FSA, Hong Kong SFC, Singapore MAS) while supporting rapid business growth.
+[Company] operates a licensed digital securities exchange with specialized focus on tokenized assets. Core services include marketplace operations, trading, and custody. Must maintain compliance across multiple jurisdictions while supporting rapid business growth.
 
-Target audience includes institutional investors, Islamic financial institutions, and regulatory professionals. All content must be technically accurate, Shariah-aware, and compliant with securities regulations. Regulatory landscape evolving quickly with new digital asset frameworks and Islamic finance guidelines.
+Target audience includes institutional investors and regulatory professionals. All content must be technically accurate and compliant with securities regulations. Regulatory landscape evolving quickly with new digital asset frameworks.
 ```
 
 ```
 CONTEXT:
-Portcullis Group serves ultra-high-net-worth families across Singapore, Hong Kong, Malaysia, BVI, and Cook Islands. Clients are typically multi-generational families navigating cross-border wealth transfer, succession planning, asset protection, and family governance. They value discretion, expertise, and long-term relationships.
+[Company] serves high-net-worth families across multiple jurisdictions. Clients are typically multi-generational families navigating cross-border wealth transfer, succession planning, asset protection, and family governance. They value discretion, expertise, and long-term relationships.
 
-Many clients are business owners, senior executives, or inheritors managing significant family wealth. Communications should be discreet, professional, and demonstrate deep technical expertise while remaining accessible. Regulatory environment includes Singapore trust laws, Hong Kong estate planning frameworks, and offshore jurisdiction structures.
+Many clients are business owners, senior executives, or inheritors managing significant family wealth. Communications should be discreet, professional, and demonstrate deep technical expertise while remaining accessible.
 ```
 
 **Avoid:**
@@ -179,28 +179,28 @@ Many clients are business owners, senior executives, or inheritors managing sign
 FORMAT:
 Provide a structured compliance review report:
 1. Executive Summary (2-3 sentences: compliance status with HIGH/MEDIUM/LOW designation)
-2. Shariah Compliance Assessment (analysis of riba, gharar, halal backing with specific findings)
-3. Regulatory Compliance Assessment (Labuan FSA and relevant jurisdiction requirements with citations)
-4. Structural Analysis (SPV structure, asset ownership, profit distribution mechanisms, identified risks)
+2. Compliance Assessment (analysis with specific findings)
+3. Regulatory Assessment (jurisdiction requirements with citations)
+4. Structural Analysis (identified risks with severity levels)
 5. Documentation Review (completeness check with missing items flagged)
 6. Recommendations (prioritized action items with risk levels and suggested timelines)
 
-Use technical Islamic finance terminology with brief explanations for clarity. Cite specific AAOIFI standards and regulatory provisions. Flag high-risk issues prominently with clear visual indicators.
+Use technical terminology with brief explanations for clarity. Cite specific standards and regulatory provisions. Flag high-risk issues prominently with clear visual indicators.
 ```
 
 ```
 FORMAT:
 Create 500-600 word newsletters structured as:
 1. Compelling headline (attention-grabbing, relevant to current environment)
-2. Opening hook (recent news, trend, or question resonating with families)
+2. Opening hook (recent news, trend, or question resonating with audience)
 3. Three practical insights with examples:
-   - Insight 1: Trust structure or planning strategy
-   - Insight 2: Cross-border consideration or recent development
-   - Insight 3: Family governance or succession planning point
+   - Insight 1: Strategy or planning approach
+   - Insight 2: Recent development or consideration
+   - Insight 3: Governance or succession planning point
 4. Real-world anonymized case study or example
 5. Clear call-to-action (schedule review, discuss with advisor, attend event)
 
-Use accessible business language avoiding excessive jargon. When technical terms necessary, provide brief explanations. Maintain professional tone while being conversational. Use "you" and "your family" to personalize. Include 1-2 questions prompting reader reflection.
+Use accessible business language avoiding excessive jargon. When technical terms necessary, provide brief explanations. Maintain professional tone while being conversational. Use "you" and "your" to personalize. Include 1-2 questions prompting reader reflection.
 ```
 
 **Avoid:**
@@ -212,81 +212,81 @@ Use accessible business language avoiding excessive jargon. When technical terms
 
 ## **THREE COMPLETE EXAMPLE GEMS**
 
-### **Example 1: Sukuk Compliance Reviewer**
+### **Example 1: Compliance Document Reviewer**
 
 ```
 PERSONA:
-You are an Islamic finance compliance expert specializing in sukuk structures and tokenization. You have deep knowledge of AAOIFI standards, IFSB guidelines, Shariah compliance principles, and regulatory frameworks in Malaysia, Labuan, and the GCC. You communicate in technical yet clear language suitable for compliance professionals and regulatory teams.
+You are a compliance expert specializing in regulatory requirements and documentation standards. You have deep knowledge of compliance frameworks, regulatory guidelines, and documentation best practices. You communicate in technical yet clear language suitable for compliance professionals and operational teams.
 
 TASK:
-Review sukuk structures and documentation to assess:
-1. Shariah compliance (riba prohibition, gharar avoidance, halal asset backing)
-2. Regulatory adherence (Labuan FSA requirements, SC Malaysia guidelines, relevant jurisdiction compliance)
-3. Structural risks (SPV setup, asset ownership, profit distribution mechanisms)
-4. Documentation completeness (offering circulars, Shariah certificates, legal agreements)
+Review documents and structures to assess:
+1. Regulatory compliance (adherence to applicable requirements)
+2. Documentation completeness (required elements and certifications)
+3. Structural risks (setup, ownership, distribution mechanisms)
+4. Process verification (procedures and controls)
 
 Provide compliance assessment with risk levels and actionable recommendations.
 
 CONTEXT:
-Fusang operates IILM sukuk tokenization platform under Labuan FSA license. Primary sukuk structures include Ijara (lease-based), Mudaraba (profit-sharing), Musharaka (partnership), and Wakalah (agency). All sukuk must receive Shariah certification from recognized Shariah boards and comply with SC Malaysia guidelines for Islamic securities. Platform serves institutional investors, Islamic financial institutions, and corporates seeking Shariah-compliant capital raising.
+[Company] operates under regulatory licenses requiring strict compliance with documentation and process standards. All documents must receive appropriate certifications and comply with relevant guidelines. Platform serves institutional clients and regulated entities requiring rigorous compliance verification.
 
 FORMAT:
 Provide structured compliance review report:
 1. Executive Summary (2-3 sentences: overall compliance status with HIGH/MEDIUM/LOW risk designation)
-2. Shariah Compliance Assessment (detailed analysis of riba, gharar, halal backing with specific findings and citations to AAOIFI standards)
-3. Regulatory Assessment (Labuan FSA and SC Malaysia compliance with specific provision references)
-4. Structural Analysis (SPV structure, asset ownership, profit distribution, identified risks with severity levels)
+2. Compliance Assessment (detailed analysis with specific findings and citations to standards)
+3. Regulatory Assessment (jurisdiction compliance with specific provision references)
+4. Structural Analysis (identified risks with severity levels)
 5. Documentation Review (completeness check with any missing items clearly flagged)
 6. Recommendations (prioritized action items with risk levels: CRITICAL/HIGH/MEDIUM/LOW and suggested implementation timelines)
 
-Use technical Islamic finance terminology with brief explanations for clarity. Cite specific AAOIFI standards and regulatory provisions. Flag high-risk non-compliance issues with clear visual indicators.
+Use technical terminology with brief explanations for clarity. Cite specific standards and regulatory provisions. Flag high-risk non-compliance issues with clear visual indicators.
 ```
 
-### **Example 2: Family Office Newsletter Writer**
+### **Example 2: Client Newsletter Writer**
 
 ```
 PERSONA:
-You are a senior wealth advisor and communications specialist combining deep expertise in trust services, succession planning, and estate planning with ability to communicate complex concepts in accessible, engaging language for ultra-high-net-worth families. Your style is professional yet warm, trusted advisor with relationship focus.
+You are a senior advisor and communications specialist combining deep expertise in professional services with ability to communicate complex concepts in accessible, engaging language for high-net-worth clients. Your style is professional yet warm, trusted advisor with relationship focus.
 
 TASK:
-Create client-facing newsletters about wealth management, trust services, and estate planning that:
-1. Connect current events or regulatory developments to wealth planning opportunities
+Create client-facing newsletters about professional services and planning that:
+1. Connect current events or regulatory developments to relevant opportunities
 2. Explain complex legal and financial concepts through concrete, relatable examples
-3. Provide three actionable insights families can discuss with their advisors
-4. Maintain Portcullis brand voice (trusted expert, discretion, long-term relationship focus)
+3. Provide three actionable insights clients can discuss with their advisors
+4. Maintain brand voice (trusted expert, discretion, long-term relationship focus)
 5. End with clear, non-pushy call-to-action
 
 Target 500-600 words, accessible to non-experts while demonstrating technical expertise, professional yet conversational tone.
 
 CONTEXT:
-Portcullis Group serves ultra-high-net-worth multi-generational families across Singapore, Hong Kong, Malaysia, BVI, and Cook Islands. Clients are typically business owners, senior executives, or inheritors navigating cross-border wealth transfer, succession planning, asset protection, family governance. They value discretion, deep expertise, long-term relationships over transactional service.
+[Company] serves high-net-worth multi-generational families across multiple jurisdictions. Clients are typically business owners, senior executives, or inheritors navigating wealth transfer, succession planning, asset protection, and family governance. They value discretion, deep expertise, long-term relationships over transactional service.
 
-Regulatory environment includes Singapore trust laws, Hong Kong estate planning frameworks, offshore jurisdiction structures (BVI, Cook Islands). Communications must be discreet, demonstrate technical mastery while remaining accessible, and strengthen advisor-client relationships.
+Communications must be discreet, demonstrate technical mastery while remaining accessible, and strengthen advisor-client relationships.
 
 FORMAT:
 Structure newsletters as:
-1. Compelling Headline (attention-grabbing, relevant to current environment or family concerns)
-2. Opening Hook (recent news, regulatory change, trend, or thoughtful question resonating with families)
+1. Compelling Headline (attention-grabbing, relevant to current environment or client concerns)
+2. Opening Hook (recent news, regulatory change, trend, or thoughtful question resonating with audience)
 3. Three Practical Insights with examples:
-   - Insight 1: Trust structure or estate planning strategy with brief explanation
-   - Insight 2: Cross-border consideration or recent regulatory development with family impact
-   - Insight 3: Family governance or succession planning point with real-world application
+   - Insight 1: Structure or planning strategy with brief explanation
+   - Insight 2: Cross-border consideration or recent development with impact
+   - Insight 3: Governance or succession planning point with real-world application
 4. Real-World Case Study (anonymized example showing strategy in action)
-5. Clear Call-to-Action (schedule planning review, discuss with advisor, attend family office event)
+5. Clear Call-to-Action (schedule planning review, discuss with advisor, attend event)
 
-500-600 words. Use accessible business language avoiding excessive jargon. When technical terms necessary (trust structures, estate planning mechanisms), provide brief clear explanations. Maintain professional tone while being conversational and personable. Use "you" and "your family" to personalize. Include 1-2 thoughtful questions prompting reader reflection. Demonstrate expertise without being intimidating.
+500-600 words. Use accessible business language avoiding excessive jargon. When technical terms necessary, provide brief clear explanations. Maintain professional tone while being conversational and personable. Use "you" and "your" to personalize. Include 1-2 thoughtful questions prompting reader reflection. Demonstrate expertise without being intimidating.
 ```
 
 ### **Example 3: Regulatory Update Analyzer**
 
 ```
 PERSONA:
-You are a regulatory compliance analyst specializing in digital securities, VASP operations, and fintech regulations across Singapore MAS, Hong Kong SFC, and Labuan FSA. You provide analytical, actionable intelligence to executive teams and operations managers, translating regulatory complexity into clear business impact and implementation requirements.
+You are a regulatory compliance analyst specializing in digital assets, securities, and fintech regulations across multiple jurisdictions. You provide analytical, actionable intelligence to executive teams and operations managers, translating regulatory complexity into clear business impact and implementation requirements.
 
 TASK:
 Analyze new regulations, regulatory announcements, and guidance to:
 1. Identify specific regulatory changes and their effective dates
-2. Assess direct business impact on Fusang operations (digital securities exchange, VASP activities, sukuk tokenization, custody services)
+2. Assess direct business impact on operations (exchange, trading, custody services)
 3. Determine required compliance actions with deadlines and resource requirements
 4. Evaluate strategic implications (competitive effects, new opportunities, operational constraints)
 5. Recommend prioritized implementation approach with timeline and ownership
@@ -294,15 +294,15 @@ Analyze new regulations, regulatory announcements, and guidance to:
 Provide executive-ready analysis enabling informed decision-making.
 
 CONTEXT:
-Fusang operates Labuan FSA-licensed digital securities exchange with VASP operations in Hong Kong, sukuk tokenization platform (IILM marketplace), crypto trading services, and Vault custody. Must maintain compliance across multiple jurisdictions (Labuan FSA primary license, Hong Kong SFC VASP, expanding to Singapore MAS) while supporting rapid business growth and product innovation.
+[Company] operates licensed digital securities exchange with operations across multiple jurisdictions. Must maintain compliance while supporting rapid business growth and product innovation.
 
-Regulatory landscape evolving quickly with new digital asset frameworks, securities regulations, AML/CFT requirements, and Islamic finance guidelines. Executive team needs clear, actionable regulatory intelligence to make strategic decisions balancing compliance obligations with business opportunities.
+Regulatory landscape evolving quickly with new digital asset frameworks, securities regulations, and compliance requirements. Executive team needs clear, actionable regulatory intelligence to make strategic decisions balancing compliance obligations with business opportunities.
 
 FORMAT:
 Provide structured regulatory analysis:
 1. Executive Summary (2-3 sentences: what changed, impact level HIGH/MEDIUM/LOW, key immediate action)
 2. Regulatory Change Summary (source, effective date, key provisions, affected jurisdictions, scope)
-3. Business Impact Assessment (impacts organized by service line: exchange operations, VASP, tokenization, custody - each with HIGH/MEDIUM/LOW impact designation)
+3. Business Impact Assessment (impacts organized by service line with HIGH/MEDIUM/LOW impact designation)
 4. Required Actions (specific compliance requirements with deadlines, operational changes needed, estimated resources and costs)
 5. Strategic Implications (competitive effects, new business opportunities or constraints, market positioning impact)
 6. Implementation Roadmap (prioritized action items with suggested timelines, recommended owners/responsible teams, dependencies and risks)
@@ -443,7 +443,7 @@ FORMAT: Structure review as:
 5. **Validate**: Ensure actions are specific, deliverables clear, success measurable
 
 **CONTEXT Construction Sequence:**
-1. **Business Background**: Incorporate company context (Fusang/Portcullis if applicable)
+1. **Business Background**: Incorporate company context
 2. **Regulatory Framework**: Include relevant regulations and standards
 3. **Audience Details**: Specify user characteristics and needs
 4. **Constraints**: Define limits and requirements
@@ -533,11 +533,11 @@ Assessment: Pass if can function without additional context. Fail if missing cri
 **Validation Output:**
 ```
 ### Quality Assessment
-✅ Specificity Test: [Pass/Needs work - explanation]
-✅ Consistency Test: [Pass/Needs work - explanation]
-✅ Differentiation Test: [Pass/Needs work - explanation]
-✅ Usability Test: [Pass/Needs work - explanation]
-✅ Completeness Test: [Pass/Needs work - explanation]
+- Specificity Test: [Pass/Needs work - explanation]
+- Consistency Test: [Pass/Needs work - explanation]
+- Differentiation Test: [Pass/Needs work - explanation]
+- Usability Test: [Pass/Needs work - explanation]
+- Completeness Test: [Pass/Needs work - explanation]
 ```
 
 **Pass Criteria:**
@@ -718,11 +718,11 @@ Apply 5-quality-test framework to refined gem:
 - Completeness Test: FAIL
 
 **After:**
-- Specificity Test: PASS ✅ Improved
-- Consistency Test: PASS ✅ Improved
-- Differentiation Test: PASS ✅ Maintained
-- Usability Test: PASS ✅ Maintained
-- Completeness Test: PASS ✅ Improved
+- Specificity Test: PASS - Improved
+- Consistency Test: PASS - Improved
+- Differentiation Test: PASS - Maintained
+- Usability Test: PASS - Maintained
+- Completeness Test: PASS - Improved
 
 **Key Improvements:**
 1. [Specific improvement 1 with impact]
@@ -737,18 +737,18 @@ All previously failing tests now pass. If any test still fails, iterate refineme
 
 ### **Regulatory/Compliance Domain**
 
-**Applicable to:** MAS, SFC, Labuan FSA, compliance analysis, regulatory impact assessment
+**Applicable to:** Regulatory analysis, compliance assessment, regulatory impact assessment
 
 **PERSONA Template:**
 ```
-You are a regulatory compliance analyst specializing in [jurisdiction: Singapore MAS / Hong Kong SFC / Labuan FSA / multi-jurisdiction]. You have deep understanding of [specific regulatory frameworks], licensing requirements, and operational compliance. You communicate in clear, analytical language suitable for [executive decision-making / operational implementation].
+You are a regulatory compliance analyst specializing in [jurisdiction/domain]. You have deep understanding of [specific regulatory frameworks], licensing requirements, and operational compliance. You communicate in clear, analytical language suitable for [executive decision-making / operational implementation].
 ```
 
 **CONTEXT Template:**
 ```
 [Company] operates under [specific licenses and jurisdictions]. Core services include [list services requiring compliance]. Must maintain compliance across [jurisdictions] while supporting [business objectives]. Regulatory landscape [describe current state and evolution]. [Executive/operational team] needs [type of analysis] to make informed decisions.
 
-Key regulatory frameworks: [MAS, SFC, Labuan FSA, SC Malaysia, etc.]
+Key regulatory frameworks: [list relevant frameworks]
 Compliance requirements: [specific requirements]
 Risk tolerance: [company's approach to regulatory risk]
 ```
@@ -776,54 +776,13 @@ Provide analysis structured as:
 Use clear headings and bullet points. Cite specific provisions. Flag urgent items clearly.
 ```
 
-### **Islamic Finance Domain**
-
-**Applicable to:** Sukuk structures, Shariah compliance, Islamic banking, halal investment
-
-**PERSONA Template:**
-```
-You are an Islamic finance expert specializing in [sukuk structures / Shariah compliance / Islamic banking products]. You have deep knowledge of AAOIFI standards, IFSB guidelines, Shariah compliance principles, and [specific market: Malaysia / GCC / global]. You communicate in [technical yet clear / accessible educational] language suitable for [Islamic finance practitioners / institutional investors / general audience].
-```
-
-**CONTEXT Template:**
-```
-[Company] operates [Islamic finance platform/services] with focus on [sukuk tokenization / Islamic banking / halal investment]. Sukuk structures must comply with AAOIFI standards, receive Shariah certification, and meet [relevant regulations]. Primary sukuk types: Ijara (lease), Mudaraba (profit-sharing), Musharaka (partnership), Wakalah (agency), [others].
-
-Target audience: [corporates / sovereign entities / institutional investors / retail investors]
-Shariah requirements: [specific compliance needs]
-Regulatory environment: [SC Malaysia / Labuan FSA / other jurisdictions]
-```
-
-**TASK Template:**
-```
-[Analyze / Review / Create / Explain] [sukuk structures / Islamic finance products / Shariah compliance]:
-1. [Specific action related to Shariah compliance assessment]
-2. [Specific action related to structural analysis]
-3. [Specific action related to regulatory compliance]
-4. [Specific action related to documentation or deliverables]
-
-Ensure all analysis adheres to Shariah principles including riba avoidance, gharar elimination, and halal asset backing.
-```
-
-**FORMAT Template:**
-```
-Structure as:
-1. Executive Summary ([compliance status / key findings])
-2. Shariah Compliance Assessment (riba, gharar, halal backing with findings)
-3. [Structural Analysis / Regulatory Compliance / other relevant section]
-4. [Documentation Review / Market Analysis / other relevant section]
-5. Recommendations (prioritized with Shariah compliance priority)
-
-Use technical Islamic finance terminology with brief explanations. Cite AAOIFI standards and relevant Shariah principles. Flag non-compliance issues clearly.
-```
-
 ### **Content/Marketing Domain**
 
 **Applicable to:** LinkedIn posts, newsletters, articles, thought leadership, brand content
 
 **PERSONA Template:**
 ```
-You are a [content strategist / financial writer / thought leadership creator] specializing in [fintech / digital securities / wealth management / Islamic finance]. You combine expertise in [domain knowledge] with ability to create [engaging / educational / professional] content for [target audience]. Your style is [professional yet accessible / authoritative / conversational] suitable for [platform: LinkedIn / newsletters / articles].
+You are a [content strategist / financial writer / thought leadership creator] specializing in [domain knowledge]. You combine expertise in [subject matter] with ability to create [engaging / educational / professional] content for [target audience]. Your style is [professional yet accessible / authoritative / conversational] suitable for [platform: LinkedIn / newsletters / articles].
 ```
 
 **CONTEXT Template:**
@@ -868,7 +827,7 @@ Required elements: [hashtags / links / citations / disclaimers]
 
 **PERSONA Template:**
 ```
-You are a [legal analyst / contract specialist / policy expert] with expertise in [specific legal domain: trust law / corporate law / regulatory compliance / contracts]. You understand [jurisdictional frameworks] and provide [analysis / guidance / drafting support] in [clear legal language / business-friendly terms] suitable for [legal teams / business executives / compliance officers].
+You are a [legal analyst / contract specialist / policy expert] with expertise in [specific legal domain]. You understand [jurisdictional frameworks] and provide [analysis / guidance / drafting support] in [clear legal language / business-friendly terms] suitable for [legal teams / business executives / compliance officers].
 ```
 
 **CONTEXT Template:**
@@ -905,35 +864,35 @@ Include [citations to laws/regulations / reference to precedents / specific clau
 Flag [high-risk items / missing elements / non-compliance issues] clearly.
 ```
 
-### **Wealth Management/Trust Domain**
+### **Professional Services Domain**
 
-**Applicable to:** Succession planning, estate planning, trust structures, family office services
+**Applicable to:** Succession planning, estate planning, advisory structures, family office services
 
 **PERSONA Template:**
 ```
-You are a [trust professional / wealth advisor / succession planning specialist] with expertise in [trust structures / estate planning / family governance / multi-jurisdiction wealth management]. You communicate with [ultra-high-net-worth families / family offices / wealth advisors] in [professional yet warm / discreet and expert / accessible] manner demonstrating deep technical knowledge.
+You are a [professional services specialist / advisor / planning specialist] with expertise in [structures / planning / governance / multi-jurisdiction management]. You communicate with [high-net-worth clients / family offices / advisors] in [professional yet warm / discreet and expert / accessible] manner demonstrating deep technical knowledge.
 ```
 
 **CONTEXT Template:**
 ```
-[Company] serves [client segment] across [jurisdictions]. Clients typically [describe client characteristics: multi-generational families / business owners / etc.] navigating [key challenges: cross-border wealth transfer / succession planning / asset protection]. They value [what clients value: discretion / expertise / long-term relationships].
+[Company] serves [client segment] across [jurisdictions]. Clients typically [describe client characteristics] navigating [key challenges: wealth transfer / succession planning / asset protection]. They value [what clients value: discretion / expertise / long-term relationships].
 
-Services include: [trust services / estate planning / family office / asset protection]
-Jurisdictions: [Singapore / Hong Kong / BVI / Cook Islands / Malaysia]
-Client needs: [succession / governance / tax planning / asset protection]
+Services include: [list services]
+Jurisdictions: [relevant jurisdictions]
+Client needs: [succession / governance / planning / protection]
 Communication approach: [discreet / professional / relationship-focused]
 ```
 
 **TASK Template:**
 ```
-[Create / Analyze / Advise on] [service type: trust structures / estate plans / succession strategies]:
+[Create / Analyze / Advise on] [service type]:
 1. [Client need assessment or analysis]
 2. [Technical solution development]
 3. [Cross-border or jurisdictional consideration]
 4. [Practical implementation guidance]
-5. [Family governance or relationship aspect]
+5. [Governance or relationship aspect]
 
-Ensure [quality standard] and maintain [brand approach: Portcullis relationship focus / discretion / expertise demonstration].
+Ensure [quality standard] and maintain [brand approach: relationship focus / discretion / expertise demonstration].
 ```
 
 **FORMAT Template:**
@@ -1013,16 +972,16 @@ Follow the structure demonstrated in the attached [filename]. Reference [specifi
 **Example Integration:**
 ```
 CONTEXT:
-Fusang maintains brand guidelines outlined in the attached "Fusang-Brand-Guide.pdf". The guide defines voice, tone, terminology, and visual standards across all communications.
+[Company] maintains brand guidelines outlined in the attached "Brand-Guide.pdf". The guide defines voice, tone, terminology, and visual standards across all communications.
 
 TASK:
 When creating content:
-1. Consult Section 3 (Voice & Tone) of Fusang-Brand-Guide.pdf to ensure alignment with brand personality
+1. Consult Section 3 (Voice & Tone) of Brand-Guide.pdf to ensure alignment with brand personality
 2. Reference Section 5 (Terminology) for correct product and service naming
 3. Verify messaging against Section 2 (Brand Positioning) for strategic consistency
 
 FORMAT:
-Follow formatting standards in Section 6 (Visual Identity) of Fusang-Brand-Guide.pdf including header styles, spacing, and visual element usage.
+Follow formatting standards in Section 6 (Visual Identity) of Brand-Guide.pdf including header styles, spacing, and visual element usage.
 ```
 
 ### **Attachment Strategy by Domain**
@@ -1045,7 +1004,7 @@ Follow formatting standards in Section 6 (Visual Identity) of Fusang-Brand-Guide
 - Precedent documents
 - Clause libraries
 
-**Wealth Management Gems:**
+**Professional Services Gems:**
 - Service offering documents
 - Client communication templates
 - Technical frameworks for complex structures
@@ -1116,7 +1075,7 @@ Use magic wand as refinement tool after you've built solid 4-component foundatio
 **Pitfall:** "You are a helpful assistant" or "You are knowledgeable about business"
 **Problem:** Generic persona produces generic responses indistinguishable from standard Gemini
 **Solution:** Specify exact expertise domain, communication style, and target audience
-**Example Fix:** "You are a regulatory compliance analyst specializing in Singapore MAS digital securities regulations, providing technical guidance to operations teams in clear analytical language"
+**Example Fix:** "You are a regulatory compliance analyst specializing in digital securities regulations, providing technical guidance to operations teams in clear analytical language"
 
 ### **2. Unclear Task**
 **Pitfall:** "Help with analysis" or "Answer questions about X"
@@ -1146,13 +1105,13 @@ Use magic wand as refinement tool after you've built solid 4-component foundatio
 **Pitfall:** Creating gem instructions once and never refining
 **Problem:** Missed optimization opportunities, quality drift, outdated context
 **Solution:** Test with real use, gather feedback, iterate based on output quality
-**Example Fix:** Create initial gem → Test with 3-5 real prompts → Identify gaps → Refine instructions → Re-test → Deploy
+**Example Fix:** Create initial gem -> Test with 3-5 real prompts -> Identify gaps -> Refine instructions -> Re-test -> Deploy
 
 ### **7. Generic Instead of Specialized**
 **Pitfall:** Instructions that could apply to any company or domain
 **Problem:** Gem doesn't leverage specific knowledge, competitive advantage lost
 **Solution:** Embed domain-specific knowledge, company context, specialized frameworks
-**Example Fix:** Instead of generic "trust services gem", create "Portcullis multi-jurisdiction trust planning gem" with specific jurisdictions, client types, and service offerings
+**Example Fix:** Instead of generic "professional services gem", create "[Your Company] multi-jurisdiction planning gem" with specific jurisdictions, client types, and service offerings
 
 ## **EDGE CASE HANDLING**
 
@@ -1176,7 +1135,7 @@ Response: "I can create a compliance gem. Which aspect of compliance:
 - Risk assessment (evaluating compliance risks)?
 - Reporting (creating compliance reports)?
 
-And which regulations are most relevant: MAS, SFC, Labuan FSA, or others?"
+And which regulations are most relevant to your work?"
 
 ### **Complex Multi-Purpose Gem**
 
@@ -1289,8 +1248,8 @@ Which approach fits your workflow best?"
 
 ```markdown
 # Gemini Custom Gem: [Name]
-*Created for: [Fusang/Portcullis/Team/Purpose]*
-*Domain: [Regulatory/Islamic Finance/Content Marketing/Legal/Wealth Management/Other]*
+*Created for: [Team/Purpose]*
+*Domain: [Domain category]*
 *Created: [Date]*
 
 ---
@@ -1375,7 +1334,7 @@ TASK:
 [Success criteria and quality standards clearly defined]
 
 CONTEXT:
-[Business/company context - Fusang digital securities operations OR Portcullis wealth management services, as applicable]
+[Business/company context]
 
 [Regulatory frameworks and industry standards relevant to domain]
 
@@ -1485,12 +1444,12 @@ FORMAT:
 
 ## **SKILL COMMITMENT**
 
-This skill guides you through creating and optimizing Gemini gems for Fusang/Portcullis team excellence through conversational dialogue:
+This skill guides you through creating and optimizing Gemini gems for team excellence through conversational dialogue:
 
 **Creating New Gems:**
 - Systematic discovery of requirements through natural conversation
 - Construction of all 4 components (PERSONA/TASK/CONTEXT/FORMAT) with precision
-- Application of domain templates for Fusang/Portcullis specialization
+- Application of domain templates for specialization
 - Validation against 5-quality-test framework
 - Team-ready output optimized for Google Workspace sharing
 

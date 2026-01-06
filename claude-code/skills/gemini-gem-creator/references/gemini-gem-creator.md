@@ -1,7 +1,6 @@
 # Gemini Custom Gem: gemini-gem-creator
-*Created for: Fusang/Portcullis Team*
+*Created for: Team Distribution*
 *Domain: Gem Creation & Optimization*
-*Created: 2025-11-26*
 
 ---
 
@@ -17,7 +16,7 @@ Helps create and optimize custom Gemini gems using the 4-component framework. Us
 |------|--------|------------|
 | Specificity | Pass | Clear 4-component methodology with explicit discovery questions, quality tests, and output formats |
 | Consistency | Pass | Structured output templates ensure consistent gem deliverables across uses |
-| Differentiation | Pass | Specialized Fusang/Portcullis domain knowledge and 5-test validation framework |
+| Differentiation | Pass | Specialized domain knowledge and 5-test validation framework |
 | Usability | Pass | Clear use cases: new gem creation, optimization, domain templates |
 | Completeness | Pass | All methodology, examples, and business context embedded for standalone operation |
 
@@ -28,16 +27,16 @@ Helps create and optimize custom Gemini gems using the 4-component framework. Us
 ## Usage Scenarios
 
 1. **Creating a Regulatory Update Analyzer Gem**
-   - Input: "I need a gem that helps analyze new MAS or SFC announcements"
+   - Input: "I need a gem that helps analyze new regulatory announcements"
    - Output: Canvas shows gem being built with regulatory PERSONA, impact assessment TASK, multi-jurisdiction CONTEXT, executive FORMAT
 
 2. **Optimizing an Underperforming Content Gem**
    - Input: "My LinkedIn posts gem is giving inconsistent results. Here are the instructions..."
    - Output: Canvas shows before/after comparison, optimized instructions addressing specific failures
 
-3. **Building a Sukuk Compliance Review Gem**
-   - Input: "I need something to review sukuk structures for Shariah compliance"
-   - Output: Canvas displays Islamic finance gem taking shape with technical PERSONA, compliance TASK, IILM CONTEXT
+3. **Building a Compliance Review Gem**
+   - Input: "I need something to review documents for compliance"
+   - Output: Canvas displays compliance gem taking shape with technical PERSONA, review TASK, regulatory CONTEXT
 
 ---
 
@@ -58,7 +57,7 @@ No file attachments needed - all methodology, examples, templates, and business 
 3. Name the gem "Gem Creator" or "Custom Gem Builder"
 4. Test with a sample gem creation request (e.g., "I need a gem to help write client newsletters")
 5. Use Gemini's magic wand feature to expand sections if needed
-6. Share with Fusang/Portcullis team via Google Workspace
+6. Share with team via Google Workspace
 
 ---
 
@@ -115,16 +114,11 @@ All gems must pass 5 tests before completion:
 - Completeness Test: Does gem have all information needed to operate standalone?
 
 CONTEXT:
-Fusang operates a Labuan FSA-licensed digital securities exchange with focus on sukuk tokenization, IILM sukuk marketplace, crypto trading, and Vault custody services. Must maintain compliance across Labuan FSA, Hong Kong SFC, and Singapore MAS.
-
-Portcullis Group serves ultra-high-net-worth families across Singapore, Hong Kong, Malaysia, BVI, and Cook Islands with trust services, succession planning, asset protection, and family office services.
-
-Common gem domains include:
-- Regulatory/Compliance: MAS, SFC, Labuan FSA analysis and impact assessment
-- Islamic Finance: Sukuk structures, AAOIFI standards, Shariah compliance
+This gem helps teams create custom Gemini gems for their specific business needs. Common gem domains include:
+- Regulatory/Compliance: Regulatory analysis and impact assessment
 - Content Marketing: LinkedIn posts, newsletters, thought leadership
 - Legal/Document: Contract review, policy creation, document analysis
-- Wealth Management: Trust structures, estate planning, succession
+- Professional Services: Advisory, planning, client communications
 
 Target users are business professionals creating AI assistants for team workflows, not AI engineers. Gems will be shared via Google Workspace to colleagues.
 
