@@ -188,7 +188,7 @@ cat ~/.config/yt-dlp/config
 ```
 CURRENT DOWNLOAD CONFIG
 ==========================================
-Location:   CDRIVE/ (iCloud) [MANDATORY DEFAULT]
+Location:   ~/Downloads/ [MANDATORY DEFAULT]
 Filename:   [title].mp4
 Quality:    Best video + best audio (merged)
 Format:     MP4
@@ -198,7 +198,7 @@ Thumbnail:  Saved + embedded
 Archive:    Duplicate prevention enabled
 ```
 
-**Note**: Location is CDRIVE by default. Only show alternative locations if user explicitly requests.
+**Note**: Location is ~/Downloads/ by default. Only show alternative locations if user explicitly requests.
 
 ### Phase 5: User Confirmation
 **Use AskUserQuestion tool:**
@@ -216,7 +216,7 @@ options:
 - Format selection (MP4, MKV, WebM)
 - Subtitles on/off
 - Different filename
-- Output location override (only if explicitly requested - default is CDRIVE)
+- Output location override (only if explicitly requested - default is ~/Downloads/)
 
 ### Phase 6: Execute Download
 
@@ -256,7 +256,7 @@ yt-dlp --concurrent-fragments 32 -o "~/Downloads/%(title)s.%(ext)s" 'URL'
 DOWNLOAD COMPLETE
 ==========================================
 File:     [filename.mp4]
-Location: CDRIVE/[filename.mp4]
+Location: ~/Downloads/[filename.mp4]
           (Full: ~/Downloads/)
 Size:     [XXX MB]
 Duration: [HH:MM:SS]
@@ -496,8 +496,8 @@ SUBTITLE OPTIONS
 
 **User's yt-dlp config at `~/.config/yt-dlp/config`:**
 ```
-# Output to iCloud CDRIVE
--o ~/Library/Mobile Documents/com~apple~CloudDocs/CDRIVE/%(title)s.%(ext)s
+# Output to ~/Downloads/ (default location)
+-o ~/Downloads/%(title)s.%(ext)s
 
 # Best quality, merged to MP4
 -f bestvideo+bestaudio/best
@@ -549,16 +549,16 @@ yt-dlp --dump-json 'URL'
 # List available formats
 yt-dlp -F 'URL'
 
-# Download to CDRIVE (DEFAULT - proper quoting for spaces)
+# Download to ~/Downloads/ (DEFAULT - proper quoting for spaces)
 yt-dlp --concurrent-fragments 32 -o "~/Downloads/%(title)s.%(ext)s" 'URL'
 
 # Download HLS with MAX speed (ALWAYS use for HLS streams)
 yt-dlp --concurrent-fragments 32 'URL'
 
-# Audio only (to CDRIVE)
+# Audio only (to ~/Downloads/)
 yt-dlp -x --audio-format mp3 -o "~/Downloads/%(title)s.%(ext)s" 'URL'
 
-# Specific quality (HLS, to CDRIVE)
+# Specific quality (HLS, to ~/Downloads/)
 yt-dlp --concurrent-fragments 32 -f 'bestvideo[height<=1080]+bestaudio' -o "~/Downloads/%(title)s.%(ext)s" 'URL'
 
 # With cookies
