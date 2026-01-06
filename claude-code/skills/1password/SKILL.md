@@ -1,11 +1,11 @@
 ---
 name: 1password
-description: This skill should be used for 1Password developer configuration, secrets management, op CLI usage, MCP server credential injection, op run setup, wrapper scripts, the Environments .env feature, GitHub Actions CI/CD integration, and AWS Secrets Manager sync. Auto-triggers on "1password", "op run", "op://", "secret reference", "credential injection", "secrets management", "vault", "biometric unlock", "GitHub Actions secrets", "CI/CD secrets", "AWS Secrets Manager", "shell plugins". Covers service accounts, Developer Watchtower, activity logging, and troubleshooting.
+description: This skill should be used for 1Password developer configuration, secrets management, op CLI usage, MCP server credential injection, op run setup, wrapper scripts, the Environments .env feature, GitHub Actions CI/CD integration, AWS Secrets Manager sync, and SSH agent configuration. Auto-triggers on "1password", "op run", "op://", "secret reference", "credential injection", "secrets management", "vault", "biometric unlock", "GitHub Actions secrets", "CI/CD secrets", "AWS Secrets Manager", "shell plugins", "ssh agent", "agent.toml", "ssh key 1password", "IdentityAgent". Covers service accounts, Developer Watchtower, activity logging, SSH key management, and troubleshooting.
 ---
 
 # 1Password Developer & Secrets Management
 
-Expert guidance for 1Password CLI, secrets management, and secure credential injection for development workflows.
+Expert guidance for 1Password CLI, secrets management, secure credential injection, and SSH agent configuration.
 
 ## Quick Reference
 
@@ -166,6 +166,49 @@ Virtual .env file mounting - secrets delivered via UNIX pipe, never on disk.
 
 See `references/environments-guide.md` for complete setup guide.
 
+## SSH Agent Configuration
+
+The 1Password SSH agent stores and provides SSH keys without exposing private keys on disk.
+
+### Config File Location
+```
+~/.config/1Password/ssh/agent.toml
+```
+
+### Default Behavior
+By default, only keys from Personal, Private, or Employee vaults are available.
+
+### Enable Keys from Shared Vaults
+
+Add to `agent.toml`:
+
+```toml
+# Enable entire vault
+[[ssh-keys]]
+vault = "DevOps"
+
+# Enable specific key
+[[ssh-keys]]
+item = "Server-Key-Name"
+vault = "DevOps"
+```
+
+### Verify Available Keys
+
+```bash
+SSH_AUTH_SOCK=~/Library/Group\ Containers/2BUA8C4S2C.com.1password/t/agent.sock ssh-add -l
+```
+
+### SSH Client Config
+
+**~/.ssh/config:**
+```
+Host *
+    IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+```
+
+See `references/ssh-agent-guide.md` for complete setup, troubleshooting, and key ordering.
+
 ## Security Features
 
 | Feature | Purpose | How to Enable |
@@ -265,5 +308,6 @@ Detailed guides in `references/` subdirectory:
 - **environments-guide.md** - 1Password Environments feature
 - **github-actions-guide.md** - CI/CD integration with GitHub Actions
 - **aws-secrets-manager.md** - AWS Secrets Manager sync setup
+- **ssh-agent-guide.md** - SSH agent setup, key enabling, and troubleshooting
 - **troubleshooting.md** - Common issues and solutions
 - **security-best-practices.md** - Hardening recommendations
