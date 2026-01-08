@@ -194,7 +194,7 @@ Quality:    Best video + best audio (merged)
 Format:     MP4
 Subtitles:  English (embedded + SRT file)
 Metadata:   Included
-Thumbnail:  Saved + embedded
+Thumbnail:  Embedded in video
 Archive:    Duplicate prevention enabled
 ```
 
@@ -511,7 +511,6 @@ SUBTITLE OPTIONS
 
 # Metadata and thumbnail
 --add-metadata
---write-thumbnail
 --embed-thumbnail
 
 # Resume and archive
