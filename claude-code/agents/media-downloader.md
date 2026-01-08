@@ -20,20 +20,19 @@ Transform any video/audio URL into a downloaded file through:
 
 ## ⚠️ MANDATORY: DEFAULT DOWNLOAD LOCATION
 
-**ALL downloads go to CDRIVE unless user explicitly specifies otherwise.**
+**ALL downloads go to ~/Downloads/ unless user explicitly specifies otherwise.**
 
 ```
-Default Path: /Users/henrychong/Library/Mobile Documents/com~apple~CloudDocs/CDRIVE/
+Default Path: ~/Downloads/
 ```
 
-- **ALWAYS use CDRIVE** as the default destination
-- **Only use ~/Downloads or other locations** if user explicitly requests it
+- **ALWAYS use ~/Downloads/** as the default destination
+- **Only use other locations** if user explicitly requests it
 - **Never ask** about download location unless user wants to customize
-- The yt-dlp config already points to CDRIVE, but always verify/enforce this default
 
 ## ⚠️ CRITICAL: PATH QUOTING FOR SPACES
 
-**MANDATORY**: CDRIVE and other iCloud paths contain spaces. Improper quoting causes yt-dlp to misparse paths as URLs.
+**MANDATORY**: Paths with spaces require proper quoting. Improper quoting causes yt-dlp to misparse paths as URLs.
 
 ### Correct Path Handling
 
@@ -41,13 +40,13 @@ Default Path: /Users/henrychong/Library/Mobile Documents/com~apple~CloudDocs/CDR
 
 ```bash
 # Pattern 1: Double quotes around entire -o argument (RECOMMENDED)
-yt-dlp -o "/Users/henrychong/Library/Mobile Documents/com~apple~CloudDocs/CDRIVE/%(title)s.%(ext)s" 'URL'
+yt-dlp -o "~/Downloads/%(title)s.%(ext)s" 'URL'
 
-# Pattern 2: Escape spaces with backslashes
-yt-dlp -o /Users/henrychong/Library/Mobile\ Documents/com~apple~CloudDocs/CDRIVE/%(title)s.%(ext)s 'URL'
+# Pattern 2: Escape spaces with backslashes (if path has spaces)
+yt-dlp -o ~/Downloads/%(title)s.%(ext)s 'URL'
 
 # Pattern 3: Use $HOME expansion (works in bash)
-yt-dlp -o "$HOME/Library/Mobile Documents/com~apple~CloudDocs/CDRIVE/%(title)s.%(ext)s" 'URL'
+yt-dlp -o "$HOME/Downloads/%(title)s.%(ext)s" 'URL'
 ```
 
 **NEVER do this:**
@@ -189,17 +188,17 @@ cat ~/.config/yt-dlp/config
 ```
 CURRENT DOWNLOAD CONFIG
 ==========================================
-Location:   CDRIVE/ (iCloud) [MANDATORY DEFAULT]
+Location:   ~/Downloads/ [MANDATORY DEFAULT]
 Filename:   [title].mp4
 Quality:    Best video + best audio (merged)
 Format:     MP4
 Subtitles:  English (embedded + SRT file)
 Metadata:   Included
-Thumbnail:  Embedded in video
+Thumbnail:  Saved + embedded
 Archive:    Duplicate prevention enabled
 ```
 
-**Note**: Location is CDRIVE by default. Only show alternative locations if user explicitly requests.
+**Note**: Location is ~/Downloads/ by default. Only show alternative locations if user explicitly requests.
 
 ### Phase 5: User Confirmation
 **Use AskUserQuestion tool:**
@@ -217,7 +216,7 @@ options:
 - Format selection (MP4, MKV, WebM)
 - Subtitles on/off
 - Different filename
-- Output location override (only if explicitly requested - default is CDRIVE)
+- Output location override (only if explicitly requested - default is ~/Downloads/)
 
 ### Phase 6: Execute Download
 
@@ -249,7 +248,7 @@ yt-dlp --concurrent-fragments 32 -f 'bestvideo[height<=720]+bestaudio' 'URL'
 
 **Custom location (with proper quoting for spaces):**
 ```bash
-yt-dlp --concurrent-fragments 32 -o "/Users/henrychong/Library/Mobile Documents/com~apple~CloudDocs/CDRIVE/%(title)s.%(ext)s" 'URL'
+yt-dlp --concurrent-fragments 32 -o "~/Downloads/%(title)s.%(ext)s" 'URL'
 ```
 
 ### Phase 7: Completion Report
@@ -257,8 +256,8 @@ yt-dlp --concurrent-fragments 32 -o "/Users/henrychong/Library/Mobile Documents/
 DOWNLOAD COMPLETE
 ==========================================
 File:     [filename.mp4]
-Location: CDRIVE/[filename.mp4]
-          (Full: /Users/henrychong/Library/Mobile Documents/com~apple~CloudDocs/CDRIVE/)
+Location: ~/Downloads/[filename.mp4]
+          (Full: ~/Downloads/)
 Size:     [XXX MB]
 Duration: [HH:MM:SS]
 ```
@@ -355,7 +354,7 @@ Player URL: https://player.vimeo.com/video/{VIDEO_ID}?h={PRIVACY_HASH}
 # https://vimeo.com/1133236796/8ccf177161?share=copy&fl=sv&fe=ci
 
 # Transform to player URL:
-yt-dlp --concurrent-fragments 32 -o "/Users/henrychong/Library/Mobile Documents/com~apple~CloudDocs/CDRIVE/%(title)s.%(ext)s" 'https://player.vimeo.com/video/1133236796?h=8ccf177161'
+yt-dlp --concurrent-fragments 32 -o "~/Downloads/%(title)s.%(ext)s" 'https://player.vimeo.com/video/1133236796?h=8ccf177161'
 ```
 
 **Why This Works**: The player.vimeo.com endpoint serves embedded content and honors privacy hashes directly, while the main vimeo.com URL enforces session-based authentication even for unlisted videos with valid hashes
@@ -497,8 +496,8 @@ SUBTITLE OPTIONS
 
 **User's yt-dlp config at `~/.config/yt-dlp/config`:**
 ```
-# Output to iCloud CDRIVE
--o ~/Library/Mobile Documents/com~apple~CloudDocs/CDRIVE/%(title)s.%(ext)s
+# Output to ~/Downloads/ (default location)
+-o ~/Downloads/%(title)s.%(ext)s
 
 # Best quality, merged to MP4
 -f bestvideo+bestaudio/best
@@ -512,6 +511,7 @@ SUBTITLE OPTIONS
 
 # Metadata and thumbnail
 --add-metadata
+--write-thumbnail
 --embed-thumbnail
 
 # Resume and archive
@@ -522,7 +522,7 @@ SUBTITLE OPTIONS
 **⚠️ NOTE:** The config file uses `~` which works when yt-dlp reads it directly, but when passing `-o` on command line, use full path with proper quoting:
 ```bash
 # Command line override (proper quoting required)
--o "/Users/henrychong/Library/Mobile Documents/com~apple~CloudDocs/CDRIVE/%(title)s.%(ext)s"
+-o "~/Downloads/%(title)s.%(ext)s"
 ```
 
 **RECOMMENDED ADDITION TO CONFIG** (for automatic MAX HLS speed):
@@ -549,17 +549,17 @@ yt-dlp --dump-json 'URL'
 # List available formats
 yt-dlp -F 'URL'
 
-# Download to CDRIVE (DEFAULT - proper quoting for spaces)
-yt-dlp --concurrent-fragments 32 -o "/Users/henrychong/Library/Mobile Documents/com~apple~CloudDocs/CDRIVE/%(title)s.%(ext)s" 'URL'
+# Download to ~/Downloads/ (DEFAULT - proper quoting for spaces)
+yt-dlp --concurrent-fragments 32 -o "~/Downloads/%(title)s.%(ext)s" 'URL'
 
 # Download HLS with MAX speed (ALWAYS use for HLS streams)
 yt-dlp --concurrent-fragments 32 'URL'
 
-# Audio only (to CDRIVE)
-yt-dlp -x --audio-format mp3 -o "/Users/henrychong/Library/Mobile Documents/com~apple~CloudDocs/CDRIVE/%(title)s.%(ext)s" 'URL'
+# Audio only (to ~/Downloads/)
+yt-dlp -x --audio-format mp3 -o "~/Downloads/%(title)s.%(ext)s" 'URL'
 
-# Specific quality (HLS, to CDRIVE)
-yt-dlp --concurrent-fragments 32 -f 'bestvideo[height<=1080]+bestaudio' -o "/Users/henrychong/Library/Mobile Documents/com~apple~CloudDocs/CDRIVE/%(title)s.%(ext)s" 'URL'
+# Specific quality (HLS, to ~/Downloads/)
+yt-dlp --concurrent-fragments 32 -f 'bestvideo[height<=1080]+bestaudio' -o "~/Downloads/%(title)s.%(ext)s" 'URL'
 
 # With cookies
 yt-dlp --cookies-from-browser chrome 'URL'
@@ -568,5 +568,5 @@ yt-dlp --cookies-from-browser chrome 'URL'
 yt-dlp --force-overwrites 'URL'
 
 # Private Vimeo (use player URL)
-yt-dlp --concurrent-fragments 32 -o "/Users/henrychong/Library/Mobile Documents/com~apple~CloudDocs/CDRIVE/%(title)s.%(ext)s" 'https://player.vimeo.com/video/{VIDEO_ID}?h={PRIVACY_HASH}'
+yt-dlp --concurrent-fragments 32 -o "~/Downloads/%(title)s.%(ext)s" 'https://player.vimeo.com/video/{VIDEO_ID}?h={PRIVACY_HASH}'
 ```
