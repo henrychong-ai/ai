@@ -1,22 +1,31 @@
 ---
 name: instruction-creator
-description: This skill should be used for quick reference and guidance about instruction files (agents, skills, slash commands, MCP servers, project instructions). Use for questions about YAML frontmatter format, agent-vs-skill decisions, model configuration options, templates, and best practices. Provides 5-step skill creation workflow reference, tooling scripts (init_skill.py, package_skill.py, quick_validate.py), and decision matrices. Triggers: "YAML frontmatter", "agent vs skill", "model configuration", "instruction template", "what format", "how do I structure", "skill workflow". For actual creation/implementation of instruction files, use the instruction-creator agent instead.
+description: This skill should be used for quick reference and guidance about instruction files (agents, skills, slash commands, MCP servers, project instructions). Use for questions about YAML frontmatter format, agent-vs-skill decisions, model configuration options, templates, best practices, context fork/agent fields, hooks in frontmatter, and cross-platform skill conversion. Provides 5-step skill creation workflow, conversion scripts (convert_to_claudeai.py), and decision matrices. Triggers: "YAML frontmatter", "agent vs skill", "model configuration", "instruction template", "what format", "how do I structure", "skill workflow", "convert skill", "cross-platform", "context fork", "hooks frontmatter", "user-invocable", "disable-model-invocation". For actual creation/implementation of instruction files, use the instruction-creator agent instead.
 ---
 
 # Instruction Creator Skill
 
 This skill provides complete guidance for creating and reviewing Claude instruction files across the entire instruction ecosystem.
 
-## About Instruction Files
+**Updated:** 2026-01-13 (Claude Code v2.1.3+)
 
-Claude instruction files extend Claude's capabilities through specialized instructions. Understanding when to use each type is critical for effective system design.
+## Skills & Slash Commands Merge (v2.1.3)
 
-### Instruction File Types
+As of Claude Code v2.1.3, **skills and slash commands have been merged** under a unified `Skill` tool:
+
+- Both handled by the same underlying mechanism
+- Skills visible in `/` menu by default (opt-out with `user-invocable: false`)
+- Both can use `context: fork` and `agent` fields for isolated execution
+- **Distinction is now purely organizational:**
+  - **Skills**: Directory structure (SKILL.md + bundled resources)
+  - **Commands**: Single .md files for quick prompts
+
+## Instruction File Types
 
 | Type | Location | Purpose | Invocation |
 |------|----------|---------|------------|
 | **Agents** | `~/.claude/agents/*.md` | Autonomous domain specialists | Auto-trigger or Task tool |
-| **Skills** | `~/.claude/skills/*/SKILL.md` | Bundled knowledge packages | "use skill [name]" |
+| **Skills** | `~/.claude/skills/*/SKILL.md` | Bundled knowledge packages | `/skill-name` or `Skill` tool |
 | **Commands** | `~/.claude/commands/*.md` | Natural language prompts | `/command-name` |
 | **Project** | `project-instructions.md` | Business context | Auto-loaded per project |
 
@@ -24,28 +33,42 @@ Claude instruction files extend Claude's capabilities through specialized instru
 
 Agents are autonomous domain specialists with proactive operation capabilities.
 
-### Agent YAML Frontmatter (Required)
+### Agent YAML Frontmatter
 
+**Required fields:**
 ```yaml
 ---
 name: agent-name                    # Required: kebab-case identifier
 description: Brief description...   # Required: include "Use PROACTIVELY" for auto-trigger
-model: sonnet                       # Required: use aliases (opus/sonnet/haiku)
 ---
 ```
 
-**Model Configuration**:
+**Optional fields:**
+```yaml
+---
+model: sonnet                       # opus/sonnet/haiku/inherit (default: sonnet)
+tools: Read, Grep, Glob, Bash       # Tools agent can use (inherits all if omitted)
+disallowedTools: Write, Edit        # Tools to explicitly deny
+permissionMode: default             # default|acceptEdits|dontAsk|bypassPermissions|plan
+skills: pr-review, security-check   # Skills to auto-load into agent context
+hooks:                              # Lifecycle hooks (see Hooks section)
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "./validate.sh"
+---
+```
+
+### Model Configuration
+
 - **Use aliases**: `opus`, `sonnet`, `haiku` (automatically use latest version)
-- **Model selection analysis** - For each agent, analyze:
-  - Complexity level (simple patterns vs multi-step reasoning)
-  - Decision-making needs (rule-based vs judgment-based)
-  - Performance needs (speed-critical vs quality-critical)
+- **`inherit`**: Inherit model from parent conversation
+- **Priority order**: Task tool override → Agent YAML → Inherit → System default
 - **Model capabilities**:
-  - `opus`: Complex reasoning, strategic analysis, nuanced judgment, multi-step workflows
-  - `sonnet`: General-purpose capability, balanced performance, most technical tasks
-  - `haiku`: Fast responses, simple patterns, rule-based operations, high-volume tasks
-- **Priority order**: Task tool override → Agent YAML → Inherit from parent → System default
-- **Override at invocation**: Can specify different model via Task tool `model` parameter
+  - `opus`: Complex reasoning, strategic analysis, multi-step workflows
+  - `sonnet`: General-purpose, balanced performance, technical tasks
+  - `haiku`: Fast responses, simple patterns, high-volume tasks
 
 ### Agent Template Structure
 
@@ -53,7 +76,7 @@ model: sonnet                       # Required: use aliases (opus/sonnet/haiku)
 ---
 name: agent-name
 description: [Specialization]. [Capabilities]. Use PROACTIVELY for [triggers].
-model: sonnet  # analyze task needs: opus (complex), sonnet (balanced), haiku (fast)
+model: sonnet
 ---
 
 # **AGENT NAME: SPECIALIZED PURPOSE**
@@ -70,18 +93,7 @@ model: sonnet  # analyze task needs: opus (complex), sonnet (balanced), haiku (f
 
 ## OPERATIONAL PROTOCOLS
 [Workflows, tool usage, MCP token strategies]
-
-## SUCCESS METRICS
-[Measurement and evolution criteria]
 ```
-
-### Agent Key Requirements
-
-- **TodoWrite capability**: Essential for complex multi-step workflows
-- **MCP token strategies**: Include explicit 25000 token limit mitigation
-- **Escalation criteria**: Define when to escalate to human review
-- **"Use PROACTIVELY"**: Include in description for auto-triggering
-- **Model selection**: Use aliases (`opus`/`sonnet`/`haiku`) - analyze task needs for optimal choice
 
 ## Creating Skills
 
@@ -89,59 +101,66 @@ Skills are specialized knowledge packages with bundled resources using progressi
 
 ### 5-Step Skill Creation Process
 
-#### Step 1: Understand the Skill
+1. **Understand**: Clarify problem, triggers, success criteria, edge cases
+2. **Name**: kebab-case, max 64 characters
+3. **Description**: Third-person voice, concrete verbs, trigger terms (CRITICAL)
+4. **Instructions**: Clear hierarchy with examples and error handling
+5. **Package/Test**: Use validation scripts
 
-Clarify what problem the skill solves with concrete examples:
-- What functionality should this skill support?
-- What would a user say that should trigger this skill?
-- What are the success criteria?
-- What are the edge cases?
+### Skill YAML Frontmatter
 
-#### Step 2: Write the Name
-
-- Format: lowercase with hyphens (kebab-case)
-- Maximum: 64 characters
-- Examples: `pdf-editor`, `travel-planner`, `compliance-reviewer`
-
-#### Step 3: Write the Description (CRITICAL)
-
-The description determines when the skill activates. Include:
-- **What it does**: Concrete verbs and capabilities
-- **When to use it**: Specific triggers and use cases
-- **Third-person voice**: "This skill should be used when..."
-- **Maximum**: 1024 characters
-
-**Pattern:**
-```
-This skill should be used when [use cases]. [Capabilities summary]. [Special triggers if any].
-```
-
-**Example:**
+**Required fields:**
 ```yaml
-description: This skill should be used when working with PDFs for extraction, creation, merging, splitting, or form handling. Provides scripts for rotation, compression, and text extraction.
+---
+name: skill-name                    # Required: kebab-case, max 64 chars
+description: This skill should...   # Required: third-person voice, max 1024 chars
+---
 ```
 
-#### Step 4: Write Main Instructions
-
-Structure with clear hierarchy:
-1. Overview and purpose
-2. Prerequisites
-3. Execution steps with examples
-4. Error handling
-5. Limitations
-
-**Writing Style**: Use imperative/infinitive form (verb-first), objective instructional language.
-
-#### Step 5: Package and Test
-
-Run validation and packaging scripts:
-```bash
-# Quick validation
-scripts/quick_validate.py ~/.claude/skills/your-skill
-
-# Full packaging
-scripts/package_skill.py ~/.claude/skills/your-skill
+**Optional fields:**
+```yaml
+---
+allowed-tools: Read, Grep, Glob     # Tools without permission prompts
+model: sonnet                       # Model override
+context: fork                       # Run in isolated sub-agent context
+agent: Explore                      # Agent type when context: fork is set
+user-invocable: true                # Show in /menu (default: true)
+disable-model-invocation: false     # Prevent Skill tool from calling (default: false)
+hooks:                              # Lifecycle hooks
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "./validate.sh"
+          once: true                # Run once per session, then removed
+---
 ```
+
+### Context Fork Feature
+
+Use `context: fork` to run skills in an **isolated sub-agent context**:
+
+```yaml
+---
+name: code-analyzer
+description: Analyze code patterns and generate reports
+context: fork          # Isolated execution
+agent: Explore         # Use fast read-only agent
+---
+```
+
+**When to use `context: fork`:**
+- Verbose output (test runs, large file analysis)
+- Multi-step operations that would clutter context
+- Complex workflows where only the summary matters
+
+**Agent options for `context: fork`:**
+| Agent | Model | Tools | Use Case |
+|-------|-------|-------|----------|
+| `Explore` | Haiku | Read-only | Fast analysis, file discovery |
+| `Plan` | Sonnet | Read-only | Research before planning |
+| `general-purpose` | Sonnet | All | Complex tasks with edits |
+| Custom agent | Per config | Per config | Domain-specific work |
 
 ### Skill Directory Structure
 
@@ -151,88 +170,40 @@ skill-name/
 │   ├── YAML frontmatter (name, description - required)
 │   └── Markdown instructions
 └── Bundled Resources (optional)
-    ├── scripts/    - Executable code for deterministic operations
-    ├── references/ - Documentation loaded as needed
-    └── assets/     - Files used in output (templates, icons)
+    ├── references/ - Documentation loaded as needed (DEFAULT)
+    ├── scripts/    - Executable code
+    ├── templates/  - Variable substitution files
+    └── assets/     - Static files
 ```
 
-### Skill YAML Frontmatter (Required)
+### Visibility Controls
 
-```yaml
----
-name: skill-name                    # Required: kebab-case, max 64 chars
-description: This skill should...   # Required: third-person voice, max 1024 chars
----
-```
-
-Optional:
-```yaml
-allowed-tools: Read, Grep, Glob     # Optional: restrict tool access
-```
-
-### Progressive Disclosure Design
-
-Skills use three-level loading for token efficiency:
-
-1. **Metadata** (~100 tokens) - Always in context
-2. **SKILL.md body** (<5k tokens) - When skill triggers
-3. **Bundled resources** - As needed by Claude
-
-**Best Practice**: Keep SKILL.md lean; move detailed reference material to `references/` subdirectory.
-
-### Bundled Resources
-
-#### scripts/
-Executable code for deterministic operations that would otherwise be rewritten repeatedly.
-- **When to include**: Code needed for consistent, reliable execution
-- **Benefits**: Token efficient, deterministic, may execute without loading into context
-
-#### references/
-Documentation loaded as needed into context.
-- **When to include**: Detailed guides, schemas, API docs, company policies
-- **Best practice**: If files are large (>10k words), include grep patterns in SKILL.md
-- **Avoid duplication**: Info in either SKILL.md OR references, not both
-
-#### assets/
-Files not loaded into context but used in output.
-- **When to include**: Templates, images, boilerplate code, fonts
-- **Examples**: Brand logos, PowerPoint templates, HTML scaffolds
-
-### Script Usage
-
-Initialize a new skill:
-```bash
-scripts/init_skill.py skill-name --path ~/.claude/skills/
-```
-
-Validate a skill:
-```bash
-scripts/quick_validate.py ~/.claude/skills/skill-name
-```
-
-Package for distribution:
-```bash
-scripts/package_skill.py ~/.claude/skills/skill-name
-```
-
-### Testing Skills (3 Scenarios)
-
-1. **Normal operations**: Typical requests - should handle perfectly
-2. **Edge cases**: Unusual inputs - should degrade gracefully
-3. **Out-of-scope**: Related but distinct tasks - skill should NOT activate
+| Field | Effect |
+|-------|--------|
+| `user-invocable: false` | Hide from /menu, still allows auto-discovery and Skill tool |
+| `disable-model-invocation: true` | Block programmatic invocation via Skill tool |
 
 ## Creating Slash Commands
 
-Slash commands are natural language instruction prompts (NOT executable code) that Claude interprets.
+Slash commands are natural language instruction prompts (NOT executable code).
 
-### Command YAML Frontmatter (Optional)
+### Command YAML Frontmatter (All Optional)
 
 ```yaml
 ---
-allowed-tools: Bash(git:*), Read    # Optional: restrict tool access
-argument-hint: [pr-number] [assignee]  # Optional: guide expected parameters
-description: Brief command purpose  # Optional: command summary
-model: sonnet                       # Optional: use aliases (opus/sonnet/haiku)
+description: Brief command purpose
+allowed-tools: Bash(git:*), Read
+argument-hint: [pr-number] [priority]
+model: sonnet
+context: fork                       # Run in forked sub-agent context
+agent: Explore                      # Agent type when context: fork
+disable-model-invocation: false     # Prevent Skill tool from calling
+hooks:                              # Lifecycle hooks
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "./validate.sh"
 ---
 ```
 
@@ -240,9 +211,9 @@ model: sonnet                       # Optional: use aliases (opus/sonnet/haiku)
 
 ```markdown
 ---
-allowed-tools: Tool(specific-commands)  # Optional
-argument-hint: [format]                 # Optional
-description: Brief command purpose      # Optional
+allowed-tools: Tool(specific-commands)
+argument-hint: [format]
+description: Brief command purpose
 ---
 
 # Natural Language Instructions for Claude
@@ -252,7 +223,6 @@ description: Brief command purpose      # Optional
 ## Input Processing
 - $ARGUMENTS represents user input (substituted by Claude Code)
 - Process $ARGUMENTS as [expected format/type]
-- Handle edge cases: [guidance]
 
 ## Tool Usage
 - Use [specific tools] to [accomplish task]
@@ -260,22 +230,38 @@ description: Brief command purpose      # Optional
 
 ## Output Requirements
 - Provide [specific format] as response
-- Include [specific elements] in output
 ```
 
-### $ARGUMENTS Handling
+## Hooks in Frontmatter
 
-```markdown
-# All arguments as single string
-Fix issue #$ARGUMENTS following our standards
-# Usage: /fix 123 high-priority → $ARGUMENTS = "123 high-priority"
+Skills, Agents, and Commands all support lifecycle hooks:
 
-# Positional arguments
-Review PR #$1 with priority $2
-# Usage: /review 456 high → $1 = "456", $2 = "high"
+### Supported Events
+
+| Event | Purpose |
+|-------|---------|
+| `PreToolUse` | Before tool execution, can block or modify |
+| `PostToolUse` | After tool completes successfully |
+| `Stop` | When component finishes |
+
+**Note:** For agents, `Stop` hooks become `SubagentStop` events.
+
+### Hook Syntax
+
+```yaml
+hooks:
+  PreToolUse:
+    - matcher: "Bash"           # Tool pattern (regex supported)
+      hooks:
+        - type: command
+          command: "./script.sh"
+          once: true            # Skills/Commands only, not Agents
+  PostToolUse:
+    - matcher: "Edit|Write"
+      hooks:
+        - type: command
+          command: "./lint.sh"
 ```
-
-**Critical Understanding**: Commands are instruction prompts, not programs. Success depends on instruction clarity, not code implementation.
 
 ## Agent vs Skill Decision Matrix
 
@@ -285,101 +271,100 @@ Review PR #$1 with priority $2
 - Proactive operation with auto-triggering needed
 - Complex autonomous decision-making required
 - Multi-step workflows requiring TodoWrite
-- Integration with business context via project references
 - Domain specialist needing continuous operation
 
 **Use Skill When:**
-- Explicit invocation preferred ("use skill [name]")
-- Bundled resources needed (scripts, references, assets)
-- Progressive disclosure valuable (load resources as needed)
-- Specialized knowledge with reusable components
+- Explicit invocation preferred (`/skill-name`)
+- Bundled resources needed (references, scripts)
+- Progressive disclosure valuable
 - Token efficiency through optional resource loading
 
 **Use Command When:**
 - Simple, single-step operations
 - Natural language instructions sufficient
-- No complex decision-making needed
 - Quick user-triggered workflows
 
-**Use Both (Agent + Skill) When:**
-- Complex domain benefits from both proactive and explicit invocation
-- Need business integration (agent) + reusable resources (skill)
-- Want automatic monitoring + manual deep-dive capability
-
-**Same-Named Skill/Agent Pairs** - Differentiate triggers to avoid overlap:
-- **Skill triggers**: Question words (what, how, which), reference terms (format, template, best practice)
-- **Agent triggers**: Action words (create, build, update, implement, review)
-- **Key principle**: Skills answer "what/how" questions; Agents execute "do this" requests
-- See `references/agent-vs-skill-decision-guide.md` for full patterns and examples
+**Use `context: fork` When:**
+- Skill/command produces verbose output
+- Complex multi-step operations
+- Want isolated context for cleaner main conversation
 
 ### Summary Table
 
 | Feature | Agent | Skill | Command |
 |---------|-------|-------|---------|
-| **Auto-Trigger** | Yes (semantic + "Use PROACTIVELY") | Yes (semantic matching) | No (manual only) |
-| **Autonomous Delegation** | Yes | No | No |
+| **Auto-Trigger** | Yes | Yes | No |
 | **Bundled Resources** | No | Yes | No |
 | **TodoWrite** | Yes | No | No |
-| **Business Context** | Yes | No | No |
+| **context: fork** | N/A | Yes | Yes |
 | **Token Efficiency** | Lower | Higher | Highest |
 | **File Structure** | Single | Multi-file | Single |
 
-**Auto-Trigger Clarification:**
-- **Skills**: Auto-trigger when Claude's semantic evaluation matches the description to user intent
-- **Agents**: Auto-trigger via semantic matching PLUS "Use PROACTIVELY" signals Claude to delegate autonomously
-- **Commands**: Manual invocation only (user must explicitly type /command-name)
-
 ## YAML Frontmatter Quick Reference
 
-### Agent (Required)
+### Agent (Required: name, description)
 ```yaml
 ---
 name: agent-name
 description: [Specialization]. Use PROACTIVELY for [triggers].
-model: sonnet  # Use aliases (opus/sonnet/haiku) - analyze task needs
+model: sonnet
+tools: Read, Grep, Glob, Bash
+disallowedTools: Write, Edit
+permissionMode: default
+skills: skill-a, skill-b
+hooks: {...}
 ---
 ```
 
-### Skill (Required)
+### Skill (Required: name, description)
 ```yaml
 ---
 name: skill-name
 description: This skill should be used when [use cases].
+allowed-tools: Read, Grep
+model: sonnet
+context: fork
+agent: Explore
+user-invocable: true
+disable-model-invocation: false
+hooks: {...}
 ---
 ```
 
-### Command (Optional)
+### Command (All Optional)
 ```yaml
 ---
+description: Brief purpose
 allowed-tools: Tool(commands)
 argument-hint: [format]
-description: Brief purpose
+model: sonnet
+context: fork
+agent: general-purpose
+disable-model-invocation: false
+hooks: {...}
 ---
 ```
 
 ## Review Checklist
 
 ### For Agents
-- [ ] YAML front matter complete (name, description, model)
+- [ ] YAML: name, description (model optional but recommended)
 - [ ] Description includes "Use PROACTIVELY" if appropriate
-- [ ] Model set using aliases (opus/sonnet/haiku) based on task analysis
+- [ ] Model uses aliases (opus/sonnet/haiku)
 - [ ] TodoWrite capability for complex operations
 - [ ] MCP token limit strategies defined
-- [ ] Escalation criteria clear
 
 ### For Skills
-- [ ] YAML front matter complete (name, description)
+- [ ] YAML: name, description (required)
 - [ ] Description uses third-person voice
 - [ ] Description includes trigger terms
-- [ ] SKILL.md uses imperative/infinitive form
+- [ ] If using `agent` field, ensure `context: fork` is set
 - [ ] Bundled resources properly organized
-- [ ] References not duplicated in SKILL.md
 
 ### For Commands
-- [ ] Natural language instructions clear and actionable
+- [ ] Natural language instructions clear
 - [ ] Tool usage patterns specified
-- [ ] $ARGUMENTS handling described
-- [ ] Output requirements defined
+- [ ] If using `agent` field, ensure `context: fork` is set
 
 ## MCP Token Limits
 
@@ -389,19 +374,16 @@ description: Brief purpose
 - Use pagination and filtering
 - Divide and conquer (smaller chunks)
 - Smart search over broad retrieval
-- Time-based chunking
 - Never use full dataset dumps
 
 ## Platform Considerations
 
 ### Claude Desktop Path Requirements
 
-Claude Desktop requires full executable paths (runs in sandbox without PATH):
+Claude Desktop requires full executable paths (runs in sandbox):
 
 ```bash
-# Find full path
 which npx        # Returns: /opt/homebrew/bin/npx
-which uv         # Returns: /Users/username/.local/bin/uv
 
 # Use in config
 "command": "/opt/homebrew/bin/npx"   # Correct
@@ -411,7 +393,7 @@ which uv         # Returns: /Users/username/.local/bin/uv
 ## When to Use Skill vs Agent
 
 **Use this skill (instruction-creator):**
-- Quick reference for templates
+- Quick reference for templates and frontmatter
 - Creating a single instruction file
 - Agent vs skill decision guidance
 - Reviewing existing files
@@ -419,13 +401,22 @@ which uv         # Returns: /Users/username/.local/bin/uv
 **Use instruction-creator agent:**
 - Creating multiple related instruction files
 - System-wide instruction optimization
-- Complex architectural decisions across files
+- Complex architectural decisions
 - Team distribution preparation (sanitization)
 - MCP setup guide creation
 
 ## References
 
-Detailed guides available in `references/` subdirectory:
-- **agent-vs-skill-decision-guide.md**: Complete decision matrix with examples
-- **yaml-frontmatter-complete-guide.md**: All valid fields and options
+Detailed guides in `references/` subdirectory:
+- **yaml-frontmatter-complete-guide.md**: All valid fields and options (COMPREHENSIVE)
+- **agent-vs-skill-decision-guide.md**: Complete decision matrix
 - **common-instruction-patterns.md**: Proven structures and templates
+- **cross-platform-conversion-guide.md**: Claude Code → Claude.ai conversion
+
+## Scripts
+
+Utility scripts in `scripts/` subdirectory:
+- **init_skill.py**: Initialize a new skill directory structure
+- **package_skill.py**: Package skill for distribution
+- **quick_validate.py**: Validate skill structure and YAML
+- **convert_to_claudeai.py**: Convert Claude Code skill to Claude.ai format

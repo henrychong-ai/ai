@@ -1,6 +1,20 @@
 # YAML Frontmatter Complete Guide
 
 **Comprehensive reference for all instruction file YAML frontmatter fields**
+**Updated: 2026-01-13 (Claude Code v2.1.3+)**
+
+---
+
+## Skills & Slash Commands Merge (v2.1.3)
+
+As of Claude Code v2.1.3, **skills and slash commands have been merged** under a unified `Skill` tool. This simplifies the mental model with no change in actual behavior:
+
+- Both are now handled by the same underlying mechanism
+- Skills are visible in the `/` menu by default (opt-out with `user-invocable: false`)
+- Both can use `context: fork` and `agent` fields for isolated execution
+- The distinction is now purely organizational:
+  - **Skills**: Directory structure with SKILL.md + bundled resources
+  - **Slash Commands**: Single .md files for quick prompts
 
 ---
 
@@ -8,83 +22,121 @@
 
 **Location:** `~/.claude/agents/*.md`
 
-**Required Fields:**
+### Complete Field Reference
+
 ```yaml
 ---
 name: agent-name                    # Required: kebab-case identifier
 description: Brief description...   # Required: specialization + when to use
-model: sonnet-4.5                   # Required: claude model version
+model: sonnet                       # Optional: use aliases (opus/sonnet/haiku/inherit)
+tools: Read, Grep, Glob, Bash       # Optional: tools agent can use (inherits all if omitted)
+disallowedTools: Write, Edit        # Optional: tools to explicitly deny
+permissionMode: default             # Optional: default|acceptEdits|dontAsk|bypassPermissions|plan
+skills: pr-review, security-check   # Optional: skills to auto-load into agent context
+hooks:                              # Optional: lifecycle hooks scoped to agent
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "./validate.sh"
+  PostToolUse:
+    - matcher: "Edit|Write"
+      hooks:
+        - type: command
+          command: "./lint.sh"
+  Stop:
+    - hooks:
+        - type: command
+          command: "./cleanup.sh"
 ---
 ```
 
-**Field Specifications:**
+### Field Specifications
 
-### `name` (Required)
+#### `name` (Required)
 - **Format:** kebab-case (lowercase with hyphens)
 - **Purpose:** Agent identifier, must match filename
-- **Examples:** `compliance-officer`, `typescript`, `things`
-- **Rules:** No spaces, no underscores, descriptive
+- **Examples:** `compliance-officer`, `typescript`, `code-reviewer`
+- **Rules:** No spaces, no underscores, max 64 characters
 
-### `description` (Required)
+#### `description` (Required)
 - **Format:** Single paragraph, 1-3 sentences
 - **Purpose:** Agent capabilities and when to use
-- **Include:** Specialization, use cases, proactive guidance
 - **Pattern:** "[Specialization]. [Capabilities]. Use PROACTIVELY for [triggers]."
 - **Examples:**
   - `"TypeScript specialist with advanced type system mastery. Use PROACTIVELY for fintech TypeScript optimization."`
-  - `"Compliance expert for regulatory requirements. Use PROACTIVELY for compliance queries."`
+  - `"Code review expert. Reviews for quality, security, maintainability. Use PROACTIVELY for PR reviews."`
 
-### `model` (Required)
-- **Format:** Model identifier string (aliases or full IDs)
-- **Purpose:** Specifies Claude model to use for agent execution
-- **Recommended:** Use aliases for automatic version updates
+#### `model` (Optional)
+- **Format:** Model alias or full ID
+- **Purpose:** Specifies Claude model for agent execution
+- **Values:** `opus`, `sonnet`, `haiku`, `inherit` (from parent)
+- **Default:** `sonnet` if not specified
+- **Best Practice:** Use aliases for automatic version updates
 
-**Model Aliases** (recommended):
-- `opus` - Latest Opus model (strategic analysis, compliance, legal, complex multi-step reasoning)
-- `sonnet` - Latest Sonnet model (code development, technical tasks, balanced capability) **[DEFAULT]**
-- `haiku` - Latest Haiku model (fast operations, simple tasks, speed-optimized)
+**Priority Order:**
+1. Task tool `model` parameter (explicit override)
+2. Agent YAML `model` field
+3. `inherit` from parent conversation
+4. System default (sonnet)
 
-**Full Model IDs** (version-specific):
-- `claude-opus-4-5` - Opus 4.5 (specific version)
-- `claude-sonnet-4-5` - Sonnet 4.5 (specific version)
-- `claude-haiku-4-5` - Haiku 4.5 (specific version)
+#### `tools` (Optional)
+- **Format:** Comma-separated string or YAML list
+- **Purpose:** Specify which tools the agent can use
+- **Default:** Inherits all tools if omitted
+- **Examples:**
+  ```yaml
+  tools: Read, Grep, Glob, Bash
+  # or YAML list:
+  tools:
+    - Read
+    - Grep
+    - Glob
+    - Bash
+  ```
 
-**Priority Order** (highest to lowest):
-1. **Task tool `model` parameter** - Explicit override at invocation time
-2. **Agent YAML `model` field** - Default specified in agent file
-3. **Inherit from parent** - If neither specified, inherits from calling conversation
-4. **System default** - Sonnet 4.5 if nothing else specified
+#### `disallowedTools` (Optional)
+- **Format:** Comma-separated string or YAML list
+- **Purpose:** Explicitly deny specific tools (removed from inherited or specified list)
+- **Examples:**
+  ```yaml
+  disallowedTools: Write, Edit
+  # or:
+  disallowedTools:
+    - Write
+    - Edit
+  ```
 
-**Built-in Agent Defaults**:
-- Explore: `haiku` (fast searches and information gathering)
-- Plan: `sonnet` (capable analysis and planning)
-- General-Purpose: `sonnet` (complex reasoning and execution)
-- claude-code-guide: `haiku` (quick documentation lookups)
+#### `permissionMode` (Optional)
+- **Format:** String enum
+- **Purpose:** Set permission mode for agent execution
+- **Values:**
+  - `default` - Standard permission prompts
+  - `acceptEdits` - Auto-accept file edits
+  - `dontAsk` - Skip most permission prompts
+  - `bypassPermissions` - Skip all permission checks
+  - `plan` - Plan mode (read-only research)
+- **Default:** `default`
 
-**Model Selection Guidance**:
-- **Use `opus`**: Strategic analysis, regulatory compliance, legal review, complex architectural decisions requiring deep multi-step reasoning
-- **Use `sonnet`**: Code development, technical tasks, general problem-solving, balanced capability (recommended default for most agents)
-- **Use `haiku`**: Fast operations, simple tasks, quick lookups, speed-optimized workflows
+#### `skills` (Optional)
+- **Format:** Comma-separated string or YAML list
+- **Purpose:** Skills to load into agent context at startup (full content injected)
+- **Note:** Different from tools - these are skills whose instructions become part of agent context
+- **Examples:**
+  ```yaml
+  skills: pr-review, security-check
+  # or:
+  skills:
+    - pr-review
+    - security-check
+  ```
 
-**Best Practices**:
-- **Use aliases** (`opus`, `sonnet`, `haiku`) not version numbers - aliases automatically use latest model version
-- **No maintenance needed** - aliases update automatically when new model versions released
-- **Choose based on complexity** - match model capability to task requirements
-- **Team agents** - consider using `sonnet` as default for broader accessibility (Pro plan users lack Opus access)
-
-**Override at Invocation** (Task tool example):
-```xml
-<invoke name="Task">
-  <parameter name="subagent_type">my-agent</parameter>
-  <parameter name="model">haiku</parameter>  <!-- Overrides agent's default -->
-  <parameter name="prompt">Task description</parameter>
-</invoke>
-```
-
-**Accessibility Considerations**:
-- **Pro plan users** - Cannot access Opus models
-- **Fallback behavior** - If agent specifies `model: opus` but user lacks access, fallback behavior may be inconsistent (may error or fallback to Sonnet)
-- **Team agents** - For shared/team agents, use `sonnet` as default to ensure broad accessibility across all plan types
+#### `hooks` (Optional)
+- **Format:** YAML object with hook events
+- **Purpose:** Define lifecycle hooks scoped to agent
+- **Supported Events:** `PreToolUse`, `PostToolUse`, `Stop`
+- **Note:** `Stop` hooks are automatically converted to `SubagentStop` events for agents
+- **See:** Hooks Reference section below
 
 ---
 
@@ -92,30 +144,103 @@ model: sonnet-4.5                   # Required: claude model version
 
 **Location:** `~/.claude/skills/*/SKILL.md`
 
-**Required Fields:**
+### Complete Field Reference
+
 ```yaml
 ---
 name: skill-name                    # Required: kebab-case identifier
 description: This skill should...   # Required: third-person usage description
+allowed-tools: Read, Grep, Glob     # Optional: tools Claude can use without permission
+model: sonnet                       # Optional: model override for skill execution
+context: fork                       # Optional: run in isolated sub-agent context
+agent: Explore                      # Optional: agent type when context: fork (requires context: fork)
+user-invocable: true                # Optional: show in /menu (default: true)
+disable-model-invocation: false     # Optional: prevent Skill tool from calling (default: false)
+hooks:                              # Optional: lifecycle hooks scoped to skill
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "./validate.sh"
+          once: true
 ---
 ```
 
-**Field Specifications:**
+### Field Specifications
 
-### `name` (Required)
+#### `name` (Required)
 - **Format:** kebab-case (lowercase with hyphens)
 - **Purpose:** Skill identifier, matches parent directory name
 - **Examples:** `pdf`, `xlsx`, `travel`, `instruction-creator`
-- **Rules:** No spaces, no underscores, descriptive
+- **Rules:** No spaces, no underscores, max 64 characters
 
-### `description` (Required)
-- **Format:** Third-person voice, 1-3 sentences
-- **Purpose:** What skill does and when to use it
+#### `description` (Required)
+- **Format:** Third-person voice, 1-3 sentences, max 1024 chars
+- **Purpose:** What skill does and when to use it (Claude uses this for auto-discovery)
 - **Pattern:** "This skill should be used when [use cases]. [Capabilities]. [Special triggers]."
+- **Voice:** Always third-person ("This skill should be used when...")
+
+#### `allowed-tools` (Optional)
+- **Format:** Comma-separated string or YAML list
+- **Purpose:** Tools Claude can use without asking permission when skill is active
 - **Examples:**
-  - `"This skill should be used when creating or reviewing Claude instruction files. Expert guidance on CCUP architecture."`
-  - `"This skill should be used when working with PDFs for extraction, creation, merging, or form handling."`
-- **Voice:** Always third-person (not "Use this skill...")
+  ```yaml
+  allowed-tools: Read, Grep, Glob
+  # or with patterns:
+  allowed-tools: Bash(python:*), Bash(git:*)
+  # or YAML list:
+  allowed-tools:
+    - Read
+    - Grep
+    - Glob
+    - Bash(python:*)
+  ```
+
+#### `model` (Optional)
+- **Format:** Model alias or full ID
+- **Purpose:** Override model when skill is active
+- **Values:** `opus`, `sonnet`, `haiku`
+
+#### `context` (Optional)
+- **Format:** String
+- **Purpose:** Set to `fork` to run skill in isolated sub-agent context
+- **Value:** `fork` (only valid value)
+- **Benefits:**
+  - Keeps verbose output in separate context
+  - Enables complex workflows without cluttering main conversation
+  - Only summary/result returned to main conversation
+
+#### `agent` (Optional)
+- **Format:** Agent type identifier
+- **Purpose:** Specify which agent type to use when `context: fork` is set
+- **Requirement:** Only works when `context: fork` is also set
+- **Values:**
+  - `Explore` - Fast read-only analysis (Haiku)
+  - `Plan` - Research and planning (Sonnet)
+  - `general-purpose` - Full capability (Sonnet)
+  - Custom agent name from `~/.claude/agents/`
+- **Default:** `general-purpose` if not specified
+
+#### `user-invocable` (Optional)
+- **Format:** Boolean
+- **Purpose:** Controls whether skill appears in `/` slash command menu
+- **Values:** `true` (default) or `false`
+- **Note:** Setting to `false` hides from menu but still allows:
+  - Automatic discovery based on description
+  - Programmatic invocation via `Skill` tool
+
+#### `disable-model-invocation` (Optional)
+- **Format:** Boolean
+- **Purpose:** Prevents the `Skill` tool from calling this skill programmatically
+- **Values:** `true` or `false` (default)
+- **Use Case:** Skills that should only be manually invoked
+
+#### `hooks` (Optional)
+- **Format:** YAML object with hook events
+- **Purpose:** Define lifecycle hooks scoped to skill
+- **Supported Events:** `PreToolUse`, `PostToolUse`, `Stop`
+- **Special:** Supports `once: true` option (runs hook once per session, then removed)
+- **See:** Hooks Reference section below
 
 ---
 
@@ -123,51 +248,149 @@ description: This skill should...   # Required: third-person usage description
 
 **Location:** `~/.claude/commands/*.md`
 
-**All Fields Optional** (organizational metadata only)
+### Complete Field Reference
 
-**Optional Fields:**
 ```yaml
 ---
-allowed-tools: Tool(specific-commands)  # Optional: restrict tool access
-argument-hint: [format]                 # Optional: guide argument format
 description: Brief command purpose      # Optional: command description
-model: sonnet-4.5                       # Optional: specific model
+allowed-tools: Bash(git:*), Read        # Optional: restrict tool access
+argument-hint: [pr-number] [priority]   # Optional: guide expected parameters
+model: sonnet                           # Optional: specific model
+context: fork                           # Optional: run in forked sub-agent context
+agent: Explore                          # Optional: agent type when context: fork
+disable-model-invocation: false         # Optional: prevent Skill tool from calling
+hooks:                                  # Optional: lifecycle hooks
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "./validate.sh"
+          once: true
 ---
 ```
 
-**Field Specifications:**
+### Field Specifications
 
-### `allowed-tools` (Optional)
-- **Format:** Tool name pattern string
+#### `description` (Optional)
+- **Format:** Brief sentence
+- **Purpose:** Organizational metadata shown in command help
+- **Examples:** `"Create a git commit"`, `"Search knowledge graph"`
+
+#### `allowed-tools` (Optional)
+- **Format:** Tool name pattern string or YAML list
 - **Purpose:** Restricts which tools command can use
 - **Examples:**
-  - `"Tool(read, write)"` - Only Read and Write tools
-  - `"Tool(bash:git)"` - Only git bash commands
-  - `"Tool(mcp__kg)"` - Only KG MCP tools
-- **Use When:** Security or scope restriction needed
+  ```yaml
+  allowed-tools: Bash(git:*), Read
+  # or YAML list:
+  allowed-tools:
+    - Bash(git:*)
+    - Read
+    - Write
+  ```
 
-### `argument-hint` (Optional)
+#### `argument-hint` (Optional)
 - **Format:** Free-text hint string
-- **Purpose:** Guide users on expected argument format
-- **Examples:**
-  - `"[city]"` - Single city name expected
-  - `"[file.pdf]"` - PDF file path expected
-  - `"[query] or leave empty"` - Query or no args
-- **Display:** Shown in command help/autocomplete
+- **Purpose:** Guide users on expected argument format (shown in autocomplete)
+- **Examples:** `"[city]"`, `"[pr-number] [priority] [assignee]"`
 
-### `description` (Optional)
-- **Format:** Brief sentence describing command purpose
-- **Purpose:** Organizational metadata for command listing
-- **Examples:**
-  - `"Search knowledge graph for entities"`
-  - `"Generate PRD for project"`
-  - `"Sync configuration files across platforms"`
-
-### `model` (Optional)
-- **Format:** Model identifier string
+#### `model` (Optional)
+- **Format:** Model alias or full ID
 - **Purpose:** Override default model for command
-- **Recommended:** `sonnet-4.5`
-- **Use When:** Specific model requirements (cost, speed, capability)
+- **Values:** `opus`, `sonnet`, `haiku`
+
+#### `context` (Optional)
+- **Format:** String
+- **Purpose:** Set to `fork` to run command in isolated sub-agent context
+- **Value:** `fork`
+
+#### `agent` (Optional)
+- **Format:** Agent type identifier
+- **Purpose:** Specify which agent type to use when `context: fork` is set
+- **Requirement:** Only works when `context: fork` is also set
+- **Values:** `Explore`, `Plan`, `general-purpose`, or custom agent name
+- **Default:** `general-purpose`
+
+#### `disable-model-invocation` (Optional)
+- **Format:** Boolean
+- **Purpose:** Prevents the `Skill` tool from calling this command programmatically
+- **Values:** `true` or `false` (default)
+
+#### `hooks` (Optional)
+- **Format:** YAML object with hook events
+- **Purpose:** Define lifecycle hooks scoped to command
+- **Supported Events:** `PreToolUse`, `PostToolUse`, `Stop`
+- **Special:** Supports `once: true` option
+- **See:** Hooks Reference section below
+
+---
+
+## Hooks Frontmatter Reference
+
+Skills, Agents, and Slash Commands all support hooks in frontmatter. Hooks are scoped to the component's lifecycle and auto-cleanup when the component finishes.
+
+### Supported Events
+
+| Event | Component Support | Purpose |
+|-------|-------------------|---------|
+| `PreToolUse` | Skills, Agents, Commands | Before tool execution, can block or modify |
+| `PostToolUse` | Skills, Agents, Commands | After tool completes successfully |
+| `Stop` | Skills, Agents, Commands | When component finishes |
+
+**Note:** For agents, `Stop` hooks are automatically converted to `SubagentStop` events.
+
+### Hook Syntax
+
+```yaml
+hooks:
+  PreToolUse:
+    - matcher: "Bash"           # Tool name pattern to match
+      hooks:
+        - type: command         # Hook type
+          command: "./script.sh" # Command to run
+          once: true            # Optional: run only once per session (Skills/Commands only)
+  PostToolUse:
+    - matcher: "Edit|Write"     # Regex pattern matching
+      hooks:
+        - type: command
+          command: "./lint.sh"
+  Stop:
+    - hooks:
+        - type: command
+          command: "./cleanup.sh"
+```
+
+### Hook Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `matcher` | string | Tool name pattern (regex supported) |
+| `type` | string | Hook type: `command` |
+| `command` | string | Shell command to execute |
+| `once` | boolean | Run hook only once per session (Skills/Commands only, not Agents) |
+
+### Examples
+
+**Validation before Bash commands:**
+```yaml
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "./scripts/validate-command.sh"
+          once: true
+```
+
+**Linting after file edits:**
+```yaml
+hooks:
+  PostToolUse:
+    - matcher: "Edit|Write"
+      hooks:
+        - type: command
+          command: "npm run lint"
+```
 
 ---
 
@@ -175,7 +398,6 @@ model: sonnet-4.5                       # Optional: specific model
 
 **Location:** Project root or docs directory
 
-**Recommended Fields:**
 ```yaml
 ---
 file_type: project_instructions     # Type identifier
@@ -187,165 +409,94 @@ token_estimate: ~4000               # Approximate token count
 ---
 ```
 
-**Field Specifications:**
+---
 
-### `file_type` (Recommended)
-- **Format:** String identifier
-- **Purpose:** Categorize instruction file type
-- **Options:** `project_instructions`, `project_index`, `global_ccup`
-- **Use:** Organization and tooling support
+## Context Fork + Agent Decision Tree
 
-### `version` (Recommended)
-- **Format:** Semantic version (X.Y or X.Y.Z)
-- **Purpose:** Track instruction file evolution
-- **Pattern:** Major.Minor.Patch
-- **Example:** `1.0`, `2.1`, `3.5.2`
+```
+Is your skill/command doing complex work?
+├─ YES: Use context: fork
+│   ├─ Read-only analysis? → agent: Explore (fast, Haiku)
+│   ├─ Complex with edits? → agent: general-purpose (full capability)
+│   └─ Specialized domain? → agent: your-custom-agent
+│
+└─ NO: Skip context: fork (run in main conversation)
+```
 
-### `last_updated` (Recommended)
-- **Format:** YYYY-MM-DD
-- **Purpose:** Track modification date
-- **Example:** `2025-10-28`
-
-### `platform_compatibility` (Recommended)
-- **Format:** String enum
-- **Purpose:** Indicate which Claude platforms supported
-- **Options:** `desktop`, `code`, `both`
-- **Use:** Platform-specific optimization guidance
-
-### `business_domain` (Recommended)
-- **Format:** Domain identifier string
-- **Purpose:** Categorize business area
-- **Examples:** `fintech`, `healthcare`, `compliance`, `ecommerce`
-
-### `token_estimate` (Recommended)
-- **Format:** Approximate token count (~N)
-- **Purpose:** Performance planning and optimization
-- **Example:** `~4000`, `~6000`
-- **Guidance:** Round to nearest 1000
+**When to use `context: fork`:**
+- Verbose output (test runs, large file analysis)
+- Multi-step operations that would clutter context
+- Operations that benefit from isolated context window
+- Complex workflows where only the summary matters
 
 ---
 
-## Field Validation Rules
+## Quick Reference Tables
 
-### Name Fields
-- **Must:** Use kebab-case only
-- **Must:** Be descriptive and unique
-- **Must:** Match filename/directory name
-- **Must Not:** Contain spaces or underscores
-- **Must Not:** Use special characters except hyphens
+### Agent Fields Summary
 
-### Description Fields
-- **Must:** Be clear and concise (1-3 sentences)
-- **Must:** Explain when to use (agents: "Use PROACTIVELY", skills: third-person)
-- **Must:** Be specific about capabilities
-- **Must Not:** Be vague or generic
-- **Must Not:** Exceed ~200 words
+| Field | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `name` | Yes | - | kebab-case identifier |
+| `description` | Yes | - | Specialization + "Use PROACTIVELY" |
+| `model` | No | `sonnet` | opus/sonnet/haiku/inherit |
+| `tools` | No | All | Tools agent can use |
+| `disallowedTools` | No | None | Tools to deny |
+| `permissionMode` | No | `default` | Permission behavior |
+| `skills` | No | None | Skills to auto-load |
+| `hooks` | No | None | Lifecycle hooks |
 
-### Model Fields
-- **Must:** Use valid model identifier
-- **Should:** Default to `sonnet-4.5` for new files
-- **Must Not:** Use deprecated model names
-- **Must Not:** Leave empty if field included
+### Skill Fields Summary
 
----
+| Field | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `name` | Yes | - | kebab-case identifier |
+| `description` | Yes | - | Third-person usage description |
+| `allowed-tools` | No | None | Tools without permission |
+| `model` | No | Inherit | Model override |
+| `context` | No | None | `fork` for isolation |
+| `agent` | No | `general-purpose` | Agent type (requires context: fork) |
+| `user-invocable` | No | `true` | Show in /menu |
+| `disable-model-invocation` | No | `false` | Block programmatic invocation |
+| `hooks` | No | None | Lifecycle hooks |
 
-## Common Patterns
+### Command Fields Summary
 
-### Agent Proactive Description
-```yaml
-description: [Specialization]. [Key capabilities]. Use PROACTIVELY for [trigger patterns]. [Notable features].
-```
-
-**Example:**
-```yaml
-description: TypeScript fintech specialist with advanced type system mastery. React, Vue, API, microservices. Use PROACTIVELY for fintech TypeScript optimization, type-safe trading systems, advanced type patterns.
-```
-
-### Skill Third-Person Description
-```yaml
-description: This skill should be used when [use cases]. [Capabilities summary]. [Special notes if any].
-```
-
-**Example:**
-```yaml
-description: This skill should be used when creating or reviewing Claude instruction files. Expert guidance on CCUP architecture, YAML frontmatter, agent-vs-skill decisions, and instruction best practices.
-```
-
-### Command Description
-```yaml
-description: [Action verb] [object] [purpose/outcome]
-```
-
-**Example:**
-```yaml
-description: Search knowledge graph for entities and relations
-```
-
----
-
-## Model Configuration Examples
-
-### Strategic Agent (Opus)
-```yaml
----
-name: compliance-officer
-description: Regulatory compliance specialist for digital securities. Use PROACTIVELY for compliance queries.
-model: opus  # Complex multi-step regulatory reasoning
----
-```
-
-### Technical Agent (Sonnet - Recommended Default)
-```yaml
----
-name: typescript-specialist
-description: TypeScript fintech development expert. Use PROACTIVELY for type-safe trading systems.
-model: sonnet  # Balanced capability for code development
----
-```
-
-### Fast Operations Agent (Haiku)
-```yaml
----
-name: quick-lookup
-description: Fast documentation and reference lookup specialist. Use PROACTIVELY for quick answers.
-model: haiku  # Speed-optimized for simple tasks
----
-```
-
-### Task Tool Override Example
-```xml
-<!-- Agent default: sonnet, but override to haiku for quick task -->
-<invoke name="Task">
-  <parameter name="subagent_type">typescript-specialist</parameter>
-  <parameter name="model">haiku</parameter>
-  <parameter name="prompt">Quick syntax check for interface definition</parameter>
-</invoke>
-```
+| Field | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `description` | No | - | Command description |
+| `allowed-tools` | No | All | Tool restrictions |
+| `argument-hint` | No | - | Expected parameters |
+| `model` | No | Inherit | Model override |
+| `context` | No | None | `fork` for isolation |
+| `agent` | No | `general-purpose` | Agent type (requires context: fork) |
+| `disable-model-invocation` | No | `false` | Block programmatic invocation |
+| `hooks` | No | None | Lifecycle hooks |
 
 ---
 
 ## Validation Checklist
 
 **For Agents:**
-- ✅ name: kebab-case, matches filename
-- ✅ description: includes specialization + "Use PROACTIVELY" + triggers
-- ✅ model: Use aliases (`opus`, `sonnet`, `haiku`) not version numbers
+- [ ] `name`: kebab-case, matches filename
+- [ ] `description`: includes specialization + "Use PROACTIVELY" + triggers
+- [ ] `model`: Use aliases (opus/sonnet/haiku) not version numbers
 
 **For Skills:**
-- ✅ name: kebab-case, matches directory name
-- ✅ description: third-person voice, explains when to use
+- [ ] `name`: kebab-case, matches directory name
+- [ ] `description`: third-person voice, explains when to use
+- [ ] If using `agent` field, ensure `context: fork` is also set
 
 **For Commands:**
-- ✅ All fields optional (YAML frontmatter is metadata only)
-- ✅ If included: properly formatted per specifications
+- [ ] All fields optional (YAML frontmatter is metadata only)
+- [ ] If using `agent` field, ensure `context: fork` is also set
 
 **For All:**
-- ✅ Valid YAML syntax (proper indentation, quoting)
-- ✅ No duplicate fields
-- ✅ No typos in field names
-- ✅ Proper date formats (YYYY-MM-DD)
+- [ ] Valid YAML syntax (proper indentation, quoting)
+- [ ] No duplicate fields
+- [ ] Proper date formats (YYYY-MM-DD)
 
 ---
 
-**Last Updated:** 2025-10-28
-**Use Case:** Complete reference for all YAML frontmatter fields and formats
+**Last Updated:** 2026-01-13
+**Claude Code Version:** 2.1.3+
