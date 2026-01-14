@@ -1,0 +1,53 @@
+image: node:22
+
+definitions:
+  caches:
+    pnpm: $HOME/.local/share/pnpm/store
+
+  steps:
+    - step: &lint
+        name: Lint & Type Check
+        caches:
+          - pnpm
+        script:
+          - corepack enable
+          - corepack prepare pnpm@latest --activate
+          - pnpm install --frozen-lockfile
+          - pnpm lint
+          - pnpm format:check
+          - pnpm typecheck
+
+    # Optional: Python lint step
+    # - step: &lint-python
+    #     name: Lint Python
+    #     image: python:3.11
+    #     script:
+    #       - pip install uv
+    #       - uv sync --dev
+    #       - uv run ruff check .
+    #       - uv run ruff format --check .
+    #       - uv run mypy .
+
+    # Optional: Go lint step
+    # - step: &lint-go
+    #     name: Lint Go
+    #     image: golang:1.22
+    #     script:
+    #       - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
+    #       - golangci-lint run
+
+pipelines:
+  default:
+    - step: *lint
+
+  pull-requests:
+    '**':
+      - step: *lint
+
+  branches:
+    main:
+      - step: *lint
+    master:
+      - step: *lint
+    develop:
+      - step: *lint

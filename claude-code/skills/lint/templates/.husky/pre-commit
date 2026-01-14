@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+
+# Husky pre-commit hook
+# Runs lint-staged to check only staged files
+
+npx lint-staged

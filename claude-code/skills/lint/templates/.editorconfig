@@ -1,0 +1,66 @@
+# .NET / C# EditorConfig
+# Copy to solution root
+
+root = true
+
+[*]
+indent_style = space
+indent_size = 4
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.cs]
+indent_size = 4
+
+# Language conventions
+csharp_style_var_for_built_in_types = true:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_prefer_braces = true:warning
+csharp_style_namespace_declarations = file_scoped:warning
+csharp_style_expression_bodied_methods = when_on_single_line:suggestion
+csharp_style_expression_bodied_properties = true:suggestion
+csharp_style_pattern_matching_over_is_with_cast_check = true:warning
+
+# Null checking
+dotnet_style_coalesce_expression = true:suggestion
+dotnet_style_null_propagation = true:suggestion
+
+# Formatting
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+csharp_indent_case_contents = true
+csharp_indent_switch_labels = true
+
+# Naming - PascalCase for public
+dotnet_naming_rule.public_members_pascal.severity = warning
+dotnet_naming_rule.public_members_pascal.symbols = public_symbols
+dotnet_naming_rule.public_members_pascal.style = pascal_style
+dotnet_naming_symbols.public_symbols.applicable_kinds = property,method,field,event
+dotnet_naming_symbols.public_symbols.applicable_accessibilities = public
+dotnet_naming_style.pascal_style.capitalization = pascal_case
+
+# Naming - Interfaces start with I
+dotnet_naming_rule.interfaces_i.severity = error
+dotnet_naming_rule.interfaces_i.symbols = interfaces
+dotnet_naming_rule.interfaces_i.style = interface_style
+dotnet_naming_symbols.interfaces.applicable_kinds = interface
+dotnet_naming_style.interface_style.capitalization = pascal_case
+dotnet_naming_style.interface_style.required_prefix = I
+
+# Analyzer severity
+dotnet_analyzer_diagnostic.severity = warning
+dotnet_diagnostic.CA1062.severity = error
+dotnet_diagnostic.CA2007.severity = error
+dotnet_diagnostic.CA2016.severity = error
+
+# StyleCop adjustments
+dotnet_diagnostic.SA1101.severity = none
+dotnet_diagnostic.SA1200.severity = none
+dotnet_diagnostic.SA1633.severity = none
+
+[*.{json,yml,yaml}]
+indent_size = 2

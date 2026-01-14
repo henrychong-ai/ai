@@ -1,0 +1,45 @@
+# Build outputs
+dist/
+build/
+out/
+.next/
+.nuxt/
+.output/
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Package manager locks (already formatted)
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+bun.lockb
+
+# Coverage and test outputs
+coverage/
+.nyc_output/
+
+# Cache directories
+.cache/
+.turbo/
+.eslintcache
+
+# Generated files
+*.min.js
+*.min.css
+*.bundle.js
+
+# Environment and secrets
+.env*
+*.local
+
+# IDE and OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Documentation builds
+docs/.vitepress/dist/
+storybook-static/

@@ -1,0 +1,59 @@
+# Project Instructions - Code Quality
+
+<!--
+USAGE: Copy this file to your project root as CLAUDE.md
+IMPORTANT: Delete all sections that don't apply to your project to save tokens.
+Claude Code reads this file every session - keep it minimal.
+-->
+
+## Linting Stack
+
+- **Linter**: ESLint with typescript-eslint (strictTypeChecked)
+- **Formatter**: Prettier
+- **Type Checker**: TypeScript
+
+## Commands
+
+```bash
+pnpm lint          # Check for errors
+pnpm lint:fix      # Auto-fix errors
+pnpm format        # Format with Prettier
+pnpm format:check  # Check formatting (CI)
+pnpm typecheck     # TypeScript check
+pnpm check         # All checks combined
+```
+
+## Code Quality Rules
+
+- **Zero warnings policy**: All lint commands use `--max-warnings=0`
+- **Run lint after code changes**: Always run `pnpm lint` after modifying code
+- **Format before commits**: Run `pnpm format` or rely on pre-commit hooks
+- **Type safety**: No `any` types; strict null checks enabled
+
+## Troubleshooting
+
+Use `/lint` skill for:
+- Setting up linting in new projects
+- Fixing lint errors
+- Adding framework-specific plugins (React, Vue, Next.js)
+- Configuring CI/CD workflows
+
+## Framework Notes
+
+<!-- Uncomment relevant section -->
+
+<!-- React/Next.js:
+- JSX accessibility rules enabled (jsx-a11y)
+- React Hooks rules enforced
+- Prop-types disabled (TypeScript handles this)
+-->
+
+<!-- Vue:
+- Vue-specific rules via eslint-plugin-vue
+- Single-file component linting enabled
+-->
+
+<!-- Node.js:
+- Node.js-specific rules via eslint-plugin-n
+- No missing imports (TypeScript handles this)
+-->
