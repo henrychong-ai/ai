@@ -37,8 +37,17 @@ import prettier from 'eslint-config-prettier';
 // Vitest unit testing:
 // import vitest from 'eslint-plugin-vitest';
 
+// Jest unit testing:
+// import jest from 'eslint-plugin-jest';
+
 // Playwright E2E testing:
 // import playwright from 'eslint-plugin-playwright';
+
+// Tailwind CSS (class ordering, validation):
+// import tailwind from 'eslint-plugin-tailwindcss';
+
+// Obsidian plugin development:
+// import obsidianmd from 'eslint-plugin-obsidianmd';
 
 export default tseslint.config(
   // =============================================================================
@@ -252,6 +261,34 @@ export default tseslint.config(
   //     'playwright/no-skipped-test': 'warn',
   //   },
   // },
+
+  // -----------------------------------------------------------------------------
+  // Jest (unit testing)
+  // -----------------------------------------------------------------------------
+  // {
+  //   files: ['**/*.test.ts', '**/*.spec.ts', '**/*.test.tsx', '**/*.spec.tsx', '**/__tests__/**/*.ts'],
+  //   plugins: {
+  //     jest,
+  //   },
+  //   languageOptions: {
+  //     globals: jest.environments.globals.globals,
+  //   },
+  //   rules: {
+  //     ...jest.configs['flat/recommended'].rules,
+  //     'jest/no-focused-tests': 'error',
+  //     'jest/no-disabled-tests': 'warn',
+  //   },
+  // },
+
+  // -----------------------------------------------------------------------------
+  // Tailwind CSS (class ordering, validation)
+  // -----------------------------------------------------------------------------
+  // ...tailwind.configs['flat/recommended'],
+
+  // -----------------------------------------------------------------------------
+  // Obsidian Plugin Development
+  // -----------------------------------------------------------------------------
+  // ...obsidianmd.configs.recommended,
 
   // =============================================================================
   // CUSTOM RULE OVERRIDES
