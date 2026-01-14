@@ -8,7 +8,33 @@ Additional plugins for Astro, Obsidian, and Solidity projects.
 
 ### Installation
 ```bash
-pnpm add -D eslint-plugin-astro astro-eslint-parser @typescript-eslint/parser
+pnpm add -D eslint-plugin-astro astro-eslint-parser typescript-eslint prettier-plugin-astro
+```
+
+### Prettier Config (.prettierrc)
+```json
+{
+  "plugins": ["prettier-plugin-astro"],
+  "overrides": [
+    {
+      "files": "*.astro",
+      "options": {
+        "parser": "astro"
+      }
+    }
+  ]
+}
+```
+
+### Browserslist Config (package.json)
+Required for `eslint-plugin-compat` to work properly:
+```json
+{
+  "browserslist": [
+    "defaults",
+    "not op_mini all"
+  ]
+}
 ```
 
 ### ESLint Config
@@ -22,7 +48,7 @@ import prettier from 'eslint-config-prettier';
 export default tseslint.config(
   // Ignores
   {
-    ignores: ['dist/', 'node_modules/', '.astro/'],
+    ignores: ['dist/', 'node_modules/', '.astro/', '.wrangler/', '*.config.mjs'],
   },
 
   // Base ESLint + TypeScript
@@ -30,8 +56,10 @@ export default tseslint.config(
   ...tseslint.configs.strictTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
 
-  // Parser options
+  // Parser options for TypeScript files ONLY
+  // IMPORTANT: astro-eslint-parser doesn't support projectService
   {
+    files: ['**/*.ts', '**/*.tsx'],
     languageOptions: {
       parserOptions: {
         projectService: true,
@@ -49,7 +77,18 @@ export default tseslint.config(
       parserOptions: {
         parser: tseslint.parser,
         extraFileExtensions: ['.astro'],
+        project: true,
+        tsconfigRootDir: import.meta.dirname,
       },
+    },
+    rules: {
+      // Astro component type inference is limited - relax strict rules
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-deprecated': 'off',
+      'sonarjs/deprecation': 'off',
     },
   },
 
@@ -57,6 +96,15 @@ export default tseslint.config(
   prettier,
 );
 ```
+
+### Key Differences from Standard TypeScript Config
+
+| Issue | Solution |
+|-------|----------|
+| `astro-eslint-parser` doesn't support `projectService` | Scope `projectService: true` to `**/*.ts, **/*.tsx` only |
+| Astro files have limited type inference | Disable `no-unsafe-*` rules for `.astro` files |
+| Prettier needs Astro support | Install `prettier-plugin-astro` |
+| Compat plugin needs browserslist | Add `browserslist` to package.json |
 
 ### VSCode Settings
 ```json
@@ -271,8 +319,8 @@ export default tseslint.config(
     },
   },
 
-  // Core plugins
-  stylistic.configs['recommended-flat'],
+  // Core plugins (note: 'recommended-flat' is deprecated)
+  stylistic.configs.recommended,
   {
     plugins: { import: importPlugin, unicorn, sonarjs, promise },
     rules: {

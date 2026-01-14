@@ -274,3 +274,20 @@ If using other import sorters, disable Ruff's:
 [tool.ruff.lint]
 select = ["E", "F", "B"]  # No "I"
 ```
+
+### SQLAlchemy/SQLModel RUF012 Errors
+SQLAlchemy's `__table_args__` and similar class attributes trigger RUF012 (mutable class attribute).
+
+**Solution:** Add `# noqa: RUF012` to these specific lines:
+```python
+class MyModel(SQLModel, table=True):
+    __tablename__ = "my_table"
+    __table_args__ = {"extend_existing": True}  # noqa: RUF012
+```
+
+**Why:** These are framework-specific patterns where mutable class attributes are intentional and managed by SQLAlchemy's metaclass.
+
+**Common patterns requiring noqa:**
+- `__table_args__` (SQLAlchemy/SQLModel)
+- `__mapper_args__` (SQLAlchemy)
+- `Config` class with `table_args` list (SQLModel)

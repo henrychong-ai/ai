@@ -86,6 +86,7 @@ cat manifest.json 2>/dev/null | grep -E "minAppVersion"
 ```bash
 # Core (always install)
 pnpm add -D eslint prettier typescript \
+  typescript-eslint \
   @typescript-eslint/eslint-plugin \
   @typescript-eslint/parser \
   @stylistic/eslint-plugin \
@@ -95,6 +96,8 @@ pnpm add -D eslint prettier typescript \
   eslint-plugin-promise \
   eslint-config-prettier
 ```
+
+**Note:** `typescript-eslint` is the unified package required for `tseslint.config()` helper.
 
 ### Step 3: Install Conditional Dependencies
 ```bash
@@ -300,7 +303,7 @@ pnpm check             # All checks
 |-----------|------------------|
 | **Next.js** | `pnpm add -D eslint-plugin-react eslint-plugin-react-hooks eslint-plugin-jsx-a11y @next/eslint-plugin-next eslint-plugin-compat` |
 | **Vue** | `pnpm add -D eslint-plugin-vue eslint-plugin-compat` |
-| **Astro** | `pnpm add -D eslint-plugin-astro astro-eslint-parser eslint-plugin-compat` |
+| **Astro** | `pnpm add -D eslint-plugin-astro astro-eslint-parser eslint-plugin-compat prettier-plugin-astro` |
 | **Obsidian** | `pnpm add -D eslint-plugin-obsidianmd` |
 | **Solidity** | Use Solhint separately (not ESLint) |
 
@@ -578,6 +581,9 @@ Both templates include:
 | Import sorting conflicts | Use eslint-plugin-import, disable IDE auto-sort |
 | Slow linting | Add `.eslintcache` to speed up, use `--cache` flag |
 | Compat plugin errors | Ensure `browserslist` is configured in package.json |
+| `stylistic.configs['recommended-flat']` deprecated | Use `stylistic.configs.recommended` instead |
+| Astro parser errors with `projectService` | Scope `projectService: true` to `**/*.ts, **/*.tsx` only; use `project: true` for astro files |
+| Astro `no-unsafe-*` errors | Astro has limited type inference; disable strict TypeScript rules for `.astro` files |
 
 ### Performance Tips
 
