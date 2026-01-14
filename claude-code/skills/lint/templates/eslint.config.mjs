@@ -49,6 +49,9 @@ import prettier from 'eslint-config-prettier';
 // Obsidian plugin development:
 // import obsidianmd from 'eslint-plugin-obsidianmd';
 
+// Astro projects:
+// import astro from 'eslint-plugin-astro';
+
 export default tseslint.config(
   // =============================================================================
   // IGNORES
@@ -77,6 +80,9 @@ export default tseslint.config(
   ...tseslint.configs.stylisticTypeChecked,
 
   // Parser options for type-aware linting
+  // NOTE: For Astro projects, scope this to TS files only:
+  //   files: ['**/*.ts', '**/*.tsx'],
+  // because astro-eslint-parser doesn't support projectService
   {
     languageOptions: {
       parserOptions: {
@@ -86,8 +92,8 @@ export default tseslint.config(
     },
   },
 
-  // Stylistic plugin
-  stylistic.configs['recommended-flat'],
+  // Stylistic plugin (note: 'recommended-flat' is deprecated, use 'recommended')
+  stylistic.configs.recommended,
 
   // Import plugin
   {
@@ -289,6 +295,33 @@ export default tseslint.config(
   // Obsidian Plugin Development
   // -----------------------------------------------------------------------------
   // ...obsidianmd.configs.recommended,
+
+  // -----------------------------------------------------------------------------
+  // Astro (requires special parser handling)
+  // IMPORTANT: If using Astro, scope projectService to TS files only (see above)
+  // -----------------------------------------------------------------------------
+  // ...astro.configs.recommended,
+  // {
+  //   files: ['**/*.astro'],
+  //   languageOptions: {
+  //     parser: astro.parser,
+  //     parserOptions: {
+  //       parser: tseslint.parser,
+  //       extraFileExtensions: ['.astro'],
+  //       project: true,
+  //       tsconfigRootDir: import.meta.dirname,
+  //     },
+  //   },
+  //   rules: {
+  //     // Astro has limited type inference - relax strict rules
+  //     '@typescript-eslint/no-unsafe-return': 'off',
+  //     '@typescript-eslint/no-unsafe-call': 'off',
+  //     '@typescript-eslint/no-unsafe-member-access': 'off',
+  //     '@typescript-eslint/no-unsafe-assignment': 'off',
+  //     '@typescript-eslint/no-deprecated': 'off',
+  //     'sonarjs/deprecation': 'off',
+  //   },
+  // },
 
   // =============================================================================
   // CUSTOM RULE OVERRIDES
