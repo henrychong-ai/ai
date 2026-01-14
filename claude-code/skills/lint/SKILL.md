@@ -15,6 +15,7 @@ Code quality, linting, and formatting setup across all major ecosystems.
 | **Python** | Ruff | Ruff | mypy | `pyproject.toml` |
 | **Go** | golangci-lint v2 | gofmt | Built-in | `.golangci.yml` |
 | **.NET/C#** | Roslyn Analyzers | dotnet format | Built-in | `.editorconfig` |
+| **CSS/SCSS** | Stylelint | Prettier | N/A | `.stylelintrc.json` |
 | **Solidity** | Solhint | Prettier | N/A | `.solhint.json` |
 
 ## Modes of Operation
@@ -60,7 +61,11 @@ These plugins are universally useful for all TypeScript/JavaScript projects:
 | **eslint-plugin-vue** | Vue | `vue` in dependencies |
 | **eslint-plugin-n** | Node.js backend | `express`, `fastify`, `hono`, `koa` in deps |
 | **eslint-plugin-vitest** | Vitest testing | `vitest` in devDependencies |
+| **eslint-plugin-jest** | Jest testing | `jest` in devDependencies |
 | **eslint-plugin-playwright** | Playwright E2E | `@playwright/test` in devDependencies |
+| **eslint-plugin-obsidianmd** | Obsidian plugins | `manifest.json` with `minAppVersion`, or `obsidian` in deps |
+| **eslint-plugin-tailwindcss** | Tailwind CSS | `tailwindcss` in dependencies |
+| **Stylelint** | CSS/SCSS (no Tailwind) | `*.css/*.scss` files AND no `tailwindcss` in deps |
 
 ---
 
@@ -71,8 +76,10 @@ When user requests linting setup, execute these steps:
 ### Step 1: Detect Project Type
 ```bash
 # Check for framework indicators
-ls package.json next.config.* vite.config.* astro.config.* 2>/dev/null
-cat package.json | grep -E "next|react|vue|astro|express|fastify|hono|vitest|playwright"
+ls package.json next.config.* vite.config.* astro.config.* manifest.json 2>/dev/null
+cat package.json | grep -E "next|react|vue|astro|express|fastify|hono|vitest|jest|playwright|obsidian"
+# Check for Obsidian manifest
+cat manifest.json 2>/dev/null | grep -E "minAppVersion"
 ```
 
 ### Step 2: Install Core Dependencies
@@ -114,6 +121,18 @@ pnpm add -D eslint-plugin-vitest
 
 # Playwright E2E (if detected)
 pnpm add -D eslint-plugin-playwright
+
+# Jest testing (if detected)
+pnpm add -D eslint-plugin-jest
+
+# Obsidian plugin (if detected)
+pnpm add -D eslint-plugin-obsidianmd
+
+# Tailwind CSS (if detected)
+pnpm add -D eslint-plugin-tailwindcss
+
+# Stylelint for CSS/SCSS (if CSS files exist AND no Tailwind)
+pnpm add -D stylelint stylelint-config-standard
 ```
 
 ### Step 4: Create Config Files
@@ -155,9 +174,14 @@ echo "npx lint-staged" > .husky/pre-commit
 | `astro.config.*` | Astro | eslint-plugin-astro, compat |
 | `"express"/"fastify"/"hono"/"koa"` | Node.js | eslint-plugin-n |
 | `"vitest"` in devDeps | Testing | eslint-plugin-vitest |
+| `"jest"` in devDeps | Testing | eslint-plugin-jest |
 | `"@playwright/test"` in devDeps | E2E Testing | eslint-plugin-playwright |
+| `manifest.json` with `minAppVersion` | Obsidian Plugin | eslint-plugin-obsidianmd |
+| `"obsidian"` in deps | Obsidian Plugin | eslint-plugin-obsidianmd |
 | `browserslist` in package.json | Frontend | eslint-plugin-compat |
 | `*.html` files exist | HTML | eslint-plugin-html |
+| `"tailwindcss"` in deps | Tailwind CSS | eslint-plugin-tailwindcss |
+| `*.css/*.scss` files (no Tailwind) | CSS/SCSS | Stylelint (separate) |
 | `hardhat.config.*` | Solidity | Solhint (separate) |
 
 ---
@@ -367,6 +391,47 @@ npx prettier --write 'contracts/**/*.sol'  # Format
 
 ---
 
+## CSS/SCSS (Stylelint)
+
+**Note:** Use Stylelint for CSS/SCSS projects WITHOUT Tailwind. For Tailwind projects, use `eslint-plugin-tailwindcss` instead.
+
+### Quick Setup
+```bash
+pnpm add -D stylelint stylelint-config-standard
+# For SCSS:
+pnpm add -D stylelint-config-standard-scss
+```
+
+### Configuration (.stylelintrc.json)
+```json
+{
+  "extends": ["stylelint-config-standard"],
+  "rules": {
+    "declaration-block-no-redundant-longhand-properties": true,
+    "color-hex-length": "short",
+    "selector-class-pattern": null
+  }
+}
+```
+
+### Run Commands
+```bash
+npx stylelint "**/*.css"              # Lint
+npx stylelint "**/*.css" --fix        # Lint + auto-fix
+```
+
+### Package.json Scripts
+```json
+{
+  "scripts": {
+    "lint:css": "stylelint '**/*.css'",
+    "lint:css:fix": "stylelint '**/*.css' --fix"
+  }
+}
+```
+
+---
+
 ## Pre-commit Hooks
 
 ### Setup (Husky + lint-staged)
@@ -386,7 +451,8 @@ echo "npx lint-staged" > .husky/pre-commit
     "*.go": ["golangci-lint run --fix"],
     "*.cs": ["dotnet format --include"],
     "*.sol": ["solhint", "prettier --write"],
-    "*.{json,md,yml,yaml,css,scss}": ["prettier --write"]
+    "*.{css,scss}": ["stylelint --fix", "prettier --write"],
+    "*.{json,md,yml,yaml}": ["prettier --write"]
   }
 }
 ```
