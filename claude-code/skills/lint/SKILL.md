@@ -155,12 +155,44 @@ Use templates from `templates/` directory:
 }
 ```
 
-### Step 6: Setup Pre-commit Hooks (Optional)
+### Step 6: Setup Pre-commit Hooks (Required)
+
+**IMPORTANT:** Pre-commit hooks are required to enforce linting and formatting on every commit.
+
 ```bash
+# Install husky + lint-staged
 pnpm add -D husky lint-staged
+
+# Initialize husky (creates .husky/ and configures git)
 pnpm exec husky init
+
+# Create pre-commit hook
 echo "npx lint-staged" > .husky/pre-commit
+
+# Verify setup
+git config core.hooksPath && test -x .husky/pre-commit && echo "✓ Husky configured"
 ```
+
+### Step 7: Add lint-staged Config to package.json
+
+```json
+{
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": ["eslint --fix --max-warnings=0", "prettier --write"],
+    "*.vue": ["eslint --fix --max-warnings=0", "prettier --write"],
+    "*.{css,scss}": ["stylelint --fix", "prettier --write"],
+    "*.py": ["ruff check --fix", "ruff format"],
+    "*.go": ["golangci-lint run --fix"],
+    "*.sol": ["solhint --fix", "prettier --write"],
+    "*.{json,md,yml,yaml}": ["prettier --write"]
+  }
+}
+```
+
+**What this enforces on every commit:**
+- Linting with auto-fix (`eslint --fix`, `ruff check --fix`)
+- Formatting (`prettier --write`, `ruff format`)
+- Only staged files are processed (fast)
 
 ### Framework Detection Matrix
 
@@ -432,7 +464,21 @@ npx stylelint "**/*.css" --fix        # Lint + auto-fix
 
 ---
 
-## Pre-commit Hooks
+## Pre-commit Hooks (Required)
+
+Pre-commit hooks are **essential** for enforcing code quality. They run automatically on every `git commit`.
+
+### What Gets Enforced
+
+| File Type | Linting | Formatting |
+|-----------|---------|------------|
+| TypeScript/JS | `eslint --fix` | `prettier --write` |
+| Vue | `eslint --fix` | `prettier --write` |
+| CSS/SCSS | `stylelint --fix` | `prettier --write` |
+| Python | `ruff check --fix` | `ruff format` |
+| Go | `golangci-lint --fix` | (included) |
+| Solidity | `solhint --fix` | `prettier --write` |
+| JSON/MD/YAML | - | `prettier --write` |
 
 ### Setup (Husky + lint-staged)
 ```bash
@@ -441,20 +487,39 @@ pnpm exec husky init
 echo "npx lint-staged" > .husky/pre-commit
 ```
 
+### Verify Setup
+```bash
+# Check git hooks path is configured
+git config core.hooksPath  # Should output: .husky
+
+# Check pre-commit hook is executable
+test -x .husky/pre-commit && echo "✓ Hook executable"
+
+# Test lint-staged (dry run)
+npx lint-staged --dry-run
+```
+
 ### lint-staged Config (package.json)
 ```json
 {
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": ["eslint --fix --max-warnings=0", "prettier --write"],
     "*.vue": ["eslint --fix --max-warnings=0", "prettier --write"],
+    "*.{css,scss}": ["stylelint --fix", "prettier --write"],
     "*.py": ["ruff check --fix", "ruff format"],
     "*.go": ["golangci-lint run --fix"],
-    "*.cs": ["dotnet format --include"],
-    "*.sol": ["solhint", "prettier --write"],
-    "*.{css,scss}": ["stylelint --fix", "prettier --write"],
+    "*.sol": ["solhint --fix", "prettier --write"],
     "*.{json,md,yml,yaml}": ["prettier --write"]
   }
 }
+```
+
+### Bypassing (Emergency Only)
+```bash
+git commit --no-verify -m "emergency fix"  # Skip pre-commit hook
+```
+
+**Warning:** Only bypass in emergencies. Skipping hooks defeats the purpose of enforced linting.
 ```
 
 ---
