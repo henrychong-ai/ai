@@ -1,0 +1,132 @@
+# golangci-lint configuration for Go projects
+# This is a template configuration - customize for your project
+#
+# For comprehensive configuration, invoke the /lint skill.
+# This template provides a solid starting point.
+
+run:
+  timeout: 5m
+  modules-download-mode: readonly
+
+  # Skip generated files
+  skip-dirs:
+    - vendor
+    - third_party
+
+  skip-files:
+    - ".*\\.pb\\.go$"
+    - ".*_gen\\.go$"
+
+linters:
+  disable-all: true
+  enable:
+    # Default linters (always enable)
+    - errcheck      # Check for unchecked errors
+    - gosimple      # Simplify code
+    - govet         # Suspicious constructs
+    - ineffassign   # Useless assignments
+    - staticcheck   # Static analysis
+    - unused        # Unused code
+
+    # Recommended additions
+    - gofumpt       # Stricter formatting than gofmt
+    - goimports     # Import ordering
+    - misspell      # Spelling mistakes in comments
+    - unconvert     # Unnecessary type conversions
+    - unparam       # Unused function parameters
+
+    # Error handling
+    - errorlint     # Error wrapping issues
+
+    # Security
+    - gosec         # Security issues
+
+    # Code quality
+    - gocritic      # Various code issues
+    - revive        # Fast, configurable linter
+
+linters-settings:
+  gofumpt:
+    extra-rules: true
+
+  govet:
+    enable-all: true
+    disable:
+      - fieldalignment  # Can be too strict
+
+  gosec:
+    excludes:
+      - G104  # Audit errors not handled (handled by errcheck)
+
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - style
+      - performance
+    disabled-checks:
+      - hugeParam  # Can be too strict
+
+  revive:
+    rules:
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: dot-imports
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: exported
+      - name: increment-decrement
+      - name: indent-error-flow
+      - name: package-comments
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: unexported-return
+      - name: var-declaration
+      - name: var-naming
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+  exclude-rules:
+    # Allow longer lines in tests
+    - path: _test\.go
+      linters:
+        - lll
+
+    # Allow unused parameters in tests (common in table-driven tests)
+    - path: _test\.go
+      linters:
+        - unparam
+
+    # Allow dot imports in tests for testify
+    - path: _test\.go
+      linters:
+        - revive
+      text: "dot-imports"
+
+    # Exclude some checks for generated code
+    - path: ".*\\.gen\\.go$"
+      linters:
+        - gocritic
+        - revive
+        - goimports
+
+output:
+  formats:
+    - format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
+  unique-by-line: true
+  sort-results: true
+
+severity:
+  default-severity: warning
+  rules:
+    - linters:
+        - errcheck
+        - gosec
+      severity: error
