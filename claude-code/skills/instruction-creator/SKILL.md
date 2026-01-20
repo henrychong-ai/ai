@@ -1,13 +1,13 @@
 ---
 name: instruction-creator
-description: This skill should be used for quick reference and guidance about instruction files (agents, skills, slash commands, MCP servers, project instructions). Use for questions about YAML frontmatter format, agent-vs-skill decisions, model configuration options, templates, best practices, context fork/agent fields, hooks in frontmatter, and cross-platform skill conversion. Provides 5-step skill creation workflow, conversion scripts (convert_to_claudeai.py), and decision matrices. Triggers: "YAML frontmatter", "agent vs skill", "model configuration", "instruction template", "what format", "how do I structure", "skill workflow", "convert skill", "cross-platform", "context fork", "hooks frontmatter", "user-invocable", "disable-model-invocation". For actual creation/implementation of instruction files, use the instruction-creator agent instead.
+description: This skill should be used for quick reference and guidance about instruction files (CLAUDE.md, rules, agents, skills, slash commands). Use for questions about YAML frontmatter format, agent-vs-skill decisions, content placement (where should this go?), rules vs CLAUDE.md, token budgets, model configuration, templates, best practices, hooks, and cross-platform conversion. Provides loading hierarchy, decision matrices, 5-step skill workflow, and placement guidance. Triggers: "YAML frontmatter", "agent vs skill", "where should I put", "rules vs CLAUDE.md", "content placement", "token budget", "auto-loading", "instruction template", "context fork", "hooks", "team sharing", "sanitization". For actual creation/implementation, use the instruction-creator agent instead.
 ---
 
 # Instruction Creator Skill
 
 This skill provides complete guidance for creating and reviewing Claude instruction files across the entire instruction ecosystem.
 
-**Updated:** 2026-01-13 (Claude Code v2.1.3+)
+**Updated:** 2026-01-20 (Claude Code v2.1.3+)
 
 ## Skills & Slash Commands Merge (v2.1.3)
 
@@ -22,12 +22,68 @@ As of Claude Code v2.1.3, **skills and slash commands have been merged** under a
 
 ## Instruction File Types
 
-| Type | Location | Purpose | Invocation |
-|------|----------|---------|------------|
-| **Agents** | `~/.claude/agents/*.md` | Autonomous domain specialists | Auto-trigger or Task tool |
-| **Skills** | `~/.claude/skills/*/SKILL.md` | Bundled knowledge packages | `/skill-name` or `Skill` tool |
-| **Commands** | `~/.claude/commands/*.md` | Natural language prompts | `/command-name` |
-| **Project** | `project-instructions.md` | Business context | Auto-loaded per project |
+| Type | Location | Purpose | Loading |
+|------|----------|---------|---------|
+| **CLAUDE.md** | `~/.claude/` or `./` | User preferences, identity | Always (auto) |
+| **Rules** | `~/.claude/rules/` or `./.claude/rules/` | Focused config, patterns | Always (auto) |
+| **Agents** | `~/.claude/agents/*.md` | Autonomous domain specialists | On trigger/Task tool |
+| **Skills** | `~/.claude/skills/*/SKILL.md` | Bundled knowledge packages | On `/skill-name` or Skill tool |
+| **Commands** | `~/.claude/commands/*.md` | Natural language prompts | On `/command-name` |
+
+**Key Distinction:**
+- **Auto-loading** (CLAUDE.md, Rules): Always load every session - keep lean
+- **On-demand** (Skills, Agents, Commands): Load when invoked - can be larger
+
+## CLAUDE.md and Rules
+
+### Auto-Loading Behavior
+
+**Critical:** CLAUDE.md and rules files **always fully load** every session. There is no lazy loading or incremental loading for these files.
+
+**Loading Order:**
+1. Global CLAUDE.md (`~/.claude/CLAUDE.md`)
+2. Global rules (`~/.claude/rules/**/*.md`)
+3. Project CLAUDE.md (`./CLAUDE.md`)
+4. Project rules (`./.claude/rules/**/*.md`)
+5. CLAUDE.local.md (`./CLAUDE.local.md`) - gitignored
+6. Nested subdirectory CLAUDE.md - only loads when navigated to that dir
+
+**Token Budget Guidelines:**
+| File Type | Recommended | Maximum |
+|-----------|-------------|---------|
+| Global CLAUDE.md | 800-1200 lines | ~1500 lines |
+| Each rules file | 50-200 lines | ~300 lines |
+| Project CLAUDE.md | 100-300 lines | ~500 lines |
+
+### Rules Directory Patterns
+
+```
+~/.claude/rules/
+├── environments/       # Cloud accounts, credentials, paths
+│   ├── cloudflare.md
+│   └── 1password.md
+├── languages/          # Language conventions
+└── tools/              # Tool-specific configs
+```
+
+**Benefits of Rules:**
+- Organization by category
+- Reusable across projects
+- Selective team sharing
+- Independent maintenance
+- Override hierarchy (project > global)
+
+### Content Placement Quick Guide
+
+| Content | Location |
+|---------|----------|
+| Core identity/preferences | Global CLAUDE.md |
+| Small cross-cutting config | `rules/environments/` |
+| Large documentation | Skill `references/` |
+| Project context | Project CLAUDE.md |
+| Personal overrides | CLAUDE.local.md |
+
+See `references/rules-and-content-placement-guide.md` for comprehensive guidance.
 
 ## Creating Agents
 
@@ -409,7 +465,8 @@ which npx        # Returns: /opt/homebrew/bin/npx
 
 Detailed guides in `references/` subdirectory:
 - **yaml-frontmatter-complete-guide.md**: All valid fields and options (COMPREHENSIVE)
-- **agent-vs-skill-decision-guide.md**: Complete decision matrix
+- **agent-vs-skill-decision-guide.md**: Complete decision matrix for agents vs skills
+- **rules-and-content-placement-guide.md**: CLAUDE.md, rules, skills placement decisions (NEW)
 - **common-instruction-patterns.md**: Proven structures and templates
 - **cross-platform-conversion-guide.md**: Claude Code → Claude.ai conversion
 
