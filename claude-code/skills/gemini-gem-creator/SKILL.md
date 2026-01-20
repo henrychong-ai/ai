@@ -164,6 +164,27 @@ FORMAT:
 - Remove ALL individual-specific content (personal names, custom framework triggers)
 - PRESERVE business context (Fusang, Portcullis, regulatory frameworks)
 
+## Gemini Knowledge Base Limits (Official)
+
+**Hard Limits per Gem:**
+
+| Constraint | Limit | Source |
+|------------|-------|--------|
+| **Maximum files** | **10 files** | Google Workspace Blog |
+| **File size** | 100 MB per file | Google Workspace Updates |
+| **File types** | Docs, TXT, DOC, DOCX, PDF, RTF, MD | Gemini Apps Help |
+| **Excluded** | Video, audio files | Gemini Apps Help |
+
+**Planning Implications:**
+- With only 10 file slots, consolidate related content (e.g., combine SG/MY/HK clauses into single file)
+- 100 MB per file is generous - size is rarely the constraint, file count is
+- Google Docs from Drive auto-update; local uploads are static snapshots
+- Context window: ~32K tokens (free) / 1M tokens (Gemini Advanced)
+
+**Sources:**
+- [Google Workspace Updates Blog](https://workspaceupdates.googleblog.com/2024/11/upload-google-docs-and-other-file-types-to-gems.html)
+- [Google Workspace Blog](https://workspace.google.com/blog/product-announcements/new-gemini-gems-deeper-knowledge-and-business-context)
+
 ## File Attachment Strategy
 
 **Attach when:**
@@ -175,6 +196,11 @@ FORMAT:
 - Core instructions are brief and stable
 - Essential knowledge fits in 200-300 words
 - Information is fundamental to every use
+
+**Consolidation Strategy (to maximize 10-file limit):**
+- Combine jurisdiction variants into single files (e.g., `model-clauses-all-jurisdictions.md`)
+- Merge related guides (e.g., combine boilerplate + term-termination into `general-provisions-guide.md`)
+- Keep templates separate when they're used independently
 
 ## Gemini Magic Wand
 
