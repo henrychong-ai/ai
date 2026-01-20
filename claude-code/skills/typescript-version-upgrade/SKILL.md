@@ -11,6 +11,7 @@ Comprehensive version upgrade orchestration for Node.js, TypeScript, and framewo
 ## When to Use This Skill
 
 - Upgrading Node.js versions (especially for CVE remediation)
+- Legacy Node.js migrations (12.x, 14.x, 16.x EOL systems)
 - Migrating TypeScript versions (4.x → 5.x)
 - Upgrading framework versions (Next.js, React, etc.)
 - Multi-repository version standardization
@@ -202,8 +203,15 @@ Load as needed based on upgrade type:
 
 ### Node.js Migrations
 - `references/node/migration-overview.md` - General Node.js upgrade principles
+- `references/node/node-12-to-24.md` - **Node 12 → 24 (EXTREMELY CRITICAL EOL migration, 12 major versions, 3+ years EOL)**
+- `references/node/node-16-to-24.md` - **Node 16 → 24 (CRITICAL EOL migration, 8 major versions)**
 - `references/node/node-20-to-22.md` - Node 20 → 22 specific changes
 - `references/node/node-22-to-24.md` - Node 22 → 24 specific changes
+
+### React Migrations
+- `references/react/react-16-to-19.md` - **React 16 → 19 (major migration, 3 versions)**
+- `references/react/react-17-to-19.md` - React 17 → 19 (2 version jump)
+- `references/react/react-18-to-19.md` - React 18 → 19 (focused upgrade)
 
 ### TypeScript Migrations
 - `references/typescript/typescript-4-to-5.md` - TS 4.x → 5.x migration
@@ -225,12 +233,29 @@ Load as needed based on upgrade type:
 | v20.x | 20.20.0+ |
 | v18.x | EOL - Must upgrade |
 | v16.x | EOL - Critical upgrade |
+| v14.x | EOL (Apr 2023) - Critical upgrade |
+| v12.x | EOL (Apr 2022) - EMERGENCY upgrade |
 
 ### TypeScript
 | Target | Minimum Version |
 |--------|-----------------|
 | Modern | 5.0+ |
 | Legacy | 4.9.x (deprecated) |
+
+### React
+| From Version | Target | Migration Complexity |
+|--------------|--------|---------------------|
+| React 16.x | 19.x | 🔴 High - Major APIs removed |
+| React 17.x | 19.x | 🟠 Medium - createRoot + defaults |
+| React 18.x | 19.x | 🟢 Low - Focused changes |
+
+### Fusang Repo Version Inventory
+| Repository | Node | React | Priority |
+|------------|------|-------|----------|
+| fusang-swap-v2-info | 16 (EOL!) | 16.9 | 🔴 CRITICAL |
+| fusang-swap-v2-interface | - | 17.0 | 🟠 HIGH |
+| web3auth_core_kit_example | - | 18.3 | 🟡 MEDIUM |
+| styx | - | 19.0 | ✅ Current |
 
 ## Example Usage
 

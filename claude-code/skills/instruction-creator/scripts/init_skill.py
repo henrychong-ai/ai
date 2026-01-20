@@ -62,44 +62,41 @@ Delete this entire "Structuring This Skill" section when done - it's just guidan
 - Concrete examples with realistic user requests
 - References to scripts/templates/references as needed]
 
-## Resources
+## Bundled Resources
 
-This skill includes example resource directories that demonstrate how to organize different types of bundled resources:
+Skills support four standardized subdirectories. Only `references/` is created by default.
 
-### scripts/
-Executable code (Python/Bash/etc.) that can be run directly to perform specific operations.
+### references/ (DEFAULT - created automatically)
+Documentation and reference material loaded into context as needed.
 
-**Examples from other skills:**
-- PDF skill: `fill_fillable_fields.py`, `extract_form_field_info.py` - utilities for PDF manipulation
-- DOCX skill: `document.py`, `utilities.py` - Python modules for document processing
+**Appropriate for:** In-depth documentation, API references, database schemas, comprehensive guides, company policies, or any detailed information Claude should reference while working.
+
+**Examples:** Product management workflow guides, BigQuery API docs, schema documentation.
+
+### scripts/ (create when needed)
+Executable code (Python/Bash/etc.) for deterministic operations.
 
 **Appropriate for:** Python scripts, shell scripts, or any executable code that performs automation, data processing, or specific operations.
 
-**Note:** Scripts may be executed without loading into context, but can still be read by Claude for patching or environment adjustments.
+**Examples:** PDF manipulation utilities, document processing modules.
 
-### references/
-Documentation and reference material intended to be loaded into context to inform Claude's process and thinking.
+### templates/ (create when needed)
+Files with variable substitution used to generate output.
 
-**Examples from other skills:**
-- Product management: `communication.md`, `context_building.md` - detailed workflow guides
-- BigQuery: API reference documentation and query examples
-- Finance: Schema documentation, company policies
+**Appropriate for:** Files that need placeholders replaced before use - email templates, code scaffolds with `{{variable}}` markers, document templates.
 
-**Appropriate for:** In-depth documentation, API references, database schemas, comprehensive guides, or any detailed information that Claude should reference while working.
+**Key distinction:** Templates expect transformation; assets are used as-is.
 
-### assets/
-Files not intended to be loaded into context, but rather used within the output Claude produces.
+### assets/ (create when needed)
+Static files not loaded into context but used in output as-is.
 
-**Examples from other skills:**
-- Brand styling: PowerPoint template files (.pptx), logo files
-- Frontend builder: HTML/React boilerplate project directories
-- Typography: Font files (.ttf, .woff2)
-
-**Appropriate for:** Templates, boilerplate code, document templates, images, icons, fonts, or any files meant to be copied or used in the final output.
+**Appropriate for:** Brand logos, fonts, icons, sample data files, or any files meant to be copied directly without modification.
 
 ---
 
-**Any unneeded directories can be deleted.** Not every skill requires all three types of resources.
+**Default Subdirectory Policy (YAGNI):**
+- `references/` → Always created (most skills need documentation)
+- `scripts/`, `templates/`, `assets/` → Create only when needed
 """
 
 EXAMPLE_SCRIPT = '''#!/usr/bin/env python3
@@ -233,29 +230,16 @@ def init_skill(skill_name, path):
         print(f"❌ Error creating SKILL.md: {e}")
         return None
 
-    # Create resource directories with example files
+    # Create only references/ directory by default (YAGNI principle)
+    # Other directories (scripts/, templates/, assets/) created incrementally as needed
     try:
-        # Create scripts/ directory with example script
-        scripts_dir = skill_dir / 'scripts'
-        scripts_dir.mkdir(exist_ok=True)
-        example_script = scripts_dir / 'example.py'
-        example_script.write_text(EXAMPLE_SCRIPT.format(skill_name=skill_name))
-        example_script.chmod(0o755)
-        print("✅ Created scripts/example.py")
-
-        # Create references/ directory with example reference doc
+        # Create references/ directory with example reference doc (DEFAULT)
         references_dir = skill_dir / 'references'
         references_dir.mkdir(exist_ok=True)
         example_reference = references_dir / 'api_reference.md'
         example_reference.write_text(EXAMPLE_REFERENCE.format(skill_title=skill_title))
-        print("✅ Created references/api_reference.md")
-
-        # Create assets/ directory with example asset placeholder
-        assets_dir = skill_dir / 'assets'
-        assets_dir.mkdir(exist_ok=True)
-        example_asset = assets_dir / 'example_asset.txt'
-        example_asset.write_text(EXAMPLE_ASSET)
-        print("✅ Created assets/example_asset.txt")
+        print("✅ Created references/api_reference.md (default subdirectory)")
+        print("ℹ️  Other subdirectories (scripts/, templates/, assets/) can be added as needed")
     except Exception as e:
         print(f"❌ Error creating resource directories: {e}")
         return None
@@ -264,8 +248,9 @@ def init_skill(skill_name, path):
     print(f"\n✅ Skill '{skill_name}' initialized successfully at {skill_dir}")
     print("\nNext steps:")
     print("1. Edit SKILL.md to complete the TODO items and update the description")
-    print("2. Customize or delete the example files in scripts/, references/, and assets/")
-    print("3. Run the validator when ready to check the skill structure")
+    print("2. Customize the example file in references/")
+    print("3. Add scripts/, templates/, or assets/ subdirectories as needed")
+    print("4. Run the validator when ready to check the skill structure")
 
     return skill_dir
 

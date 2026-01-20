@@ -69,7 +69,7 @@ Expert in [domain] with [key capabilities]. Specialized for [specific use cases]
 [Business outcome measurements]
 ```
 
-**Examples:** compliance-officer, security-auditor, code-reviewer agents
+**Examples:** compliance-officer, fusang, portcullis agents
 
 ---
 
