@@ -172,8 +172,18 @@ FORMAT:
 |------------|-------|--------|
 | **Maximum files** | **10 files** | Google Workspace Blog |
 | **File size** | 100 MB per file | Google Workspace Updates |
-| **File types** | Docs, TXT, DOC, DOCX, PDF, RTF, MD | Gemini Apps Help |
 | **Excluded** | Video, audio files | Gemini Apps Help |
+
+**Supported File Types:**
+
+| Category | Formats |
+|----------|---------|
+| **Documents** | TXT, DOC, DOCX, PDF, RTF, DOT, DOTX |
+| **Spreadsheets** | XLS, XLSX, CSV, TSV |
+| **Google Workspace** | Google Docs, Google Sheets |
+| **NOT Supported** | Markdown (.md), JSON, YAML, XML |
+
+**CRITICAL: Markdown (.md) files CANNOT be uploaded to Gemini Gems knowledge base.**
 
 **Planning Implications:**
 - With only 10 file slots, consolidate related content (e.g., combine SG/MY/HK clauses into single file)
@@ -184,6 +194,31 @@ FORMAT:
 **Sources:**
 - [Google Workspace Updates Blog](https://workspaceupdates.googleblog.com/2024/11/upload-google-docs-and-other-file-types-to-gems.html)
 - [Google Workspace Blog](https://workspace.google.com/blog/product-announcements/new-gemini-gems-deeper-knowledge-and-business-context)
+
+## Markdown to TXT Conversion
+
+**When preparing Markdown files for Gemini Gems knowledge base:**
+
+1. **Keep the Markdown syntax** - Do NOT strip formatting (headers, lists, bold, etc.)
+2. **Only change the file extension** - Rename `.md` to `.txt`
+3. **Content stays identical** - The model understands Markdown syntax in plain text
+
+**Why keep Markdown syntax:**
+- LLMs are trained on massive amounts of Markdown and understand it natively
+- `#`, `##`, `###` convey document hierarchy to the model
+- Lists, bold, tables provide structural information
+- Stripping syntax removes valuable semantic information
+
+**Conversion command:**
+```bash
+# Simple rename (content unchanged)
+for f in *.md; do mv "$f" "${f%.md}.txt"; done
+
+# Or create copies
+for f in *.md; do cp "$f" "${f%.md}.txt"; done
+```
+
+**Result:** `.txt` files containing Markdown syntax are perfectly valid and give Gemini full structural understanding of your documents.
 
 ## File Attachment Strategy
 
@@ -198,9 +233,10 @@ FORMAT:
 - Information is fundamental to every use
 
 **Consolidation Strategy (to maximize 10-file limit):**
-- Combine jurisdiction variants into single files (e.g., `model-clauses-all-jurisdictions.md`)
-- Merge related guides (e.g., combine boilerplate + term-termination into `general-provisions-guide.md`)
+- Combine jurisdiction variants into single files (e.g., `model-clauses-all-jurisdictions.txt`)
+- Merge related guides (e.g., combine boilerplate + term-termination into `general-provisions-guide.txt`)
 - Keep templates separate when they're used independently
+- Always use `.txt` extension (not `.md`) for knowledge base uploads
 
 ## Gemini Magic Wand
 
