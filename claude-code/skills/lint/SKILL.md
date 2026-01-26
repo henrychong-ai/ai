@@ -323,7 +323,7 @@ uv add --dev ruff mypy
 ### Configuration (pyproject.toml)
 ```toml
 [tool.ruff]
-target-version = "py311"
+target-version = "py312"
 line-length = 100
 
 [tool.ruff.lint]
@@ -333,7 +333,7 @@ select = ["E", "W", "F", "I", "N", "UP", "B", "C4", "SIM", "TCH", "RUF"]
 quote-style = "double"
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.12"
 strict = true
 ```
 
@@ -535,9 +535,12 @@ Use templates from `templates/` directory:
 
 Both templates include:
 - TypeScript/JavaScript linting (ESLint + Prettier + TypeScript)
+- **Test execution with coverage** (`pnpm test:coverage`)
 - Commented sections for Python (Ruff + mypy) and Go (golangci-lint)
 - Caching for faster builds
 - Concurrency controls to cancel outdated runs
+
+**Note:** Tests run after lint passes. Coverage thresholds are enforced in `vitest.config.ts` (see `/typescript` skill for test configuration templates).
 
 ---
 
