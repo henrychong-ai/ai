@@ -1,4 +1,4 @@
-name: Lint
+name: Lint & Test
 
 on:
   push:
@@ -28,7 +28,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
           cache: 'pnpm'
 
       - name: Install dependencies
@@ -43,17 +43,70 @@ jobs:
       - name: Type check
         run: pnpm typecheck
 
-  # Optional: Add for Python projects
+  test:
+    name: Test & Coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: lint  # Run after lint passes
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests with coverage
+        run: pnpm test:coverage
+
+      # Optional: Upload coverage to Codecov
+      # - name: Upload coverage
+      #   uses: codecov/codecov-action@v4
+      #   with:
+      #     files: ./coverage/lcov.info
+      #     fail_ci_if_error: true
+
+  # Python lint job - uncomment for Python projects
   # lint-python:
   #   name: Lint Python
   #   runs-on: ubuntu-latest
+  #   timeout-minutes: 10
   #   steps:
   #     - uses: actions/checkout@v4
   #     - uses: astral-sh/setup-uv@v4
+  #     - run: uv python install 3.13
   #     - run: uv sync --dev
   #     - run: uv run ruff check .
   #     - run: uv run ruff format --check .
-  #     - run: uv run mypy .
+  #     - run: uv run mypy src/
+  #
+  # test-python:
+  #   name: Test Python & Coverage
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 15
+  #   needs: lint-python
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: astral-sh/setup-uv@v4
+  #     - run: uv python install 3.13
+  #     - run: uv sync --dev
+  #     - run: uv run pytest --cov=src --cov-fail-under=80 --cov-report=xml
+  #     # Optional: Upload coverage to Codecov
+  #     # - uses: codecov/codecov-action@v4
+  #     #   with:
+  #     #     files: ./coverage.xml
+  #     #     fail_ci_if_error: true
 
   # Optional: Add for Go projects
   # lint-go:

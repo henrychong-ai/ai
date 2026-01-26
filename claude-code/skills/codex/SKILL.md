@@ -73,16 +73,30 @@ Access OpenAI's GPT-5.2 models for second opinions, hard problems, and code revi
 - Missing technology context
 - No success criteria
 - Asking what Claude can answer confidently
+- **Downgrading reasoning level** (using `high` instead of `xhigh`) without explicit user request
 
 ## MCP Syntax
 
-### Primary Session
+**CRITICAL: Always use `xhigh` reasoning unless user explicitly requests a different level.** Do not downgrade to `high` or lower without explicit user instruction.
+
+### Primary Session (Default - xhigh reasoning)
 ```
 mcp__codex__codex({
   prompt: "[prepared prompt]",
   config: {
-    "model": "gpt-5.2-codex",         // or "gpt-5.2"
-    "model_reasoning_effort": "xhigh"  // none/low/medium/high/xhigh
+    "model": "gpt-5.2-codex"
+    // model_reasoning_effort defaults to "xhigh" - omit unless user specifies level
+  }
+})
+```
+
+### With Explicit Reasoning Level (only when user specifies)
+```
+mcp__codex__codex({
+  prompt: "[prepared prompt]",
+  config: {
+    "model": "gpt-5.2-codex",
+    "model_reasoning_effort": "medium"  // only include when user explicitly requests: none/low/medium/high
   }
 })
 ```

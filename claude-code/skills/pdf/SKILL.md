@@ -1,7 +1,6 @@
 ---
 name: pdf
-description: Comprehensive PDF manipulation toolkit for extracting text and tables, creating new PDFs, merging/splitting documents, handling forms, and creating blank fillable templates from filled-in examples. When Claude needs to fill in a PDF form, create fillable forms, reverse-engineer forms from filled samples, or programmatically process, generate, or analyze PDF documents at scale.
-license: Proprietary. LICENSE.txt has complete terms
+description: Comprehensive PDF manipulation toolkit for extracting text and tables, creating new PDFs, merging/splitting documents, handling forms, and creating blank fillable templates from filled-in examples. When Claude needs to fill in a PDF form, create fillable forms, reverse-engineer forms from filled samples, rename generic form field names to semantic names for programmatic filling, or programmatically process, generate, or analyze PDF documents at scale.
 ---
 
 # PDF Processing Guide
@@ -289,6 +288,7 @@ with open("encrypted.pdf", "wb") as output:
 | Command line merge | qpdf | `qpdf --empty --pages ...` |
 | OCR scanned PDFs | pytesseract | Convert to image first |
 | Fill PDF forms | pdf-lib or pypdf (see references/forms.md) | See references/forms.md |
+| Rename form fields | pikepdf | See references/renaming-form-fields.md |
 
 ## Next Steps
 
@@ -298,3 +298,4 @@ with open("encrypted.pdf", "wb") as output:
 - To create fillable PDF forms from scratch (with interactive checkboxes and text fields), see references/creating-fillable-pdfs.md
 - **To create blank fillable templates from filled-in examples** (reverse-engineering workflow), see references/creating-fillable-pdfs.md#creating-blank-templates-from-filled-in-examples
 - For troubleshooting guides, see references/advanced-features.md
+- **To rename generic form field names to semantic names** (for easier programmatic filling), see references/renaming-form-fields.md
