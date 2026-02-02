@@ -1,0 +1,410 @@
+# Obsidian Plugin Tech Stack
+
+Complete reference for the official Obsidian plugin development stack.
+
+## Source
+
+Based on [obsidian-sample-plugin](https://github.com/obsidianmd/obsidian-sample-plugin) - the official template maintained by Obsidian.
+
+---
+
+## Project Structure
+
+```
+obsidian-plugin/
+├── src/
+│   └── main.ts              # Plugin entry point
+├── manifest.json            # Plugin metadata (required)
+├── package.json             # npm configuration
+├── tsconfig.json            # TypeScript configuration
+├── esbuild.config.mjs       # Build configuration
+├── styles.css               # Plugin styles (optional)
+├── versions.json            # Version compatibility mapping
+├── .eslintrc                # ESLint configuration
+└── .gitignore
+```
+
+---
+
+## manifest.json
+
+Required metadata file that Obsidian reads to load the plugin.
+
+```json
+{
+  "id": "your-plugin-id",
+  "name": "Your Plugin Name",
+  "version": "1.0.0",
+  "minAppVersion": "1.5.0",
+  "description": "Brief description of your plugin.",
+  "author": "Your Name",
+  "authorUrl": "https://github.com/yourusername",
+  "isDesktopOnly": false
+}
+```
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `id` | Yes | Unique identifier (lowercase, hyphens) |
+| `name` | Yes | Display name in plugin list |
+| `version` | Yes | Semantic version (X.Y.Z) |
+| `minAppVersion` | Yes | Minimum Obsidian version required |
+| `description` | Yes | Brief description (<100 chars) |
+| `author` | Yes | Author name |
+| `authorUrl` | No | Link to author profile/site |
+| `isDesktopOnly` | No | Set `true` if plugin requires Node.js APIs |
+
+---
+
+## package.json
+
+```json
+{
+  "name": "obsidian-plugin-name",
+  "version": "1.0.0",
+  "description": "Plugin description",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+    "version": "node version-bump.mjs && git add manifest.json versions.json"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^16.11.6",
+    "@typescript-eslint/eslint-plugin": "5.29.0",
+    "@typescript-eslint/parser": "5.29.0",
+    "builtin-modules": "3.3.0",
+    "esbuild": "0.17.3",
+    "obsidian": "latest",
+    "tslib": "2.4.0",
+    "typescript": "4.7.4"
+  }
+}
+```
+
+### Key Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `npm run dev` | Watch mode - rebuilds on file changes |
+| `npm run build` | Production build with type checking |
+| `npm run version` | Bump version in manifest.json and versions.json |
+
+### Essential Dependencies
+
+| Package | Purpose |
+|---------|---------|
+| `obsidian` | Obsidian API type definitions |
+| `esbuild` | Fast bundler for development and production |
+| `typescript` | TypeScript compiler |
+| `tslib` | Runtime helpers (reduces bundle size) |
+
+---
+
+## tsconfig.json
+
+Official recommended TypeScript configuration:
+
+```json
+{
+  "compilerOptions": {
+    "baseUrl": "src",
+    "inlineSourceMap": true,
+    "inlineSources": true,
+    "module": "ESNext",
+    "target": "ES2022",
+    "allowJs": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "noImplicitReturns": true,
+    "moduleResolution": "node",
+    "importHelpers": true,
+    "noUncheckedIndexedAccess": true,
+    "isolatedModules": true,
+    "strictNullChecks": true,
+    "strictBindCallApply": true,
+    "allowSyntheticDefaultImports": true,
+    "useUnknownInCatchVariables": true,
+    "lib": ["DOM", "ES2022"]
+  },
+  "include": ["src/**/*.ts"]
+}
+```
+
+### Configuration Breakdown
+
+#### Module & Target
+| Option | Value | Purpose |
+|--------|-------|---------|
+| `module` | `ESNext` | Latest ES modules; esbuild handles bundling |
+| `target` | `ES2022` | Modern JS; Obsidian 1.0+ runs on Electron 25+ which supports ES2022 |
+| `moduleResolution` | `node` | Node.js-style module resolution |
+| `isolatedModules` | `true` | Required for esbuild transpilation |
+
+#### Strict Type Checking
+| Option | Value | Purpose |
+|--------|-------|---------|
+| `noImplicitAny` | `true` | Error on implied `any` type |
+| `noImplicitThis` | `true` | Error on implicit `any` for `this` |
+| `noImplicitReturns` | `true` | Error if not all paths return |
+| `strictNullChecks` | `true` | Strict null/undefined checking |
+| `strictBindCallApply` | `true` | Strict bind/call/apply checking |
+| `noUncheckedIndexedAccess` | `true` | Add `undefined` to index results |
+| `useUnknownInCatchVariables` | `true` | `unknown` type for catch variables |
+
+#### Source Maps & Paths
+| Option | Value | Purpose |
+|--------|-------|---------|
+| `inlineSourceMap` | `true` | Embed source maps for debugging |
+| `inlineSources` | `true` | Include source in maps |
+| `baseUrl` | `src` | Base for non-relative imports |
+
+---
+
+## esbuild.config.mjs
+
+```javascript
+import esbuild from "esbuild";
+import process from "process";
+import builtins from "builtin-modules";
+
+const banner = `/*
+THIS IS A GENERATED/BUNDLED FILE BY ESBUILD
+if you want to view the source, please visit the github repository of this plugin
+*/
+`;
+
+const prod = (process.argv[2] === "production");
+
+const context = await esbuild.context({
+  banner: { js: banner },
+  entryPoints: ["src/main.ts"],
+  bundle: true,
+  external: [
+    "obsidian",
+    "electron",
+    "@codemirror/autocomplete",
+    "@codemirror/collab",
+    "@codemirror/commands",
+    "@codemirror/language",
+    "@codemirror/lint",
+    "@codemirror/search",
+    "@codemirror/state",
+    "@codemirror/view",
+    "@lezer/common",
+    "@lezer/highlight",
+    "@lezer/lr",
+    ...builtins
+  ],
+  format: "cjs",
+  target: "es2018",
+  logLevel: "info",
+  sourcemap: prod ? false : "inline",
+  treeShaking: true,
+  outfile: "main.js",
+});
+
+if (prod) {
+  await context.rebuild();
+  process.exit(0);
+} else {
+  await context.watch();
+}
+```
+
+### Key Configuration
+
+| Option | Purpose |
+|--------|---------|
+| `entryPoints` | Main TypeScript file |
+| `bundle` | Bundle all imports into single file |
+| `external` | Don't bundle Obsidian/CodeMirror (provided by Obsidian) |
+| `format: "cjs"` | CommonJS output (required by Obsidian) |
+| `treeShaking` | Remove unused code |
+| `sourcemap` | Inline in dev, disabled in prod |
+
+---
+
+## versions.json
+
+Maps plugin versions to minimum Obsidian versions:
+
+```json
+{
+  "1.0.0": "1.5.0",
+  "0.9.0": "1.4.0"
+}
+```
+
+Used by Obsidian to ensure compatibility. Update when:
+- Using new Obsidian API features
+- Changing `minAppVersion` in manifest.json
+
+---
+
+## ESLint Configuration
+
+Recommended `.eslintrc` for Obsidian plugins:
+
+```json
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "env": { "node": true },
+  "plugins": ["@typescript-eslint"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "parserOptions": {
+    "sourceType": "module"
+  },
+  "rules": {
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": ["error", { "args": "none" }],
+    "@typescript-eslint/ban-ts-comment": "off",
+    "no-prototype-builtins": "off",
+    "@typescript-eslint/no-empty-function": "off"
+  }
+}
+```
+
+### obsidianmd ESLint Plugin
+
+For stricter conformance, use `eslint-plugin-obsidianmd`:
+
+```bash
+npm install --save-dev eslint-plugin-obsidianmd
+```
+
+```json
+{
+  "plugins": ["obsidianmd"],
+  "extends": ["plugin:obsidianmd/recommended"]
+}
+```
+
+---
+
+## styles.css
+
+Optional CSS file for plugin styling:
+
+```css
+/* Scope all styles to your plugin */
+.your-plugin-class {
+  /* styles */
+}
+
+/* Use Obsidian CSS variables for theming */
+.your-plugin-class {
+  background-color: var(--background-primary);
+  color: var(--text-normal);
+  border: 1px solid var(--background-modifier-border);
+}
+```
+
+### Common Obsidian CSS Variables
+
+| Variable | Purpose |
+|----------|---------|
+| `--background-primary` | Main background |
+| `--background-secondary` | Secondary background |
+| `--text-normal` | Normal text color |
+| `--text-muted` | Muted text color |
+| `--interactive-accent` | Accent/highlight color |
+| `--background-modifier-border` | Border color |
+
+---
+
+## Development Workflow
+
+### Setup
+```bash
+# Clone sample plugin
+git clone https://github.com/obsidianmd/obsidian-sample-plugin
+cd obsidian-sample-plugin
+npm install
+```
+
+### Development
+```bash
+# Start watch mode
+npm run dev
+
+# Symlink to vault (macOS/Linux)
+ln -s /path/to/plugin /path/to/vault/.obsidian/plugins/your-plugin
+
+# Reload in Obsidian: Cmd+R or "Reload app without saving"
+```
+
+### Production Build
+```bash
+npm run build
+```
+
+### Release Checklist
+1. Update version in `manifest.json`
+2. Update `versions.json` if minAppVersion changed
+3. Run `npm run build`
+4. Create GitHub release with `main.js`, `manifest.json`, `styles.css`
+
+---
+
+## Testing
+
+### Vitest Setup (Recommended)
+
+```bash
+npm install --save-dev vitest
+```
+
+```json
+// package.json
+{
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  }
+}
+```
+
+```typescript
+// vitest.config.ts
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'node',
+  },
+});
+```
+
+### Mocking Obsidian API
+
+Create `tests/mocks/obsidian.ts` to mock Obsidian classes:
+
+```typescript
+export class Plugin {
+  app = {};
+  manifest = {};
+  loadData = vi.fn();
+  saveData = vi.fn();
+}
+
+export class Modal {
+  app: any;
+  constructor(app: any) { this.app = app; }
+  open = vi.fn();
+  close = vi.fn();
+}
+```
+
+---
+
+*Last verified: 2025-12-23 against obsidian-sample-plugin master branch*
