@@ -1,6 +1,6 @@
 ---
 name: typescript-version-upgrade
-description: This skill should be used for upgrading Node.js, TypeScript, and framework versions with production-grade safety protocols. Use for CVE remediation, LTS upgrades, TypeScript migrations, Next.js upgrades, and multi-repository version standardization. Triggers on version upgrade, node upgrade, typescript migration, CVE patch, security update, framework migration.
+description: This skill should be used for upgrading Node.js, TypeScript, ECMAScript targets, and framework versions with production-grade safety protocols. Use for CVE remediation, LTS upgrades, TypeScript migrations, ES target upgrades (ES5→ES2024), Next.js upgrades, and multi-repository version standardization. Triggers on version upgrade, node upgrade, typescript migration, CVE patch, security update, framework migration, ES target, tsconfig target, lib upgrade, ECMAScript upgrade.
 allowed-tools: Read, Grep, Glob, Bash, Edit, Write
 ---
 
@@ -13,6 +13,10 @@ Comprehensive version upgrade orchestration for Node.js, TypeScript, and framewo
 - Upgrading Node.js versions (especially for CVE remediation)
 - Legacy Node.js migrations (12.x, 14.x, 16.x EOL systems)
 - Migrating TypeScript versions (4.x → 5.x)
+- **Upgrading ECMAScript target versions (ES5 → ES2024)**
+- **Aligning tsconfig.json target/lib with Node.js version**
+- **Analyzing browser support requirements for ES targets**
+- **Configuring polyfills for runtime API support**
 - Upgrading framework versions (Next.js, React, etc.)
 - Multi-repository version standardization
 - Security-critical production application upgrades
@@ -63,6 +67,12 @@ Perform upgrades with validation gates.
 | `package.json engines.node` | Parse JSON | Check version constraint |
 | `Dockerfile FROM node:` | Grep pattern | Check base image version |
 | `tsconfig.json` | Parse JSON | Check TypeScript settings |
+| `tsconfig.json target` | Parse JSON | Check ES target version |
+| `tsconfig.json lib` | Parse JSON | Check lib array settings |
+| `vite.config.ts build.target` | Read file | Check Vite build target |
+| `esbuild target` | Read config | Check esbuild target |
+| `.browserslistrc` | Read file | Check browser targets |
+| `package.json browserslist` | Parse JSON | Check browser constraints |
 | `next.config.js/ts` | Read file | Check Next.js patterns |
 
 ## Upgrade Execution Protocol
@@ -168,6 +178,97 @@ git commit -m "chore: upgrade Node.js from X to Y
 Addresses: CVE-XXXX-XXXXX (if applicable)"
 ```
 
+---
+
+## ECMAScript Target Upgrade Protocol
+
+Load `references/ecmascript/es-upgrade-checklist.md` for complete step-by-step protocol.
+
+### Default Target Recommendation
+
+**ES2022 should be the target for ALL projects** unless backwards compatibility with older Node versions is not required, in which case **ES2024** can be used.
+
+| Scenario | Target | Rationale |
+|----------|--------|-----------|
+| **Default (all projects)** | ES2022 | Wide Node.js 18+ support, excellent browser coverage |
+| **Modern only (Node 22+)** | ES2024 | Latest features, smallest bundles, no legacy support needed |
+
+### ES Upgrade Pre-Flight Analysis
+
+1. **Detect Current Configuration**
+   - Read `tsconfig.json` → extract `target`, `lib`, `module`
+   - Read `.nvmrc` / `.node-version` → determine Node.js version
+   - Read bundler configs → esbuild, vite, webpack targets
+
+2. **Determine Safe ES Target**
+   - Node.js version → maximum safe ES target (see mapping table)
+   - Browser requirements → minimum common ES support
+   - TypeScript version → ES target support (ES2023+ requires TS 5.5+)
+
+3. **Analyze Breaking Change Risk**
+   - **Low Risk (syntax only):** Arrow functions, classes, async/await
+   - **Medium Risk (needs runtime):** Optional chaining, nullish coalescing
+   - **High Risk (cannot polyfill):** Private fields, Proxy, WeakRef, BigInt arithmetic
+
+### Node.js to ES Target Mapping
+
+| Node.js | Target | Lib | Module | TypeScript |
+|---------|--------|-----|--------|------------|
+| **24.x** | ES2024 | ES2024 | NodeNext | 5.6+ |
+| **22.x** | ES2023 | ES2023 | NodeNext | 5.5+ |
+| **20.x** | ES2023 | ES2023 | NodeNext | 5.5+ |
+| **18.x** | ES2022 | ES2022 | Node16 | 5.0+ |
+| **16.x** | ES2021 | ES2021 | Node16 | 4.x+ |
+| **14.x** | ES2020 | ES2020 | Node16 | 4.x+ |
+
+### ES Version Feature Summary
+
+| Target | Key Features Added |
+|--------|-------------------|
+| ES2022 | Top-level await, private class fields (#), Array.at(), Error.cause |
+| ES2023 | findLast/findLastIndex, toSorted/toReversed/toSpliced (non-mutating) |
+| ES2024 | Object.groupBy, Map.groupBy, Promise.withResolvers |
+
+### What CAN vs CANNOT Be Polyfilled
+
+| Category | ✅ Polyfillable | ❌ Cannot Polyfill |
+|----------|----------------|-------------------|
+| Array methods | map, filter, flat, findLast, toSorted | — |
+| Object methods | entries, fromEntries, groupBy | — |
+| Promise methods | allSettled, any, withResolvers | — |
+| Syntax features | — | ?., ??, async/await, class fields |
+| Private fields | — | #privateField |
+| BigInt | Comparison only | Arithmetic operations |
+| Proxy | — | Full Proxy behavior |
+| WeakRef | — | Cannot polyfill |
+| RegExp | — | Named groups, lookbehind, v flag |
+
+### ES Upgrade Validation Gates
+
+**Gate 1: Type Check**
+```bash
+pnpm exec tsc --noEmit
+# Must exit 0 with no errors
+```
+
+**Gate 2: Build**
+```bash
+pnpm build
+# Check: Build succeeds, bundle size should DECREASE
+```
+
+**Gate 3: Tests**
+```bash
+pnpm test
+# All tests must pass
+```
+
+**Gate 4: Bundle Inspection**
+```bash
+head -50 dist/index.js
+# Verify modern syntax present, no unnecessary polyfills
+```
+
 ## AI Safety Guardrails
 
 **Load `references/safety/ai-guardrails.md` for detailed protocols.**
@@ -223,6 +324,14 @@ Load as needed based on upgrade type:
 - `references/safety/ai-guardrails.md` - AI-specific safety protocols
 - `references/safety/testing-protocols.md` - Testing requirements
 
+### ECMAScript Target Migrations
+- `references/ecmascript/es-version-features.md` - Complete ES feature list by version (ES5→ES2024)
+- `references/ecmascript/node-es-mapping.md` - Node.js to ES target mapping with tsconfig examples
+- `references/ecmascript/browser-support-matrix.md` - Browser version requirements per ES level
+- `references/ecmascript/polyfill-strategies.md` - core-js and Babel configuration
+- `references/ecmascript/bundler-configuration.md` - esbuild, Vite, Webpack ES alignment
+- `references/ecmascript/es-upgrade-checklist.md` - Step-by-step ES upgrade protocol
+
 ## Quick Reference: Version Targets
 
 ### Node.js (CVE-2025-59466 Compliant)
@@ -242,20 +351,29 @@ Load as needed based on upgrade type:
 | Modern | 5.0+ |
 | Legacy | 4.9.x (deprecated) |
 
+### ECMAScript Targets (Recommended)
+| Scenario | Target | Rationale |
+|----------|--------|-----------|
+| **Default (all projects)** | ES2022 | Node 18+, Chrome 94+, Safari 15+ |
+| **Modern (Node 22+ only)** | ES2024 | Latest features, no legacy support |
+| **Wide browser support** | ES2020 | 93%+ global coverage |
+| **Legacy Node 16** | ES2021 | EOL but sometimes required |
+
+### Node.js to ES Mapping
+| Node | Target | TypeScript Required |
+|------|--------|---------------------|
+| 24.x | ES2024 | 5.6+ |
+| 22.x | ES2023 | 5.5+ |
+| 20.x | ES2023 | 5.5+ |
+| 18.x | ES2022 | 5.0+ |
+| 16.x | ES2021 | 4.x+ |
+
 ### React
 | From Version | Target | Migration Complexity |
 |--------------|--------|---------------------|
 | React 16.x | 19.x | 🔴 High - Major APIs removed |
 | React 17.x | 19.x | 🟠 Medium - createRoot + defaults |
 | React 18.x | 19.x | 🟢 Low - Focused changes |
-
-### [Your Company] Repo Version Inventory
-| Repository | Node | React | Priority |
-|------------|------|-------|----------|
-| [project-example]-info | 16 (EOL!) | 16.9 | 🔴 CRITICAL |
-| [project-example]-interface | - | 17.0 | 🟠 HIGH |
-| web3auth_core_kit_example | - | 18.3 | 🟡 MEDIUM |
-| styx | - | 19.0 | ✅ Current |
 
 ## Example Usage
 
