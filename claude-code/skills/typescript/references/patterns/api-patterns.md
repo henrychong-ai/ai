@@ -133,6 +133,76 @@ app.get('/api/me', (c) => {
 });
 ```
 
+### Response Immutability with Workers Static Assets
+
+**CRITICAL:** When using Cloudflare Workers Static Assets (`ASSETS.fetch()`), the returned Response object has **immutable headers**. Middleware that modifies response headers (e.g., `secureHeaders()`, CORS) will fail silently or throw errors.
+
+**Symptoms:**
+- Headers not being added to responses
+- `TypeError: Cannot modify read-only property` errors
+- Middleware appears to run but has no effect
+
+**Root Cause:** `ASSETS.fetch()` returns a Response from the static asset handler that cannot be modified. This applies even with `run_worker_first = true` in `wrangler.toml`.
+
+**Fix Pattern:** Create a new Response with mutable headers by copying the original:
+
+```typescript
+// src/index.ts - Handling static assets with mutable headers
+import { Hono } from 'hono';
+import { secureHeaders } from 'hono/secure-headers';
+
+type Bindings = {
+  ASSETS: Fetcher;
+  // ... other bindings
+};
+
+const app = new Hono<{ Bindings: Bindings }>();
+
+// Apply security headers middleware
+app.use('*', secureHeaders());
+
+// Serve static assets with mutable headers
+app.get('*', async (c) => {
+  const assetResponse = await c.env.ASSETS.fetch(c.req.raw);
+
+  // CRITICAL: Create new Response with mutable headers
+  // Original assetResponse has immutable headers
+  return new Response(assetResponse.body, {
+    status: assetResponse.status,
+    statusText: assetResponse.statusText,
+    headers: new Headers(assetResponse.headers), // Mutable copy
+  });
+});
+
+export default app;
+```
+
+**Alternative Approaches:**
+
+1. **Separate API and asset handling** - Apply header middleware only to API routes:
+```typescript
+// Only apply secureHeaders to API routes
+app.use('/api/*', secureHeaders());
+
+// Assets served without modification
+app.get('*', (c) => c.env.ASSETS.fetch(c.req.raw));
+```
+
+2. **Add headers manually** - For specific headers without middleware:
+```typescript
+app.get('*', async (c) => {
+  const response = await c.env.ASSETS.fetch(c.req.raw);
+  const mutableResponse = new Response(response.body, {
+    status: response.status,
+    headers: new Headers(response.headers),
+  });
+  mutableResponse.headers.set('X-Custom-Header', 'value');
+  return mutableResponse;
+});
+```
+
+**Reference:** Discovered in Bifrost project v1.11.6-v1.11.7 (February 2026). See KG entity "Cloudflare Workers Static Assets Immutable Response Issue" for full context.
+
 ### Error Handling
 
 ```typescript
@@ -583,4 +653,4 @@ async function validateResponse<T>(
 
 *Companion to: error-handling.md, async-patterns.md*
 *See also: tech-stack/cloudflare.md for Hono/Workers setup*
-*Last updated: 2025-12-31*
+*Last updated: 2026-02-03*
