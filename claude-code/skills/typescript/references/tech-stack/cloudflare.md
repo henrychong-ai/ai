@@ -62,11 +62,11 @@ pnpm exec wrangler secret put SECRET_NAME
 pnpm exec wrangler kv key put --namespace-id=xxx key value
 ```
 
-**With 1Password (Henry's setup):**
+**With 1Password:**
 ```bash
-# Personal Cloudflare account (requires --account flag for personal 1Password)
-CLOUDFLARE_API_TOKEN=$(op read "op://Technology/Cloudflare - HC/API Tokens/API Token - Workers Edit" --account my.1password.com) \
-CLOUDFLARE_ACCOUNT_ID="<your-cloudflare-account-id>" \
+# Using 1Password CLI for secure token retrieval
+CLOUDFLARE_API_TOKEN=$(op read "op://<vault>/<item>/API Token" --account <your-account>.1password.com) \
+CLOUDFLARE_ACCOUNT_ID="<your-account-id>" \
 pnpm exec wrangler deploy
 ```
 
@@ -1513,6 +1513,77 @@ wrangler deploy --env staging
 wrangler dev --env development
 ```
 
+### CRITICAL: wrangler.toml Environment Inheritance
+
+**When deploying with `wrangler deploy --env <environment>`, BINDINGS are NOT inherited from the top-level configuration.**
+
+#### NOT Inherited (must define per-environment):
+- `[[kv_namespaces]]` → Must define `[[env.production.kv_namespaces]]`
+- `[[d1_databases]]` → Must define `[[env.production.d1_databases]]`
+- `[[r2_buckets]]` → Must define `[[env.production.r2_buckets]]`
+- `[vars]` → Must define `[env.production.vars]`
+
+#### IS Inherited (do NOT define per-environment):
+- `[assets]` → Top-level config applies to all environments
+- `[observability]` → Inherited
+- `compatibility_date` → Inherited
+
+**WARNING:** Do NOT add `[env.production.assets]` - this syntax causes SPA routing to fail!
+
+#### Multi-Environment Pattern
+
+```toml
+# TOP-LEVEL CONFIG
+# - Assets config: inherited by all environments
+# - Bindings: NOT inherited, must define per-environment
+
+[[kv_namespaces]]
+binding = "ROUTES"
+id = "xxx-production-id"
+preview_id = "xxx-preview-id"
+
+# Assets IS inherited - only define at top level!
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+html_handling = "force-trailing-slash"
+not_found_handling = "single-page-application"
+
+[vars]
+ENVIRONMENT = "production"
+VERSION = "1.0.0"
+
+# PRODUCTION ENVIRONMENT
+# Bindings must be duplicated, but NOT [assets]!
+[env.production]
+name = "my-worker"
+
+[env.production.vars]
+ENVIRONMENT = "production"
+VERSION = "1.0.0"
+
+[[env.production.kv_namespaces]]
+binding = "ROUTES"
+id = "xxx-production-id"
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "my-db"
+database_id = "xxx-db-id"
+
+[[env.production.r2_buckets]]
+binding = "FILES_BUCKET"
+bucket_name = "files"
+```
+
+#### Failure Symptoms
+
+If bindings are missing from the environment section:
+- `c.env.ROUTES` → `undefined` (KV operations fail)
+- `c.env.DB` → `undefined` (D1 queries fail)
+- `c.env.ASSETS` → `undefined` (Static assets fail with "Internal Server Error")
+- `c.env.FILES_BUCKET` → `undefined` (R2 file serving fails)
+
 ---
 
 ## Quick Reference
@@ -1562,5 +1633,9 @@ const city = c.req.header('CF-IPCity');
 
 ---
 
+---
+
+---
+
 *Companion to: typescript-ironclad-stack.md, typescript-ironclad-infra.md*
-*Last updated: 2025-12-31*
+*Last updated: 2026-02-03*
