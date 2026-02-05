@@ -56,7 +56,6 @@ cp commands/kg.md ~/.claude/commands/
 | **file-converter** | Intelligent file format conversion with validation |
 | **media-downloader** | Download videos/audio from web URLs |
 | **instruction-creator** | Create instruction files and review existing ones |
-| **gemini-gem-converter** | Convert Claude Code skills to Gemini Gems |
 
 ### MCP Setup Guides
 
