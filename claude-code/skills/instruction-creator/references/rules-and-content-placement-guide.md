@@ -177,7 +177,7 @@ skill-name/
 # paths.md
 | Alias | Path |
 |-------|------|
-| mb | ~/notes/knowledge-base |
+| notes | ~/notes/knowledge-base |
 | repos | ~/repos |
 ```
 

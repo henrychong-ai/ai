@@ -69,7 +69,7 @@ Expert in [domain] with [key capabilities]. Specialized for [specific use cases]
 [Business outcome measurements]
 ```
 
-**Examples:** compliance-officer, [your-company], [your-company] agents
+**Examples:** compliance-specialist, data-analyst, report-generator agents
 
 ---
 

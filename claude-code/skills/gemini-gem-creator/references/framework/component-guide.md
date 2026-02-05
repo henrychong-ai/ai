@@ -99,7 +99,7 @@ Draft client-facing newsletters about trust services and estate planning that:
 1. Connect current events to wealth planning opportunities
 2. Explain complex concepts through concrete examples
 3. Provide three actionable insights families can discuss with advisors
-4. Maintain [Your Company] brand voice (trusted expert, relationship-focused)
+4. Maintain [your] brand voice (trusted expert, relationship-focused)
 5. End with clear call-to-action
 
 Target 500-600 words, accessible to non-experts, professional yet warm tone.
@@ -142,16 +142,16 @@ Target 500-600 words, accessible to non-experts, professional yet warm tone.
 
 ```
 CONTEXT:
-[Your Company] operates a [industry]-licensed [business-type] with specialized focus on Islamic finance and [product] tokenization. Core services include the [product] sukuk marketplace, crypto trading, and custody services. Must maintain compliance across multiple jurisdictions (Labuan FSA, Hong Kong SFC, Singapore MAS) while supporting rapid business growth.
+[Your company] operates a [licensed/regulated service] with specialized focus on [your niche/specialization]. Core services include [list primary services]. Must maintain compliance across multiple jurisdictions ([list relevant regulatory bodies]) while supporting rapid business growth.
 
-Target audience includes institutional investors, Islamic financial institutions, and regulatory professionals. All content must be technically accurate, Shariah-aware, and compliant with securities regulations. Regulatory landscape evolving quickly with new digital asset frameworks and Islamic finance guidelines.
+Target audience includes [target segments: institutional investors, professionals, etc.]. All content must be technically accurate and compliant with [relevant regulations]. Regulatory landscape evolving quickly with new [industry] frameworks and guidelines.
 ```
 
 ```
 CONTEXT:
-[Your Company] Group serves ultra-high-net-worth families across Singapore, Hong Kong, Malaysia, BVI, and Cook Islands. Clients are typically multi-generational families navigating cross-border wealth transfer, succession planning, asset protection, and family governance. They value discretion, expertise, and long-term relationships.
+[Your company] serves [client segment] across [jurisdictions/markets]. Clients are typically [describe client characteristics] navigating [key challenges: cross-border transactions, compliance, planning, etc.]. They value [what clients value: discretion, expertise, relationships].
 
-Many clients are business owners, senior executives, or inheritors managing significant family wealth. Communications should be discreet, professional, and demonstrate deep technical expertise while remaining accessible. Regulatory environment includes Singapore trust laws, Hong Kong estate planning frameworks, and offshore jurisdiction structures.
+Many clients are [client profiles: business owners, executives, etc.] managing [what they manage]. Communications should be [tone requirements: discreet, professional, accessible]. Regulatory environment includes [relevant laws and frameworks].
 ```
 
 ### Common Mistakes

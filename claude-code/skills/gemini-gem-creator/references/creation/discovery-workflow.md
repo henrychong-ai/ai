@@ -76,7 +76,7 @@ Build each component systematically using discovery information.
 
 ### CONTEXT Construction Sequence
 
-1. **Business Background**: Incorporate company context ([Your Company] if applicable)
+1. **Business Background**: Incorporate company context (your organization's specifics)
 2. **Regulatory Framework**: Include relevant regulations and standards
 3. **Audience Details**: Specify user characteristics and needs
 4. **Constraints**: Define limits and requirements

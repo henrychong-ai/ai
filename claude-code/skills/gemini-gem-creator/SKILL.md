@@ -1,6 +1,6 @@
 ---
 name: gemini-gem-creator
-description: This skill creates and converts Gemini Custom Gems using the 4-component framework (Persona/Task/Context/Format). Create gems from requirements through interactive discovery, or convert Claude Code agents/skills to team-shareable gems. Optimizes existing gems against quality standards. Use for [Your Company] Google Workspace gem distribution, gemini-gem-converter, convert to gemini.
+description: This skill creates and converts Gemini Custom Gems using the 4-component framework (Persona/Task/Context/Format). Create gems from requirements through interactive discovery, or convert Claude Code agents/skills to team-shareable gems. Optimizes existing gems against quality standards. Use for Google Workspace gem distribution, gemini-gem-converter, convert to gemini.
 model: opus
 allowed-tools: Read, Glob, Write
 ---
@@ -155,14 +155,14 @@ FORMAT:
 ### For Create Mode
 - Ask discovery questions one at a time
 - Push for specificity when answers are vague
-- Use domain templates for [Your Company] contexts
+- Use domain templates for your specific business context
 - Validate against 5-quality-test framework
 
 ### For Convert Mode
 - **NEVER modify or delete source CC file**
 - Remove ALL CC-specific syntax (YAML, tools, MCP, paths)
 - Remove ALL individual-specific content (personal names, custom framework triggers)
-- PRESERVE business context ([Your Company], [Your Company], regulatory frameworks)
+- PRESERVE business context (your company, industry, regulatory frameworks)
 
 ## Gemini Knowledge Base Limits (Official)
 

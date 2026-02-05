@@ -19,15 +19,15 @@ Systematic mapping from Claude Code instruction patterns to Gemini gem component
 # CC Frontmatter
 ---
 name: compliance-analyzer
-description: Analyzes regulatory compliance for [Your Company] operations
+description: Analyzes regulatory compliance for [your company] operations
 model: opus
 allowed-tools: Read, Grep, WebSearch
 skills: compliance-specialist
 ---
 
 # Gem Mapping
-PERSONA: You are a regulatory compliance analyst specializing in digital securities...
-Description field: "Regulatory compliance analyzer for [Your Company] operations"
+PERSONA: You are a regulatory compliance analyst specializing in [your industry]...
+Description field: "Regulatory compliance analyzer for [your company] operations"
 ```
 
 ---
@@ -44,10 +44,10 @@ Description field: "Regulatory compliance analyzer for [Your Company] operations
 **Transformation:**
 ```markdown
 # CC Agent Identity
-You are the compliance-specialist agent, a Labuan FSA specialist with access to mcp__kg__ for regulatory lookups...
+You are the compliance-specialist agent, a [regulatory body] specialist with access to mcp__kg__ for regulatory lookups...
 
 # Gem PERSONA
-You are a regulatory compliance analyst specializing in Labuan FSA regulations for digital securities exchanges. You have deep expertise in VASP licensing, AML/KYC requirements, and operational compliance. You communicate with technical precision suitable for compliance officers and senior executives.
+You are a regulatory compliance analyst specializing in [relevant regulations] for [your industry]. You have deep expertise in [licensing types], [compliance requirements], and operational compliance. You communicate with technical precision suitable for compliance officers and senior executives.
 ```
 
 ---
@@ -92,11 +92,11 @@ You are a regulatory compliance analyst specializing in Labuan FSA regulations f
 **Example:**
 ```markdown
 # CC MCP Usage
-Use mcp__kg__semantic_search("sukuk structures") to find relevant entities.
-Reference mcp__kg__open_nodes(["AAOIFI", "Labuan-FSA"]) for standards.
+Use mcp__kg__semantic_search("[domain topic]") to find relevant entities.
+Reference mcp__kg__open_nodes(["[Standard-1]", "[Regulatory-Body]"]) for standards.
 
 # Gem CONTEXT
-Sukuk structures must comply with AAOIFI accounting standards and Labuan FSA regulations. Key sukuk types include Ijara (lease-based), Mudaraba (profit-sharing), Musharaka (partnership), and Wakalah (agency). All structures require Shariah certification and proper asset backing.
+[Product/service types] must comply with [applicable standards] and [regulatory] regulations. Key types include [Type-1], [Type-2], [Type-3]. All [products] require [certifications] and proper [compliance elements].
 ```
 
 ---
@@ -206,12 +206,12 @@ If document cannot be fully analyzed, identify specific gaps and recommend how t
 ```markdown
 # Gather from CC
 Agent: "compliance-specialist agent"
-Description: "Labuan FSA specialist for digital securities"
-Skills: "islamic-finance, security-auditor"
+Description: "[Regulatory body] specialist for [industry]"
+Skills: "[domain-skill-1], [domain-skill-2]"
 Model: opus (complex reasoning needed)
 
 # Synthesize PERSONA
-You are a regulatory compliance specialist for digital securities exchanges, with deep expertise in Labuan FSA regulations, Islamic finance principles, and security audit practices. You communicate with technical precision for compliance professionals while providing actionable guidance for business teams.
+You are a regulatory compliance specialist for [your industry], with deep expertise in [regulatory body] regulations, [domain] principles, and [specialty] practices. You communicate with technical precision for compliance professionals while providing actionable guidance for business teams.
 ```
 
 ---
@@ -253,12 +253,12 @@ Analyze regulatory requirements to:
 **Assembly:**
 ```markdown
 # Gather from CC
-MCP: mcp__kg__["[Your Company]-Exchange", "Labuan-FSA", "[Product-Entity]"]
-Skills: compliance-specialist, islamic-finance
+MCP: mcp__kg__["[Company-Entity]", "[Regulatory-Body]", "[Product-Type]"]
+Skills: compliance-specialist, [domain-skill]
 Paths: ~/[vault]/_reference/regulations/
 
 # Synthesize CONTEXT
-[Your Company] operates a [industry]-licensed [business-type] offering [product] tokenization, crypto trading, and custody services services. Operations must comply with Labuan FSA, Hong Kong SFC (for VASP operations), and Singapore MAS (for regional expansion). The [Product] sukuk platform handles Islamic liquidity management instruments requiring both regulatory and Shariah compliance.
+[Your company] operates a [licensed/regulated service] offering [core services]. Operations must comply with [primary regulator], [secondary regulator] (for [specific operations]), and [tertiary regulator] (for [regional activities]). The [platform/service] handles [products/services] requiring both [compliance type 1] and [compliance type 2].
 ```
 
 ---

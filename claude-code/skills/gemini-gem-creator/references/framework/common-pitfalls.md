@@ -64,7 +64,7 @@ CONTEXT: We do finance stuff.
 
 **Fix:**
 ```
-CONTEXT: [Your Company] operates a [industry]-licensed [business-type] with [product] tokenization, crypto trading, and custody services services. Operations must comply with Labuan FSA, Hong Kong SFC, and Singapore MAS. Target audience is compliance professionals and senior executives requiring analysis for regulatory submissions and board reporting.
+CONTEXT: [Your company] operates a [licensed/regulated service] with [core service offerings]. Operations must comply with [relevant regulatory bodies]. Target audience is [audience segments] requiring analysis for [specific use cases].
 ```
 
 **Key elements:**
@@ -171,10 +171,10 @@ PERSONA: You are a digital securities compliance analyst specializing in tokeniz
 ```
 
 **Specialization sources:**
-- Company-specific operations ([Your Company] exchange, [Your Company] trusts)
+- Company-specific operations (your services, products, platforms)
 - Regulatory expertise (specific jurisdictions, standards)
-- Industry terminology (sukuk, tokenization, UHNW families)
-- Output formats (regulatory submissions, board reports)
+- Industry terminology (domain-specific language)
+- Output formats (regulatory submissions, board reports, client deliverables)
 
 ---
 

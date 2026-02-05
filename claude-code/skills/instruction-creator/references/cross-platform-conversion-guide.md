@@ -102,7 +102,7 @@ Skills that **require local tool execution**:
 - `ffmpeg` - Requires ffmpeg CLI
 - `obsidian` - Requires Obsidian MCP server
 - `things` - Requires Things MCP server
-- `infrastructure` - Requires SSH, Tailscale
+- `infrastructure` - Requires SSH, system access
 
 ### Partially Portable Skills
 
@@ -469,7 +469,7 @@ Based on analysis of common Claude Code skills:
 | git | Requires git CLI |
 | images, ffmpeg | Require CLI tools |
 | obsidian, things | Require MCP servers |
-| infrastructure, infrastructure | Require SSH, system access |
+| infrastructure, devops | Require SSH, system access |
 
 ---
 

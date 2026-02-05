@@ -1,6 +1,6 @@
 # Domain-Specific Templates
 
-Pre-built templates for common [Your Company] gem domains.
+Pre-built templates for common business gem domains.
 
 ## Regulatory/Compliance Domain
 
@@ -198,7 +198,7 @@ You are a [trust professional / wealth advisor / succession planning specialist]
 4. [Practical implementation guidance]
 5. [Family governance or relationship aspect]
 
-Ensure [quality standard] and maintain [brand approach: [Your Company] relationship focus / discretion / expertise demonstration].
+Ensure [quality standard] and maintain [brand approach: relationship focus / discretion / expertise demonstration].
 ```
 
 ### CONTEXT Template

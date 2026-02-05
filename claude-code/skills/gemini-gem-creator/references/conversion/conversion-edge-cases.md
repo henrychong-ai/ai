@@ -131,7 +131,7 @@ CONTEXT:
 This gem combines multiple domain expertise areas:
 
 Compliance Expertise:
-- Labuan FSA digital securities regulations
+- [Your regulatory body] regulations
 - AML/KYC requirements and monitoring
 - Regulatory reporting obligations
 
