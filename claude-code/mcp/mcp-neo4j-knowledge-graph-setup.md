@@ -549,7 +549,7 @@ Add instructions? (yes/no)
 ```
 No problem! You can always add these instructions later by asking a future Claude Code session to:
 
-"Read and execute the setup guide at henrychong.com/mcp-neo4j-kg/setup and add KG usage instructions to my CLAUDE.md file"
+"Add KG usage instructions to my CLAUDE.md file using the guidelines from Section 8.3 of this setup guide"
 
 The setup guide contains the full instructions ready to add whenever you need them.
 ```
