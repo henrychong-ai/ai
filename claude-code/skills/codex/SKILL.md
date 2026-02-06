@@ -1,34 +1,34 @@
 ---
 name: codex
-description: Route requests to OpenAI GPT-5.2 models via Codex MCP for second opinions, hard problems, and code review. Triggers on /codex, "use codex", with -g flag for general model and reasoning levels (none/low/medium/high/xhigh).
+description: Route requests to OpenAI GPT-5.3 models via Codex MCP for second opinions, hard problems, and code review. Triggers on /codex, "use codex", with -g flag for general model and reasoning levels (none/low/medium/high/xhigh).
 allowed-tools: mcp__codex__codex, mcp__codex__codex-reply
 ---
 
-# Codex Skill - OpenAI GPT-5.2 Integration
+# Codex Skill - OpenAI GPT-5.3 Integration
 
-Access OpenAI's GPT-5.2 models for second opinions, hard problems, and code review. Runs in main thread—context flows TO Codex, responses flow BACK for integration.
+Access OpenAI's GPT-5.3 models for second opinions, hard problems, and code review. Runs in main thread—context flows TO Codex, responses flow BACK for integration.
 
 ## Quick Reference
 
 | Trigger | Model | Reasoning |
 |---------|-------|-----------|
-| `/codex` or `use codex` | gpt-5.2-codex | xhigh (default) |
-| `use codex -g` | gpt-5.2 | xhigh |
-| `use codex [level]` | gpt-5.2-codex | specified level |
-| `use codex -g [level]` | gpt-5.2 | specified level |
+| `/codex` or `use codex` | gpt-5.3-codex | high (explicit) |
+| `use codex -g` | gpt-5.3 | high |
+| `use codex [level]` | gpt-5.3-codex | specified level |
+| `use codex -g [level]` | gpt-5.3 | specified level |
 
-**Reasoning Levels:** `none` → `low` → `medium` → `high` → `xhigh` (default, best quality)
+**Reasoning Levels:** `none` → `low` → `medium` → `high` → `xhigh` (always pass explicitly)
 
 ## Models
 
-| Aspect | gpt-5.2-codex (default) | gpt-5.2 (-g flag) |
+| Aspect | gpt-5.3-codex (default) | gpt-5.3 (-g flag) |
 |--------|-------------------------|-------------------|
 | **Focus** | Specialized coding | General reasoning |
 | **Strengths** | Multi-file reasoning, debugging, refactoring, performance optimization | Broad knowledge, research, strategy, documentation |
 | **Best for** | Code problems, architecture, debugging | Non-code technical, cross-domain, research |
 | **Context** | 400K tokens | 400K tokens |
 
-**Model Selection:** Use default `gpt-5.2-codex` for any code-related problem. Use `-g` flag only when problem isn't primarily about code.
+**Model Selection:** Use default `gpt-5.3-codex` for any code-related problem. Use `-g` flag only when problem isn't primarily about code.
 
 ## When to Use Codex
 
@@ -73,30 +73,30 @@ Access OpenAI's GPT-5.2 models for second opinions, hard problems, and code revi
 - Missing technology context
 - No success criteria
 - Asking what Claude can answer confidently
-- **Downgrading reasoning level** (using `high` instead of `xhigh`) without explicit user request
+- **Downgrading reasoning level** (using `medium` or lower instead of `high`) without explicit user request
 
 ## MCP Syntax
 
-**CRITICAL: Always use `xhigh` reasoning unless user explicitly requests a different level.** Do not downgrade to `high` or lower without explicit user instruction.
+**CRITICAL: Always use `high` reasoning unless user explicitly requests a different level.** Do not downgrade to `medium` or lower without explicit user instruction.
 
-### Primary Session (Default - xhigh reasoning)
+### Primary Session (Default - high reasoning)
 ```
 mcp__codex__codex({
   prompt: "[prepared prompt]",
   config: {
-    "model": "gpt-5.2-codex"
-    // model_reasoning_effort defaults to "xhigh" - omit unless user specifies level
+    "model": "gpt-5.3-codex",
+    "model_reasoning_effort": "high"  // ALWAYS pass explicitly - do not omit
   }
 })
 ```
 
-### With Explicit Reasoning Level (only when user specifies)
+### With Different Reasoning Level (only when user explicitly requests)
 ```
 mcp__codex__codex({
   prompt: "[prepared prompt]",
   config: {
-    "model": "gpt-5.2-codex",
-    "model_reasoning_effort": "medium"  // only include when user explicitly requests: none/low/medium/high
+    "model": "gpt-5.3-codex",
+    "model_reasoning_effort": "medium"  // only include when user explicitly requests: none/low/medium/xhigh
   }
 })
 ```
