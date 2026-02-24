@@ -86,44 +86,14 @@
 - Desire flexibility in how capability is accessed
 
 **Example: instruction-creator**
-- **Agent** (`~/.claude/agents/instruction-creator.md`):
-  - Proactive architectural review
-  - System-wide instruction optimization
-  - Complex multi-file creation
-  - Business context integration
+A single skill (`~/.claude/skills/instruction-creator/SKILL.md`) handles both:
+  - Quick reference for YAML frontmatter and templates
+  - Proactive architectural review and creation
+  - System-wide instruction optimisation
+  - Complex multi-file creation (can spin up Task tool subagents for parallelised work)
+  - Progressive disclosure to bundled reference materials
 
-- **Skill** (`~/.claude/skills/instruction-creator/SKILL.md`):
-  - Explicit reference when creating single file
-  - Quick lookup for YAML frontmatter
-  - Decision guidance without full context load
-  - Progressive disclosure to reference materials
-
-### Differentiating Same-Named Skill/Agent Pairs
-
-When creating both a skill and agent with the same name, **differentiate their descriptions** to avoid trigger overlap:
-
-**Skill Description Pattern** (reference/guidance focus):
-```yaml
-description: This skill should be used for quick reference and guidance about [domain].
-Use for questions about [formats], [decisions], [options], and [best practices].
-Triggers: "[what format]", "[how to structure]", "[which option]", "[template]".
-For actual implementation, use the [name] agent instead.
-```
-
-**Agent Description Pattern** (implementation/execution focus):
-```yaml
-description: [Role] for [domain]. Use PROACTIVELY for creating/updating [items],
-building [deliverables], complex multi-step [workflows], and [domain] review.
-```
-
-**Trigger Word Strategy:**
-
-| Skill Triggers (Reference) | Agent Triggers (Implementation) |
-|----------------------------|--------------------------------|
-| "what format", "how to structure" | "create", "build", "update" |
-| "which option", "should I use" | "implement", "generate", "modify" |
-| "template", "example", "best practice" | "review", "optimize", "fix" |
-| Question words: what, how, which | Action words: create, build, update |
+**Note:** A separate agent is unnecessary when the skill runs in main thread context with full tool access. The skill can delegate to subagents via the Task tool for heavy parallel work.
 
 **Key Principle:** Skills answer "what/how" questions; Agents execute "do this" requests.
 

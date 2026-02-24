@@ -1,6 +1,6 @@
 ---
 name: instruction-creator
-description: This skill should be used for quick reference and guidance about instruction files (CLAUDE.md, rules, agents, skills, slash commands). Use for questions about YAML frontmatter format, agent-vs-skill decisions, content placement (where should this go?), rules vs CLAUDE.md, token budgets, model configuration, templates, best practices, hooks, and cross-platform conversion. Provides loading hierarchy, decision matrices, 5-step skill workflow, and placement guidance. Triggers: "YAML frontmatter", "agent vs skill", "where should I put", "rules vs CLAUDE.md", "content placement", "token budget", "auto-loading", "instruction template", "context fork", "hooks", "team sharing", "sanitization". For actual creation/implementation, use the instruction-creator agent instead.
+description: Master architect for Claude instruction ecosystems including agents, skills, slash commands, MCP servers, and project instructions. Creates optimal instruction hierarchies. Provides skill creation templates, 5-step workflow guidance, model configuration guidance (aliases, inheritance, override), and script references (init_skill.py, package_skill.py). Use PROACTIVELY for creating/updating agents, creating/updating skills, creating/updating slash commands, MCP setup guide creation, complex multi-file instruction creation, system-wide optimization, team distribution preparation (sanitization), instruction ecosystem review, YAML frontmatter format, agent-vs-skill decisions, content placement, rules vs CLAUDE.md, token budgets, hooks, and cross-platform conversion. Triggers: "YAML frontmatter", "agent vs skill", "where should I put", "rules vs CLAUDE.md", "content placement", "token budget", "auto-loading", "instruction template", "context fork", "hooks", "team sharing", "sanitization", "create agent", "create skill", "review instructions".
 ---
 
 # Instruction Creator Skill
@@ -120,7 +120,7 @@ hooks:                              # Lifecycle hooks (see Hooks section)
 
 - **Use aliases**: `opus`, `sonnet`, `haiku` (automatically use latest version)
 - **`inherit`**: Inherit model from parent conversation
-- **Priority order**: Task tool override → Agent YAML → Inherit → System default
+- **Priority order**: Task tool override > Agent YAML > Inherit > System default
 - **Model capabilities**:
   - `opus`: Complex reasoning, strategic analysis, multi-step workflows
   - `sonnet`: General-purpose, balanced performance, technical tasks
@@ -446,29 +446,25 @@ which npx        # Returns: /opt/homebrew/bin/npx
 "command": "npx"                      # Will fail
 ```
 
-## When to Use Skill vs Agent
+## Execution Model
 
-**Use this skill (instruction-creator):**
-- Quick reference for templates and frontmatter
-- Creating a single instruction file
-- Agent vs skill decision guidance
-- Reviewing existing files
+This skill runs in the **main thread context** with full access to all tools (Read, Write, Edit, Bash, Glob, Grep, etc.). This is optimal because:
+- Direct access to the full conversation context
+- Can read, create, and modify instruction files inline
+- No context isolation overhead for interactive workflows
 
-**Use instruction-creator agent:**
-- Creating multiple related instruction files
-- System-wide instruction optimization
-- Complex architectural decisions
-- Team distribution preparation (sanitization)
-- MCP setup guide creation
+For complex multi-file operations (e.g., creating an entire instruction ecosystem), this skill can spin up Task tool subagents as needed for parallelised work.
 
 ## References
 
 Detailed guides in `references/` subdirectory:
 - **yaml-frontmatter-complete-guide.md**: All valid fields and options (COMPREHENSIVE)
 - **agent-vs-skill-decision-guide.md**: Complete decision matrix for agents vs skills
-- **rules-and-content-placement-guide.md**: CLAUDE.md, rules, skills placement decisions (NEW)
+- **rules-and-content-placement-guide.md**: CLAUDE.md, rules, skills placement decisions
 - **common-instruction-patterns.md**: Proven structures and templates
-- **cross-platform-conversion-guide.md**: Claude Code → Claude.ai conversion
+- **cross-platform-conversion-guide.md**: Claude Code > Claude.ai conversion
+- **mcp-setup-guide-framework.md**: MCP server setup guide creation framework, scope decision matrix, credential security
+- **creation-checklists.md**: File type selection matrix, MUST/SHOULD/MAY requirements, model selection, sanitisation
 
 ## Scripts
 

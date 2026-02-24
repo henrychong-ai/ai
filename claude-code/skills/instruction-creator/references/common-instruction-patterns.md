@@ -69,7 +69,7 @@ Expert in [domain] with [key capabilities]. Specialized for [specific use cases]
 [Business outcome measurements]
 ```
 
-**Examples:** compliance-specialist, data-analyst, report-generator agents
+**Examples:** compliance-officer, business-domain agents
 
 ---
 
@@ -314,7 +314,7 @@ For automatic operation, the agent handles triggers.
 For manual control, use "use skill [name]".
 ```
 
-**Example:** instruction-creator (agent for proactive optimization, skill for explicit reference)
+**Example:** instruction-creator (skill handles both proactive creation and explicit reference)
 
 ---
 
