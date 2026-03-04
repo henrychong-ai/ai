@@ -1,0 +1,189 @@
+# Global Corporate Registry Reference
+# For use with the Dossier Intelligence Gem
+# Last Updated: 2026-03-02
+
+## ASIA-PACIFIC
+
+### Singapore
+- Registry: Accounting & Corporate Regulatory Authority (ACRA) BizFile
+- URL: https://www.bizfile.gov.sg
+- Data: Company registration, directors, shareholders, financial filings, company status
+- Search: Company name or UEN (Unique Entity Number)
+- Notes: Paid search for detailed records; basic info available free
+
+### Hong Kong
+- Registry: Companies Registry - Integrated Companies Registry Information System (ICRIS)
+- URL: https://www.icris.cr.gov.hk
+- Data: Company registration, directors, secretaries, charges, annual returns
+- Search: Company name or company number (CR number)
+- Notes: Some searches require HKD fee; free basic company name search available
+- Also: SFC Licensed Persons Register - https://www.sfc.hk/en/Regulatory-functions/Intermediaries/Licensing/Register-of-licensed-persons-and-registered-institutions
+
+### Malaysia
+- Registry: Suruhanjaya Syarikat Malaysia (SSM) / Companies Commission of Malaysia
+- URL: https://www.ssm.com.my
+- Data: Company registration, directors, shareholders, business registrations
+- Search: Company name or registration number
+- Notes: MyCoID portal for online searches
+
+### Malaysia (Labuan)
+- Registry: Labuan Financial Services Authority (Labuan FSA)
+- URL: https://www.labuanfsa.gov.my
+- Data: Licensed entities, Labuan companies, Labuan trusts
+- Notes: Separate from SSM; offshore financial centre jurisdiction
+
+### Japan
+- Registry: Ministry of Justice - Legal Affairs Bureau
+- URL: https://www.moj.go.jp
+- Data: Company registration, directors, articles of incorporation
+- Notes: Searches primarily in Japanese
+
+### Australia
+- Registry: Australian Securities & Investments Commission (ASIC)
+- URL: https://connectonline.asic.gov.au
+- Data: Company registration, directors, officeholders, financial reports
+- Search: Company name or ACN/ABN
+- Notes: Basic searches free; detailed documents paid
+
+### India
+- Registry: Ministry of Corporate Affairs (MCA)
+- URL: https://www.mca.gov.in
+- Data: Company registration, directors, annual filings, charges
+- Search: Company name or CIN (Corporate Identification Number)
+
+### China
+- Registry: National Enterprise Credit Information Publicity System (NECIPS)
+- URL: https://www.gsxt.gov.cn
+- Data: Company registration, legal representative, shareholders, annual reports
+- Notes: Interface in Chinese; consider Tianyancha or QCC for English-accessible lookups
+
+### South Korea
+- Registry: Korea Financial Supervisory Service DART
+- URL: https://dart.fss.or.kr
+- Data: Company filings, financial reports, material disclosures
+- Notes: Listed companies; interface in Korean with some English
+
+## EUROPE
+
+### United Kingdom
+- Registry: Companies House
+- URL: https://find-and-update.company-information.service.gov.uk
+- Data: Company registration, directors, persons with significant control (PSC), charges, financial statements, filing history
+- Search: Company name or company number
+- Notes: Extensive free data; one of the most comprehensive open registries globally
+
+### Ireland
+- Registry: Companies Registration Office (CRO)
+- URL: https://www.cro.ie
+- Data: Company registration, directors, annual returns
+- Search: Company name or company number
+
+### Netherlands
+- Registry: Kamer van Koophandel (KvK) / Chamber of Commerce
+- URL: https://www.kvk.nl
+- Data: Company registration, trade names, UBO register
+- Search: Company name or KvK number
+
+### Germany
+- Registry: Handelsregister (Commercial Register)
+- URL: https://www.handelsregister.de
+- Data: Company registration, managing directors, proxy holders
+- Notes: Interface in German; federal system with state courts
+
+### Luxembourg
+- Registry: Registre de Commerce et des Societes (RCS)
+- URL: https://www.lbr.lu
+- Data: Company registration, beneficial owners, financial filings
+- Notes: Important for fund structures and holding companies
+
+### Switzerland
+- Registry: Zefix (Central Business Names Index)
+- URL: https://www.zefix.ch
+- Data: Company registration, registered office, purpose, persons
+- Notes: Federated system; Zefix aggregates cantonal registers
+
+## AMERICAS
+
+### United States
+- Federal - SEC EDGAR: https://www.sec.gov/cgi-bin/browse-edgar
+  - Data: Public company filings (10-K, 10-Q, 8-K, proxy statements, insider trading)
+  - Search: Company name, ticker, or CIK number
+  - Notes: Comprehensive for publicly listed companies
+- State-level: Each state has Secretary of State business search
+  - Delaware: https://icis.corp.delaware.gov/ecorp/entitysearch
+  - New York: https://appext20.dos.ny.gov/corp_public/corpsearch.entity_search_entry
+  - California: https://bizfileonline.sos.ca.gov/search/business
+  - Notes: Many US companies incorporate in Delaware regardless of operating location
+- PACER (court records): https://pacer.uscourts.gov
+  - Data: Federal court filings, bankruptcy records
+  - Notes: Paid per-page; search is free
+
+### Canada
+- Registry: Corporations Canada (Federal)
+- URL: https://ised-isde.canada.ca/cc/lgcy/fdrlCrpSrch.html
+- Data: Federal company registrations
+- Notes: Provincial registries also exist for provincially incorporated companies
+
+### Cayman Islands
+- Registry: Cayman Islands General Registry
+- URL: https://www.ciregistry.ky
+- Data: Company registration, limited public information
+- Notes: Limited transparency; offshore jurisdiction
+
+### British Virgin Islands (BVI)
+- Registry: BVI Financial Services Commission
+- URL: https://www.bvifsc.vg
+- Data: Licensed entities, limited company search
+- Notes: Very limited public information; known for privacy
+
+## OFFSHORE & SPECIAL JURISDICTIONS
+
+### Jersey
+- Registry: Jersey Financial Services Commission (JFSC)
+- URL: https://www.jerseyfsc.org
+- Data: Registered entities, regulated businesses
+
+### Guernsey
+- Registry: Guernsey Registry
+- URL: https://www.guernseyregistry.com
+- Data: Company registration, directors
+
+### Isle of Man
+- Registry: Isle of Man Companies Registry
+- URL: https://www.gov.im/categories/business-and-industries/companies-registry/
+- Data: Company registration, directors, annual returns
+
+### Cook Islands
+- Registry: Cook Islands Financial Supervisory Commission
+- URL: https://www.fsc.gov.ck
+- Data: Licensed entities, international trusts, international companies
+- Notes: Known for asset protection trusts
+
+## GLOBAL AGGREGATORS
+
+### OpenCorporates
+- URL: https://opencorporates.com
+- Data: Aggregated company data from 140+ jurisdictions
+- Search: Company name, officer name, or jurisdiction
+- Notes: Free basic search; API and bulk data available. Excellent starting point for cross-jurisdiction searches.
+
+### LEI (Legal Entity Identifier) Lookup
+- URL: https://search.gleif.org
+- Data: LEI registrations, entity relationships, ownership chains
+- Notes: Useful for regulated financial entities
+
+### ICIJ Offshore Leaks Database
+- URL: https://offshoreleaks.icij.org
+- Data: Panama Papers, Paradise Papers, Pandora Papers entity data
+- Search: Name, jurisdiction, or intermediary
+- Notes: Leaked data from offshore service providers; significant for due diligence
+
+## SEARCH TIPS
+
+1. Always search both the individual's name AND the company name in corporate registries
+2. Check for variant spellings, transliterations, and maiden/married names
+3. Cross-reference directors found in one jurisdiction against other registries
+4. Note registration dates - recent incorporations before major transactions may be red flags
+5. Check if companies are active, dormant, or dissolved - dissolved companies with recent transactions are suspicious
+6. For Asian names, search both Western order (Given Family) and Eastern order (Family Given)
+7. Use OpenCorporates as a starting point, then verify in official registries

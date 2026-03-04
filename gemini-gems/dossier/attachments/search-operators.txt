@@ -1,0 +1,213 @@
+# Google Search Operators for OSINT Research
+# For use with the Dossier Intelligence Gem
+# Last Updated: 2026-03-02
+
+## CORE OPERATORS
+
+### Exact Match
+"John Smith" - Forces exact phrase match
+Usage: Always start individual searches with exact name in quotes
+
+### Site-Specific Search
+site:linkedin.com "John Smith" - Search only within a specific domain
+site:x.com "John Smith" - Search X/Twitter
+site:facebook.com "John Smith" - Search Facebook
+site:web.archive.org "example.com" - Search Wayback Machine archives
+
+### Exclude Domain
+-site:pinterest.com - Exclude irrelevant sites from results
+-site:nameberry.com - Exclude baby name sites
+Usage: Add exclusions to reduce noise for common names
+
+### Title Search
+intitle:"John Smith" - Find pages with name in the title
+intitle:"Annual Report" "Company Name" - Find annual reports
+
+### URL Search
+inurl:about "Company Name" - Find about pages
+inurl:team "Company Name" - Find team/staff pages
+inurl:board "Company Name" - Find board of directors pages
+
+### File Type
+filetype:pdf "Company Name" annual report - Find PDF annual reports
+filetype:pdf "John Smith" CV OR resume - Find uploaded CVs/resumes
+filetype:xlsx OR filetype:csv "Company Name" - Find data files
+
+### OR Operator
+"John Smith" OR "J. Smith" OR "Jonathan Smith" - Search name variants
+"CEO" OR "Chief Executive" OR "Managing Director" - Search role variants
+
+### Wildcard
+"John * Smith" - Match any word between John and Smith
+"* Director" "Company Name" - Find any director title
+
+### Date Range
+"Company Name" after:2023-01-01 before:2024-01-01 - Limit to date range
+"John Smith" after:2020-01-01 - Results from 2020 onwards
+
+### Number Range
+"Company Name" revenue $1000000..$100000000 - Search within number range
+
+## OSINT SEARCH STRATEGIES
+
+### Pass 1: Individual - Identity Discovery
+```
+"Full Name" - Basic exact match
+"Full Name" + city/country - Geographic disambiguation
+"Full Name" + company name - Professional context
+"Full Name" + industry keywords - Industry context
+"Full Name" + "date of birth" OR "born" - DOB discovery
+"Full Name" + nationality OR passport - Nationality info
+```
+
+### Pass 2: Individual - Social Media Deep Dive
+```
+site:linkedin.com/in "Full Name" - LinkedIn profile
+site:linkedin.com/in "Full Name" + company - LinkedIn with company context
+site:x.com "Full Name" OR site:twitter.com "Full Name" - X/Twitter
+site:facebook.com "Full Name" + location - Facebook with location
+site:instagram.com "Full Name" - Instagram
+site:github.com "Full Name" - GitHub (tech individuals)
+site:medium.com "@" "Full Name" - Medium articles
+site:youtube.com "Full Name" - YouTube appearances
+site:crunchbase.com/person "Full Name" - Crunchbase profile
+```
+
+### Pass 3: Individual - Corporate Associations
+```
+"Full Name" director OR directorship - Directorships
+"Full Name" shareholder OR shareholding - Shareholdings
+"Full Name" "appointed as" OR "named as" - Appointments
+"Full Name" "resigned" OR "stepped down" - Departures
+"Full Name" company OR companies OR founded OR co-founded - Company associations
+site:opencorporates.com "Full Name" - OpenCorporates officer search
+"Full Name" "companies house" - UK Companies House references
+"Full Name" "ACRA" OR "bizfile" - Singapore registry references
+"Full Name" EDGAR OR "SEC filing" - US SEC filing references
+```
+
+### Pass 4: Individual - Media & Adverse
+```
+"Full Name" interview OR keynote OR conference OR panel - Speaking engagements
+"Full Name" quoted OR "said" OR "told" site:reuters.com OR site:bloomberg.com - Major media quotes
+"Full Name" award OR recognition OR honour - Achievements
+"Full Name" lawsuit OR litigation OR sued - Legal issues
+"Full Name" fraud OR scandal OR investigation OR allegation - Adverse media
+"Full Name" bankruptcy OR insolvent OR liquidation - Financial distress
+"Full Name" arrested OR charged OR convicted OR sentenced - Criminal matters
+"Full Name" sanction OR sanctioned OR blacklisted - Sanctions
+"Full Name" complaint OR controversy OR misconduct - Complaints
+"Full Name" regulatory action OR enforcement OR fine OR penalty - Regulatory
+```
+
+### Pass 5: Company - Identity & Structure
+```
+"Company Name" - Basic search
+"Company Name" registration OR incorporated OR registered - Registration details
+"Company Name" "annual report" OR "financial statements" - Financial filings
+"Company Name" subsidiary OR subsidiaries OR "parent company" - Corporate structure
+"Company Name" shareholder OR shareholders OR "beneficial owner" - Ownership
+"Company Name" board OR "board of directors" - Board composition
+site:opencorporates.com "Company Name" - OpenCorporates
+```
+
+### Pass 6: Company - Operations & Financial
+```
+"Company Name" revenue OR turnover OR profit OR loss - Financial indicators
+"Company Name" funding OR "series A" OR "series B" OR investment - Funding
+"Company Name" valuation OR "valued at" - Valuation
+"Company Name" acquisition OR merger OR "acquired by" OR takeover - M&A activity
+"Company Name" partnership OR "partnered with" OR collaboration - Partnerships
+"Company Name" clients OR customers OR "case study" - Client references
+"Company Name" employees OR headcount OR hiring OR layoff - Workforce
+site:glassdoor.com "Company Name" - Employee reviews
+"Company Name" site:crunchbase.com - Crunchbase profile
+```
+
+### Pass 7: Company - Regulatory & Legal
+```
+"Company Name" license OR licensed OR regulated - Licensing
+"Company Name" compliance OR "regulatory approval" - Compliance
+"Company Name" lawsuit OR litigation OR sued OR plaintiff OR defendant - Litigation
+"Company Name" enforcement OR penalty OR fine OR censure - Regulatory action
+"Company Name" investigation OR probe OR inquiry - Investigations
+"Company Name" breach OR violation OR non-compliance - Compliance issues
+```
+
+### Pass 8: Historical & Archived Content
+```
+site:web.archive.org "company-domain.com" - Archived website versions
+site:web.archive.org "Full Name" - Archived mentions
+"Company Name" OR "Full Name" after:2010-01-01 before:2015-12-31 - Historical period
+cache:"company-domain.com/about" - Google cached version
+"Company Name" "formerly known as" OR "previously" OR "rebranded" - Name history
+```
+
+### Pass 9: Sanctions & Watchlist Screening
+```
+"Full Name" OR "Company Name" sanctions OR sanctioned - General sanctions
+"Full Name" OR "Company Name" OFAC OR "specially designated" - US sanctions
+"Full Name" OR "Company Name" "Panama Papers" OR "Paradise Papers" OR "Pandora Papers" - ICIJ leaks
+site:offshoreleaks.icij.org "Full Name" - ICIJ database direct
+"Full Name" OR "Company Name" debarred OR debarment OR "world bank" - Debarment
+"Full Name" PEP OR "politically exposed" - PEP status
+"Full Name" OR "Company Name" "money laundering" OR AML - AML concerns
+```
+
+## NOISE REDUCTION TECHNIQUES
+
+### For Common Names
+"John Smith" + "Company Name" - Add known company
+"John Smith" + city + industry - Add location and industry
+"John Smith" -baby -recipe -lyrics -movie - Exclude irrelevant contexts
+"John Smith" "CEO" OR "director" OR "founder" - Add professional context
+
+### For Companies with Generic Names
+"Company Name" + industry + jurisdiction - Add industry and location
+"Company Name" + registration number - Use registration number if known
+"Company Name" -"other unrelated company" - Exclude known false matches
+
+## ADVANCED TECHNIQUES
+
+### Finding Removed Content
+```
+cache:url - Google's cached version (may show recently removed content)
+site:web.archive.org/web/*/url - All Wayback Machine snapshots
+"Full Name" site:web.archive.org - Archived mentions
+```
+
+### Finding Documents
+```
+filetype:pdf "Company Name" - PDF documents
+filetype:pdf "Full Name" biography OR CV OR resume - Personal documents
+filetype:pptx OR filetype:ppt "Company Name" - Presentations
+filetype:xlsx OR filetype:xls "Company Name" - Spreadsheets
+```
+
+### Finding Connections
+```
+"Person A" "Person B" - Find pages mentioning both people
+"Person A" "Company B" - Find connections between person and company
+"Company A" "Company B" - Find connections between companies
+"Full Name" "board" OR "advisory" OR "trustee" OR "patron" - Organisational roles
+```
+
+### Finding Contact Information (Public)
+```
+"Full Name" email OR contact OR "@" + company domain - Email discovery
+"Full Name" "phone" OR "tel" OR "mobile" - Phone numbers (public listings only)
+"Full Name" speaker OR bio OR biography - Public biographical information
+```
+
+## TIPS FOR EFFECTIVE OSINT SEARCHING
+
+1. Start broad, then narrow - Begin with exact name match, add qualifiers to refine
+2. Search name variants - Include common abbreviations, maiden names, transliterations
+3. Use multiple search passes - Each pass targets different information categories
+4. Document your searches - Note what you searched and what you found/didn't find
+5. Cross-reference findings - Verify information across multiple independent sources
+6. Check dates - Note when information was published and when pages were last updated
+7. Save/archive key pages - Web content can be removed; note access dates
+8. Consider language - For non-English targets, search in relevant languages
+9. Think laterally - Search for associates, companies, and events connected to the target
+10. Note absence of information - What you DON'T find can be as significant as what you do

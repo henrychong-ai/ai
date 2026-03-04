@@ -1,6 +1,6 @@
-# Claude Code Resources
+# AI Resources
 
-A collection of agents, skills, and commands for [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
+A collection of Claude Code extensions (agents, skills, commands) and Gemini Custom Gems.
 
 ## Installation
 
@@ -60,32 +60,29 @@ Custom slash commands for common workflows. Copy to `~/.claude/commands/`.
 | [/kg](claude-code/commands/kg.md) | Knowledge Graph query shortcuts |
 | [/push](claude-code/commands/push.md) | Git push with validation |
 
+### Gemini Custom Gems
+
+Ready-to-use [Gemini Custom Gems](https://gemini.google.com/). Copy the instructions into Gemini's gem builder.
+
+| Gem | Description |
+|-----|-------------|
+| [Dossier](gemini-gems/dossier/) | OSINT intelligence dossier generator with 7-pass search methodology, confidence ratings, and structured templates for individuals and companies. Best with Deep Research mode. |
+| [Gem Creator](gemini-gems/gem-creator/) | Build custom Gemini gems using the 4-component framework (Persona/Task/Context/Format) with canvas-based visual building and 5-test quality validation. |
+
 ## Directory Structure
 
 ```
 ai/
-└── claude-code/
-    ├── agents/           # Autonomous domain specialists
-    │   ├── file-converter.md
-    │   ├── instruction-creator.md
-    │   └── media-downloader.md
-    ├── commands/         # Custom slash commands
-    │   ├── kg.md
-    │   └── push.md
-    └── skills/           # Bundled knowledge packages
-        ├── 1password/
-        ├── claude-code-config/
-        ├── codex/
-        ├── dotnet/
-        ├── ffmpeg/
-        ├── gemini-gem-creator/
-        ├── go/
-        ├── images/
-        ├── instruction-creator/
-        ├── lint/
-        ├── pdf/
-        ├── typescript/
-        └── typescript-version-upgrade/
+├── claude-code/
+│   ├── agents/           # Autonomous domain specialists
+│   ├── commands/         # Custom slash commands
+│   └── skills/           # Bundled knowledge packages
+└── gemini-gems/
+    ├── dossier/          # OSINT intelligence dossier generator
+    │   ├── dossier.md
+    │   └── attachments/  # Knowledge base files (.txt)
+    └── gem-creator/      # Gem creation methodology
+        └── gem-creator.md
 ```
 
 ## Usage
@@ -115,6 +112,10 @@ Commands are invoked with `/command-name`:
 /kg search "topic"
 /push
 ```
+
+### Using Gemini Gems
+
+Each gem directory contains a markdown file with instructions between `---BEGIN GEM INSTRUCTIONS---` and `---END GEM INSTRUCTIONS---` markers. Copy that block into Gemini's gem builder, upload any attachments to the knowledge base, and you're ready to go.
 
 ## Requirements
 

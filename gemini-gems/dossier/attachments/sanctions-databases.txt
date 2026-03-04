@@ -1,0 +1,175 @@
+# Sanctions, PEP & Watchlist Database Reference
+# For use with the Dossier Intelligence Gem
+# Last Updated: 2026-03-02
+
+## SANCTIONS LISTS
+
+### United States - OFAC SDN List
+- Authority: U.S. Department of the Treasury, Office of Foreign Assets Control
+- URL: https://sanctionssearch.ofac.treas.gov
+- Coverage: Specially Designated Nationals and Blocked Persons
+- Search: Name, ID number, country, programme
+- Data: Full name, aliases, DOB, nationality, passport numbers, addresses, programme basis
+- Notes: Primary global sanctions list. Includes SDN, Sectoral Sanctions, Non-SDN lists.
+- Update frequency: Multiple times per week
+
+### United Nations - Consolidated Sanctions List
+- Authority: UN Security Council
+- URL: https://www.un.org/securitycouncil/sanctions/un-sc-consolidated-list
+- Coverage: Individuals and entities designated by UN Security Council committees
+- Search: Name search available on website
+- Data: Name, aliases, DOB, nationality, designation date, narrative summary
+- Notes: Baseline sanctions adopted by most countries. Search via: https://scsanctions.un.org
+- Update frequency: As designations are made
+
+### European Union - Consolidated Sanctions List
+- Authority: European Commission
+- URL: https://www.sanctionsmap.eu
+- Coverage: EU autonomous sanctions and UN-derived sanctions
+- Search: Interactive map and searchable database
+- Data: Name, DOB, designation basis, relevant legal acts
+- Notes: Includes both UN-derived and EU autonomous measures
+- Also: EU Financial Sanctions Database - https://webgate.ec.europa.eu/fsd/fsf
+
+### United Kingdom - OFSI Consolidated List
+- Authority: HM Treasury, Office of Financial Sanctions Implementation
+- URL: https://www.gov.uk/government/publications/financial-sanctions-consolidated-list-of-targets
+- Coverage: UK financial sanctions targets (post-Brexit, diverges from EU)
+- Data: Name, aliases, DOB, address, designation basis
+- Notes: Downloadable as XML/CSV. Search via: https://sanctionssearchapp.ofsi.hmtreasury.gov.uk
+
+### Hong Kong - Sanctions List
+- Authority: Commerce and Economic Development Bureau
+- URL: https://www.cedb.gov.hk/citb/en/policy-responsibilities/sanctions.html
+- Coverage: UN Security Council sanctions as implemented in Hong Kong
+- Notes: Primarily mirrors UN sanctions
+
+### Singapore - MAS Sanctions
+- Authority: Monetary Authority of Singapore
+- URL: https://www.mas.gov.sg/regulation/anti-money-laundering/targeted-financial-sanctions
+- Coverage: UN Security Council designations, MAS-specific designations
+- Notes: Published via MAS Notices to Financial Institutions
+
+### Australia - DFAT Consolidated Sanctions List
+- Authority: Department of Foreign Affairs and Trade
+- URL: https://www.dfat.gov.au/international-relations/security/sanctions/consolidated-list
+- Coverage: UN and Australian autonomous sanctions
+- Data: Downloadable consolidated list
+
+## PEP (POLITICALLY EXPOSED PERSONS) DATABASES
+
+### What is a PEP?
+A Politically Exposed Person is an individual who holds or has held a prominent public function. PEP status is a risk indicator, not an accusation - it means enhanced due diligence is required.
+
+### PEP Categories:
+- Heads of state/government
+- Senior politicians and legislators
+- Senior government/judicial/military officials
+- Senior executives of state-owned enterprises
+- Important political party officials
+- Family members and close associates of the above
+
+### Publicly Available PEP Sources:
+1. CIA World Leaders: https://www.cia.gov/resources/world-leaders/
+   - Current heads of state, cabinet members for all countries
+2. Every Politician: https://everypolitician.org
+   - Database of politicians worldwide
+3. Wikidata: https://www.wikidata.org
+   - Structured data on political figures
+4. National government websites
+   - Parliament/legislature member lists
+   - Cabinet and ministry websites
+   - Judicial appointment records
+5. Wikipedia
+   - Biographical articles on political figures
+   - Cross-reference against official sources
+
+### PEP Assessment Approach:
+1. Search target name against known political figures in relevant jurisdictions
+2. Check if target holds/held government office, legislative seat, judicial appointment, or military command
+3. Check if target is a board member or senior executive of a state-owned enterprise
+4. Check if target is a known family member or close associate of a PEP
+5. Note the jurisdiction, level of office, and recency (current vs. former)
+
+## INTERNATIONAL WATCHLISTS & DATABASES
+
+### ICIJ Offshore Leaks Database
+- URL: https://offshoreleaks.icij.org
+- Coverage: Panama Papers (2016), Paradise Papers (2017), Pandora Papers (2021), and other leaked datasets
+- Data: Offshore entities, officers, intermediaries, addresses
+- Search: Name, country, jurisdiction, data source
+- Notes: Appearance does not indicate wrongdoing. Many legitimate reasons for offshore structures. However, useful for identifying undisclosed connections.
+
+### World Bank - Listing of Ineligible Firms & Individuals
+- URL: https://www.worldbank.org/en/projects-operations/procurement/debarred-firms
+- Coverage: Firms and individuals debarred from World Bank-financed projects
+- Data: Name, country, grounds for debarment, debarment period
+- Notes: Cross-debarment with other multilateral development banks (AfDB, ADB, EBRD, IDB)
+
+### Interpol - Public Notices
+- URL: https://www.interpol.int/How-we-work/Notices
+- Coverage: Red Notices (wanted persons), public database
+- Search: Name, nationality, age range
+- Notes: Only a subset of notices are public. Absence from public database does not mean no notice exists.
+
+### FBI - Most Wanted
+- URL: https://www.fbi.gov/wanted
+- Coverage: FBI wanted persons across categories
+- Notes: US-specific but globally relevant for serious crimes
+
+### Europol - Most Wanted
+- URL: https://www.europol.europa.eu/crime-areas-and-statistics/most-wanted-fugitives
+- Coverage: Europe's most wanted fugitives
+- Notes: EU-focused
+
+## REGULATORY ENFORCEMENT DATABASES
+
+### Singapore - MAS Enforcement Actions
+- URL: https://www.mas.gov.sg/regulation/enforcement/enforcement-actions
+- Data: Civil penalties, criminal convictions, prohibition orders, composition penalties
+
+### Hong Kong - SFC Enforcement
+- URL: https://www.sfc.hk/en/Regulatory-functions/Enforcement
+- Data: Enforcement actions, disciplinary proceedings, prosecutions
+
+### Malaysia - SC Malaysia Enforcement
+- URL: https://www.sc.com.my/regulation/enforcement
+- Data: Administrative actions, civil actions, criminal prosecution
+
+### UK - FCA Enforcement
+- URL: https://www.fca.org.uk/news/search-results?np_category=enforcement&start=1
+- Data: Final notices, decision notices, supervisory notices, criminal prosecutions
+
+### US - SEC Enforcement
+- URL: https://www.sec.gov/litigation/litigations.htm
+- Data: Administrative proceedings, civil actions, trading suspensions
+
+### US - DOJ FCPA Actions
+- URL: https://www.justice.gov/criminal/criminal-fraud/related-enforcement-actions
+- Data: Foreign Corrupt Practices Act enforcement actions
+- Notes: Critical for anti-bribery due diligence
+
+## SEARCH METHODOLOGY
+
+### For Each Target, Check:
+1. All relevant sanctions lists based on nationality and jurisdictions of operation
+2. PEP status based on known public roles
+3. ICIJ Offshore Leaks for undisclosed offshore connections
+4. World Bank debarment list
+5. Interpol public notices
+6. Regulatory enforcement databases for relevant jurisdictions
+
+### Interpreting Results:
+- MATCH on sanctions list = Immediate red flag, requires legal review
+- PEP status = Enhanced due diligence required, not inherently negative
+- ICIJ Offshore Leaks match = Requires context assessment; presence alone is not negative
+- World Bank debarment = Significant integrity concern
+- Regulatory enforcement = Assess severity, recency, and remediation
+- CLEAR on all searches = Note as "No adverse findings in public databases as of [date]"
+
+### Limitations:
+- These are publicly available databases only
+- Commercial screening services (World-Check, Dow Jones, LexisNexis) have broader coverage
+- Negative results do not guarantee absence from restricted lists
+- Sanctions lists change frequently - results are point-in-time
+- Some jurisdictions have limited public enforcement disclosure
