@@ -1,6 +1,6 @@
 # Claude Code Resources
 
-A collection of agents, skills, commands, and MCP server setup guides for [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
+A collection of agents, skills, and commands for [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
 
 ## Directory Structure
 
@@ -8,15 +8,12 @@ A collection of agents, skills, commands, and MCP server setup guides for [Claud
 claude-code/
 ├── agents/           # Autonomous domain specialist agents
 ├── commands/         # Slash command definitions
-├── skills/           # Specialized knowledge packages with bundled resources
-├── mcp/              # MCP server setup guides
-├── plugins/          # Claude Code plugins
-└── scripts/          # Utility scripts
+└── skills/           # Specialized knowledge packages with bundled resources
 ```
 
 ## Installation
 
-Copy the directories you need to your Claude Code configuration:
+Copy the items you need to your Claude Code configuration:
 
 ```bash
 # Copy a skill
@@ -29,6 +26,8 @@ cp agents/file-converter.md ~/.claude/agents/
 cp commands/kg.md ~/.claude/commands/
 ```
 
+Or point Claude Code at this repo and ask it to install what you need.
+
 ## Contents
 
 ### Skills
@@ -38,7 +37,6 @@ cp commands/kg.md ~/.claude/commands/
 | **typescript** | TypeScript development specialist with Cloudflare Workers, React, Node.js patterns |
 | **go** | Go development specialist for backends, APIs, CLI tools |
 | **dotnet** | .NET development specialist for enterprise applications |
-| **python** | Python development specialist (reference only) |
 | **pdf** | PDF manipulation toolkit (extract, create, merge, split, forms) |
 | **lint** | Linting and formatting setup for TypeScript/JavaScript projects |
 | **ffmpeg** | Video/audio processing with ffmpeg |
@@ -48,6 +46,7 @@ cp commands/kg.md ~/.claude/commands/
 | **instruction-creator** | Guide for creating Claude Code instruction files |
 | **gemini-gem-creator** | Create and convert Gemini Custom Gems |
 | **typescript-version-upgrade** | Node.js/TypeScript version upgrade protocols |
+| **claude-code-config** | Statusline setup with real-time cost, context, and OAuth utilization metrics |
 
 ### Agents
 
@@ -57,26 +56,12 @@ cp commands/kg.md ~/.claude/commands/
 | **media-downloader** | Download videos/audio from web URLs |
 | **instruction-creator** | Create instruction files and review existing ones |
 
-### MCP Setup Guides
-
-| Guide | Description |
-|-------|-------------|
-| **mcp-neo4j-knowledge-graph-setup** | Automated setup for Neo4j Knowledge Graph MCP |
-| **sequential-thinking-mcp-setup** | Setup guide for Yggdrasil sequential thinking |
-| **codex-mcp-setup** | OpenAI Codex MCP server configuration |
-
 ### Commands
 
 | Command | Description |
 |---------|-------------|
 | **/kg** | Knowledge Graph query shortcuts |
 | **/push** | Git push with validation |
-
-### Plugins
-
-| Plugin | Description |
-|--------|-------------|
-| **statusline** | Custom statusline configuration for Claude Code |
 
 ## Usage
 
@@ -91,7 +76,7 @@ Skills are invoked with `/skill-name` or automatically triggered based on contex
 
 ### Using an Agent
 
-Agents are invoked via the Task tool or auto-triggered based on their description:
+Agents are invoked via the Agent tool or auto-triggered based on their description:
 
 ```
 Use the file-converter agent to convert document.pdf to markdown

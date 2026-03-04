@@ -28,7 +28,7 @@ Access OpenAI's GPT-5.3 models for second opinions, hard problems, and code revi
 | **Best for** | Code problems, architecture, debugging | Non-code technical, cross-domain, research |
 | **Context** | 400K tokens | 400K tokens |
 
-**Model Selection:** Use default `gpt-5.3-codex` for any code-related problem. Use `-g` flag only when problem isn't primarily about code.
+**Model Selection:** ALWAYS use `gpt-5.3-codex` unless the user explicitly passes the `-g` flag. The `-g` flag exists for non-code problems (research, strategy, cross-domain) but the decision to use it belongs to the USER, not to the AI. Do NOT autonomously switch to `gpt-5.3` based on your own assessment of the problem type — only switch when `-g` is explicitly present in the user's input.
 
 ## When to Use Codex
 
