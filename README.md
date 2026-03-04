@@ -1,219 +1,139 @@
-# Claude Code Extensions
+# Claude Code Resources
 
-A collection of agents, skills, commands, MCP server setup guides, and plugins for [Claude Code](https://claude.ai/code) - Anthropic's official CLI for Claude.
+A collection of agents, skills, and commands for [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
 
-## What's Included
+## Installation
 
-### 🤖 Agents
+Copy the items you need to your Claude Code configuration:
+
+```bash
+# Copy a skill
+cp -r claude-code/skills/typescript ~/.claude/skills/
+
+# Copy an agent
+cp claude-code/agents/file-converter.md ~/.claude/agents/
+
+# Copy a command
+cp commands/kg.md ~/.claude/commands/
+```
+
+Or point Claude Code at this repo and ask it to install what you need.
+
+## Contents
+
+### Agents
 
 Autonomous domain specialists that handle complex, multi-step tasks. Copy to `~/.claude/agents/`.
 
 | Agent | Description |
 |-------|-------------|
-| [codex](claude-code/agents/codex.md) | OpenAI Codex MCP integration for gpt-5.2-codex and gpt-5.2 models |
-| [file-converter](claude-code/agents/file-converter.md) | Intelligent file format conversion with auto-detection (PDF, Markdown, DOCX, HTML, Mermaid, images) |
-| [gemini-gem-converter](claude-code/agents/gemini-gem-converter.md) | Convert Claude Code agents/skills to Google Gemini Custom Gem format |
-| [instruction-creator](claude-code/agents/instruction-creator.md) | Master architect for creating Claude instruction files (agents, skills, commands) |
-| [media-downloader](claude-code/agents/media-downloader.md) | Download videos/audio from web URLs using yt-dlp with smart tool selection |
+| [file-converter](claude-code/agents/file-converter.md) | Intelligent file format conversion with auto-detection and validation |
+| [instruction-creator](claude-code/agents/instruction-creator.md) | Create and review Claude Code instruction files (agents, skills, commands) |
+| [media-downloader](claude-code/agents/media-downloader.md) | Download videos/audio from web URLs using yt-dlp |
 
-### 📚 Skills
+### Skills
 
 Bundled knowledge packages with reference materials. Copy entire folder to `~/.claude/skills/`.
 
 | Skill | Description |
 |-------|-------------|
-| [1password](claude-code/skills/1password/) | 1Password CLI, secrets management, op run setup, GitHub Actions integration |
-| [ffmpeg](claude-code/skills/ffmpeg/) | Video/audio processing with hardware acceleration on Apple Silicon |
-| [gemini-gem-creator](claude-code/skills/gemini-gem-creator/) | Create Google Gemini Custom Gems using the 4-component framework |
-| [images](claude-code/skills/images/) | Image manipulation with ImageMagick (resize, crop, convert, collage) |
-| [instruction-creator](claude-code/skills/instruction-creator/) | Quick reference for instruction file formats, templates, and best practices |
-| [pdf](claude-code/skills/pdf/) | PDF manipulation: extraction, merging, forms, creating fillable templates |
+| [1password](claude-code/skills/1password/) | 1Password CLI, secrets management, op run setup |
+| [claude-code-config](claude-code/skills/claude-code-config/) | Statusline setup with real-time cost, context, and OAuth utilization metrics |
+| [codex](claude-code/skills/codex/) | OpenAI Codex MCP integration for second opinions |
+| [dotnet](claude-code/skills/dotnet/) | .NET development specialist for enterprise applications |
+| [ffmpeg](claude-code/skills/ffmpeg/) | Video/audio processing with ffmpeg |
+| [gemini-gem-creator](claude-code/skills/gemini-gem-creator/) | Create and convert Gemini Custom Gems |
+| [go](claude-code/skills/go/) | Go development specialist for backends, APIs, CLI tools |
+| [images](claude-code/skills/images/) | Image processing and manipulation |
+| [instruction-creator](claude-code/skills/instruction-creator/) | Guide for creating Claude Code instruction files |
+| [lint](claude-code/skills/lint/) | Linting and formatting setup for TypeScript/JavaScript projects |
+| [pdf](claude-code/skills/pdf/) | PDF manipulation toolkit (extract, create, merge, split, forms) |
+| [typescript](claude-code/skills/typescript/) | TypeScript development specialist with Cloudflare Workers, React, Node.js patterns |
+| [typescript-version-upgrade](claude-code/skills/typescript-version-upgrade/) | Node.js/TypeScript version upgrade protocols |
 
-### ⚡ Commands
+### Commands
 
 Custom slash commands for common workflows. Copy to `~/.claude/commands/`.
 
 | Command | Description |
 |---------|-------------|
-| [/kg](claude-code/commands/kg.md) | Token-efficient Knowledge Graph session capture and optimization |
-| [/push](claude-code/commands/push.md) | Intelligent git push workflow with auto-generated commit messages |
-
-### 🔧 MCP Server Setup Guides
-
-Step-by-step installation guides for MCP servers. Claude Code can read and execute these automatically.
-
-| Guide | Description |
-|-------|-------------|
-| [codex-mcp-setup](claude-code/mcp/codex-mcp-setup.md) | Install OpenAI Codex MCP for gpt-5.2-codex model integration |
-| [mcp-neo4j-knowledge-graph-setup](claude-code/mcp/mcp-neo4j-knowledge-graph-setup.md) | Set up Neo4j-backed Knowledge Graph with embeddings |
-| [sequential-thinking-mcp-setup](claude-code/mcp/sequential-thinking-mcp-setup.md) | Install Sequential Thinking MCP for structured problem-solving |
-
-### 🔌 Plugins
-
-Full plugins with installers for easy distribution. See plugin-specific READMEs for installation.
-
-| Plugin | Description |
-|--------|-------------|
-| [statusline](claude-code/plugins/statusline/) | Statusline showing model, costs, context usage, and rate limit metrics |
-
-## Installation
-
-### Option 1: Automated Installer (Recommended)
-
-```bash
-# Clone and run the installer
-git clone https://github.com/henrychong-ai/ai.git
-cd ai/claude-code
-./scripts/install.sh
-```
-
-The installer will:
-- Copy all agents to `~/.claude/agents/`
-- Copy all skills to `~/.claude/skills/`
-- Copy all commands to `~/.claude/commands/`
-- Backup any existing files before overwriting
-
-**Installer options:**
-```bash
-./scripts/install.sh --agents-only    # Install only agents
-./scripts/install.sh --skills-only    # Install only skills
-./scripts/install.sh --commands-only  # Install only commands
-./scripts/install.sh --no-backup      # Skip backing up existing files
-```
-
-### Option 2: Plugin Marketplace
-
-Add this repository as a plugin marketplace source, then install via Claude Code:
-
-```bash
-# In Claude Code, run:
-/install-extensions
-```
-
-### Option 3: Manual Install
-
-1. **Agents**: Copy individual `.md` files to `~/.claude/agents/`
-2. **Skills**: Copy entire skill folder (with `SKILL.md` and `references/`) to `~/.claude/skills/`
-3. **Commands**: Copy `.md` files to `~/.claude/commands/`
-4. **MCP Guides**: Reference directly in Claude Code conversations
-5. **Plugins**: Follow plugin-specific installation instructions
-
-### Using MCP Setup Guides
-
-In Claude Code, simply reference the guide file:
-
-```
-Please read and execute the setup from /path/to/ai/claude-code/mcp/sequential-thinking-mcp-setup.md
-```
-
-Claude Code will automatically execute all installation steps.
+| [/kg](claude-code/commands/kg.md) | Knowledge Graph query shortcuts |
+| [/push](claude-code/commands/push.md) | Git push with validation |
 
 ## Directory Structure
 
 ```
 ai/
 └── claude-code/
-    ├── .claude-plugin/   # Plugin metadata
-    │   └── plugin.json
-    ├── scripts/          # Installation scripts
-    │   └── install.sh
     ├── agents/           # Autonomous domain specialists
-    │   ├── codex.md
     │   ├── file-converter.md
-    │   ├── gemini-gem-converter.md
     │   ├── instruction-creator.md
     │   └── media-downloader.md
     ├── commands/         # Custom slash commands
     │   ├── kg.md
     │   └── push.md
-    ├── mcp/              # MCP server setup guides
-    │   ├── codex-mcp-setup.md
-    │   ├── mcp-neo4j-knowledge-graph-setup.md
-    │   └── sequential-thinking-mcp-setup.md
-    ├── plugins/          # Nested plugins
-    │   └── statusline/
-    ├── plugin-commands/  # Plugin-specific commands
-    │   └── install-extensions.md
     └── skills/           # Bundled knowledge packages
         ├── 1password/
+        ├── claude-code-config/
+        ├── codex/
+        ├── dotnet/
         ├── ffmpeg/
         ├── gemini-gem-creator/
+        ├── go/
         ├── images/
         ├── instruction-creator/
-        └── pdf/
+        ├── lint/
+        ├── pdf/
+        ├── typescript/
+        └── typescript-version-upgrade/
 ```
 
-## Requirements
-
-- **Claude Code** v1.0+ with MCP support
-- **macOS** recommended (some features use macOS-specific tools)
-- **Node.js & npm** for MCP server installation
-
-### Skill-Specific Requirements
-
-| Skill/Plugin | Dependencies |
-|--------------|--------------|
-| 1password | 1Password CLI (`op`) |
-| ffmpeg | `brew install ffmpeg` |
-| images | `brew install imagemagick` |
-| pdf | `uv pip install pypdf pdfplumber` |
-| statusline | `brew install jq`, `bun install -g ccusage` |
-
-## Usage Examples
-
-### Using Agents
-
-Agents auto-activate based on triggers or can be invoked explicitly:
-
-```
-# File conversion (auto-triggers on "convert this file")
-Convert this PDF to markdown
-
-# Media download (auto-triggers on URLs)
-Download this video: https://youtube.com/watch?v=...
-
-# Codex integration (gpt-5.2-codex with high reasoning)
-use codex to optimize this function
-
-# Codex with different reasoning levels
-use codex xhigh to architect this system    # maximum reasoning
-use codex low to format this code           # fast, lightweight
-
-# General purpose model (gpt-5.2)
-use codex -g to analyze this research paper
-```
+## Usage
 
 ### Using Skills
 
-Invoke skills with the "use skill" pattern:
+Skills are invoked with `/skill-name` or automatically triggered based on context:
 
 ```
-use skill pdf to fill this form
-use skill ffmpeg to compress this video
+/typescript   # Invoke TypeScript skill
+/pdf          # Invoke PDF skill
+```
+
+### Using Agents
+
+Agents are invoked via the Agent tool or auto-triggered based on their description:
+
+```
+Use the file-converter agent to convert document.pdf to markdown
 ```
 
 ### Using Commands
 
-Type the command name directly:
+Commands are invoked with `/command-name`:
 
 ```
-/push          # Smart git push with auto-commit message
-/kg            # Capture session knowledge to KG
+/kg search "topic"
+/push
 ```
+
+## Requirements
+
+- **Claude Code** v1.0+
+- **macOS** recommended (some features use macOS-specific tools)
 
 ## Contributing
 
-Contributions welcome! When adding new components:
-
-1. **Agents**: Include YAML frontmatter with `name`, `description`, and `model`
-2. **Skills**: Create folder with `SKILL.md` and optional `references/` subdirectory
-3. **Commands**: Include YAML frontmatter with `name` and `description`
-4. **MCP Guides**: Make them auto-executable by Claude Code
+1. Fork this repository
+2. Create your feature branch
+3. Ensure all sensitive/personal information is removed
+4. Submit a pull request
 
 ## License
 
-Individual components may have their own licenses. Check component-specific files for details.
+MIT License - see individual files for specific attributions.
 
-## Author
+## Related
 
-Henry Chong ([@henrychong-ai](https://github.com/henrychong-ai))
+- [Claude Code Documentation](https://docs.anthropic.com/en/docs/claude-code)
+- [MCP (Model Context Protocol)](https://modelcontextprotocol.io/)
+- [@henrychong-ai/mcp-neo4j-knowledge-graph](https://www.npmjs.com/package/@henrychong-ai/mcp-neo4j-knowledge-graph)
