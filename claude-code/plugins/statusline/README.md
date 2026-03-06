@@ -4,22 +4,25 @@ A Claude Code statusline configuration that displays comprehensive session metri
 
 ## Output Format
 
+Two-line display:
+
 ```
-repos │ main │ 🤖 Opus | 💰 $21.13 today / $21.13 block (4h 25m) | 🧠 146k/200k (73%) | 📊 5h: 25% / 7d: 21% / son: 2%
+Line 1: repos │ main │ 🤖 Opus 4.6 | 🧠 146k/200k (73%)
+Line 2: 💰 $21.13 today / $21.13 block (4h 25m) | 📊 5h: 25% / 7d: 21% / son: 2%
 ```
 
-| Component | Description |
-|-----------|-------------|
-| `repos` | Current directory name |
-| `main` | Git branch (if in repo) |
-| `🤖 Opus` | Current model |
-| `💰 $21.13 today` | Today's accumulated cost |
-| `$21.13 block` | Current billing block cost |
-| `(4h 25m)` | Time remaining in 5h block |
-| `🧠 146k/200k (73%)` | Context window usage |
-| `📊 5h: 25%` | 5-hour utilization |
-| `7d: 21%` | 7-day utilization |
-| `son: 2%` | Sonnet-specific utilization |
+| Component | Line | Description |
+|-----------|------|-------------|
+| `repos` | 1 | Current directory name |
+| `main` | 1 | Git branch (if in repo) |
+| `🤖 Opus 4.6` | 1 | Current model |
+| `🧠 146k/200k (73%)` | 1 | Context window usage |
+| `💰 $21.13 today` | 2 | Today's accumulated cost |
+| `$21.13 block` | 2 | Current billing block cost |
+| `(4h 25m)` | 2 | Time remaining in 5h block |
+| `📊 5h: 25%` | 2 | 5-hour utilization |
+| `7d: 21%` | 2 | 7-day utilization |
+| `son: 2%` | 2 | Sonnet-specific utilization |
 
 ## Requirements
 
@@ -153,6 +156,7 @@ Interpretation: For every 1% of 7d consumed, ~40.0% of 5h is consumed.
 
 ## Version History
 
+- **1.3.0** (2026-03-06): Two-line layout, OAuth simplification (direct CC Keychain read), retry-after bounds fix (5s floor / 300s cap)
 - **1.2.0** (2026-01-08): Added calc_usage_ratio.py for 5h/7d consumption analysis
 - **1.1.0** (2026-01-05): Non-blocking architecture - read cache first, background refresh, atomic writes
 - **1.0.0** (2025-12-19): Initial release

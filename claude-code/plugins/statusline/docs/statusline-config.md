@@ -244,8 +244,9 @@ refresh_oauth_bg() {
       echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) oauth API rejected (token from CC Keychain)" >> /tmp/claude-oauth-debug.log
       # Dynamic cooldown from retry-after header (minimum 300s)
       ra=$(grep -i "retry-after" "$hdr_tmp" 2>/dev/null | tr -d "\r" | awk '{print $2}')
-      ra=${ra:-300}
-      [ "$ra" -lt 300 ] 2>/dev/null && ra=300
+      ra=${ra:-30}
+      [ "$ra" -lt 5 ] && ra=5
+      [ "$ra" -gt 300 ] && ra=300
       echo "$(($(date +%s) + ra))" > /tmp/claude-oauth-api-cooldown
       rm -f "$tmp"
     fi
@@ -420,7 +421,7 @@ timestamp,5h%,7d%,sonnet%
 
 Contains a Unix epoch (seconds) indicating when the next API retry is allowed. Prevents OAuth usage API hammering after a failed API call. Checked at the start of `refresh_oauth_bg()` — if current time < stored epoch, refresh is skipped entirely.
 
-**Dynamic duration:** Parses `retry-after` header from 429 responses (minimum 300s / 5 min). A rate limit with `retry-after: 3600` creates a 1-hour cooldown instead of the old fixed 5-minute cooldown.
+**Dynamic duration:** Parses `retry-after` header from 429 responses (floor 5s, cap 300s). Eliminates self-inflicted 5-minute blackouts when server sends `retry-after: 0`.
 
 **Format (2026-03-05):** Changed from empty touch file (mtime-based, fixed 5-min) to epoch-in-file (dynamic duration from retry-after header).
 
@@ -520,8 +521,8 @@ Next call after refresh: Shows updated values
 10. **Null check**: Context usage gracefully handles null current_usage
 11. **Separate caches**: Fault isolation - ccusage failure doesn't break OAuth data
 12. **Direct CC Keychain read**: `get_oauth_token()` reads CC's own access token directly — CC manages token lifecycle (refresh, rotation)
-13. **API call cooldown**: Dynamic cooldown after failed OAuth usage API call prevents rate limit feedback loops (`/tmp/claude-oauth-api-cooldown`). Parses `retry-after` header for duration (minimum 300s). File contains retry epoch.
-14. **Retry-after header parsing**: `curl -D` captures response headers; `grep -i "retry-after"` extracts the value. Cooldown duration adapts to server-specified wait time.
+13. **API call cooldown**: Dynamic cooldown after failed OAuth usage API call prevents rate limit feedback loops (`/tmp/claude-oauth-api-cooldown`). Parses `retry-after` header for duration (floor 5s, cap 300s). File contains retry epoch.
+14. **Retry-after header parsing**: `curl -D` captures response headers; `grep -i "retry-after"` extracts the value. Bounds: floor 5s (was 300s), cap 300s. Eliminates self-inflicted 5-minute blackouts when server sends `retry-after: 0`.
 15. **umask 077**: Background subshell sets restrictive umask for temp files
 16. **curl timeout**: `--max-time 10` on all curl calls prevents hanging
 17. **Log rotation**: Debug log (>50KB → 20 lines) and usage CSV (>500KB → 1000 lines)
@@ -566,7 +567,8 @@ Line 2: 💰 $0.13 today / $0.13 block (4h 25m) | 📊 5h: 25% / 7d: 21% / son: 
 
 ## Version History
 
-- **2026-03-06**: **OAuth simplification — direct CC Keychain read.** Removed `attempt_token_refresh()` function and 4-step `get_oauth_token()` chain (~85 lines). Replaced with 1-step direct read from CC's Keychain entry (`Claude Code-credentials`). CC manages its own token lifecycle (refresh, rotation); statusline just reads the current access token. Eliminates stale refresh token `invalid_grant` cascades that caused rate limiting. Also implemented dynamic `retry-after` cooldown (was documented but never deployed to settings.json). Removed: `/tmp/claude-statusline-token.json`, Keychain `Claude Code-statusline-token`, `/tmp/claude-oauth-refresh-cooldown`. Token extraction now uses `jq` primary with `grep -o`/`cut` fallback.
+- **2026-03-06 (b)**: **Fix retry-after bounds.** Changed from 300s minimum floor to 5s floor / 300s cap. Eliminates self-inflicted 5-minute blackouts when Anthropic's `/api/oauth/usage` returns `retry-after: 0`. The old code clamped any value below 300s up to 300s, meaning a server response of "retry immediately" was interpreted as "wait 5 minutes".
+- **2026-03-06 (a)**: **OAuth simplification — direct CC Keychain read.** Removed `attempt_token_refresh()` function and 4-step `get_oauth_token()` chain (~85 lines). Replaced with 1-step direct read from CC's Keychain entry (`Claude Code-credentials`). CC manages its own token lifecycle (refresh, rotation); statusline just reads the current access token. Eliminates stale refresh token `invalid_grant` cascades that caused rate limiting. Also implemented dynamic `retry-after` cooldown (was documented but never deployed to settings.json). Removed: `/tmp/claude-statusline-token.json`, Keychain `Claude Code-statusline-token`, `/tmp/claude-oauth-refresh-cooldown`. Token extraction now uses `jq` primary with `grep -o`/`cut` fallback.
 - **2026-03-05**: Token invalidation on API rejection + dynamic retry-after cooldown. (1) When usage API returns non-200, cached token is invalidated (file cache + Keychain statusline entry deleted), forcing `get_oauth_token()` to re-resolve via CC Keychain refresh token on next cycle. Fixes revoked tokens being reused indefinitely. (2) API cooldown file changed from empty touch file (mtime-based, fixed 5-min) to epoch-in-file format. Parses `retry-after` header from 429 responses for dynamic cooldown duration (minimum 300s). (3) `curl -D` captures response headers for retry-after extraction. Root cause: token rotation by CC invalidated cached access token; `get_oauth_token()` only checked expiry not API acceptance; 277 failed calls triggered account-level rate limiting.
 - **2026-03-02**: Moved 📊 usage block from Line 1 to end of Line 2. New layout: Line 1 (dir │ branch │ model | ctx), Line 2 (cost | usage).
 - **2026-03-01**: Two-line layout and block reorder. Line 1: dir │ branch │ model | context | usage. Line 2: cost (daily/block + time remaining). Resolves line wrapping/cutoff issue (GitHub #22115). Added full CC JSON stdin schema documentation (all available fields including unused: cost.*, version, session_id, vim.mode, agent.name). Added block layout reference table for easy rearranging.
