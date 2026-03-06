@@ -106,43 +106,33 @@ OAuth API cache (/tmp/claude-usage-cache.json, 60s TTL) ────────
 
 **Key Design Principle:** Read cache FIRST, display immediately, then trigger background refresh if stale. This ensures the statusline never blocks on network calls and always shows last-known-good values.
 
-## Self-Healing OAuth Token Resolution
+## OAuth Token Resolution
 
-When `refresh_oauth_bg()` needs a token, `get_oauth_token()` resolves it via a 4-step chain:
+When `refresh_oauth_bg()` needs a token, `get_oauth_token()` reads it directly from CC's Keychain:
 
 ```
-1. /tmp/claude-statusline-token.json (file cache, ~1ms, lost on reboot)
-   → contains ONLY {accessToken, expiresAt} — NO refresh token
-   → if accessToken valid (expiresAt > now + 60s): USE IT
+1. Keychain "Claude Code-credentials" (CC's own, CC manages lifecycle)
+   → JSON blob: {"claudeAiOauth":{"accessToken":"...","refreshToken":"..."}}
+   → extract accessToken via jq (primary) or grep (fallback for truncated JSON)
+   → if found: USE IT
 
-2. Keychain "Claude Code-statusline-token" (persistent, ~50ms)
-   → contains {accessToken, refreshToken, expiresAt}
-   → if accessToken valid: populate file cache + USE IT
-   → if expired: try its refreshToken via OAuth endpoint
-
-3. Keychain "Claude Code-credentials" (CC's own, read-only fallback)
-   → extract refreshToken via grep (truncated blob)
-   → try OAuth refresh endpoint
-
-4. Stale fallback
-   → use whatever's in /tmp/claude-usage-cache.json + "!" indicator
+2. Failure
+   → stale fallback — use whatever's in /tmp/claude-usage-cache.json + "!" indicator
 ```
+
+### Design Rationale
+
+CC actively manages its own OAuth tokens (access + refresh) in the macOS Keychain. Rather than maintaining a separate token lifecycle (refresh endpoint, cooldowns, rotation handling), the statusline reads CC's current access token directly. This eliminates:
+- Stale refresh token `invalid_grant` cascades
+- Token rotation conflicts between CC and statusline
+- Bootstrap/seed complexity
+- The entire `attempt_token_refresh()` function (~45 lines removed)
 
 ### Security Model
 
 | Store | Contains | Security |
 |-------|----------|----------|
-| `/tmp/claude-statusline-token.json` | `{accessToken, expiresAt}` only | `chmod 600`, `umask 077` |
-| Keychain `Claude Code-statusline-token` | `{accessToken, refreshToken, expiresAt}` | macOS Keychain encryption |
-| Keychain `Claude Code-credentials` | CC's own blob (read-only fallback) | macOS Keychain encryption |
-
-### Refresh Mechanics
-
-- **OAuth endpoint**: `POST https://console.anthropic.com/v1/oauth/token` with `grant_type=refresh_token`
-- **Client ID**: `9d1c250a-e61b-44d9-88ed-5944d1962f5e` (Claude Code's public client ID)
-- **Cooldown**: 5-minute cooldown after failed refresh (`/tmp/claude-oauth-refresh-cooldown`)
-- **Rotation-safe**: If response omits new `refresh_token`, keeps previous one
-- **Bootstrap**: First run uses CC Keychain refresh token → creates statusline Keychain entry
+| Keychain `Claude Code-credentials` | CC's own blob (read-only) | macOS Keychain encryption |
 
 ## Complete Command
 
@@ -174,110 +164,19 @@ ccusage_cache="/tmp/claude-ccusage-cache.json"
 oauth_cache="/tmp/claude-usage-cache.json"
 
 # ============================================
-# SELF-HEALING OAUTH TOKEN FUNCTIONS
+# OAUTH TOKEN (read directly from CC Keychain)
 # ============================================
 
-# Refresh an OAuth access token using a refresh token
-# Returns new access token on success, empty on failure
-# Writes to Keychain (with refresh token) and file cache (without)
-attempt_token_refresh() {
-  local refresh_token="$1"
-  local ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-  local cooldown="/tmp/claude-oauth-refresh-cooldown"
-  # Cooldown: skip if last failure < 300s (5 min)
-  if [ -f "$cooldown" ]; then
-    local cd_ts=$(stat -f %m "$cooldown" 2>/dev/null || echo 0)
-    local now_s=$(date +%s)
-    [ $((now_s - cd_ts)) -lt 300 ] && return 1
-  fi
-  # POST with --data-urlencode to safely handle special chars in token
-  local resp=$(curl -s --max-time 10 -X POST "https://console.anthropic.com/v1/oauth/token" \
-    -H "Content-Type: application/x-www-form-urlencoded" \
-    --data-urlencode "grant_type=refresh_token" \
-    --data-urlencode "refresh_token=${refresh_token}" \
-    --data-urlencode "client_id=9d1c250a-e61b-44d9-88ed-5944d1962f5e" 2>/dev/null)
-  local new_access=$(echo "$resp" | jq -r '.access_token // empty' 2>/dev/null)
-  if [ -z "$new_access" ]; then
-    echo "$ts refresh failed: $(echo "$resp" | jq -r '.error // "unknown"' 2>/dev/null)" >> /tmp/claude-oauth-debug.log
-    touch "$cooldown" 2>/dev/null
-    return 1
-  fi
-  # Rotation-safe: keep old refresh token if response doesn't include a new one
-  local new_refresh=$(echo "$resp" | jq -r '.refresh_token // empty' 2>/dev/null)
-  [ -z "$new_refresh" ] && new_refresh="$refresh_token"
-  local expires_in=$(echo "$resp" | jq -r '.expires_in // 86400' 2>/dev/null)
-  local now_ms=$(($(date +%s) * 1000))
-  local new_expires=$((now_ms + expires_in * 1000))
-  # Keychain blob (includes refresh token — encrypted at rest)
-  local kc_blob="{\"accessToken\":\"${new_access}\",\"refreshToken\":\"${new_refresh}\",\"expiresAt\":${new_expires}}"
-  security add-generic-password -U -s "Claude Code-statusline-token" -a "$USER" -w "$kc_blob" 2>/dev/null
-  # File cache (access token + expiry ONLY — no refresh token in /tmp)
-  local fc_blob="{\"accessToken\":\"${new_access}\",\"expiresAt\":${new_expires}}"
-  local tmp="/tmp/claude-statusline-token.json.tmp.$$"
-  echo "$fc_blob" > "$tmp"
-  chmod 600 "$tmp" 2>/dev/null
-  if jq -e . "$tmp" >/dev/null 2>&1; then
-    mv "$tmp" /tmp/claude-statusline-token.json
-  else
-    rm -f "$tmp"
-  fi
-  rm -f "$cooldown" 2>/dev/null
-  echo "$ts token refreshed successfully (expires in ${expires_in}s)" >> /tmp/claude-oauth-debug.log
-  echo "$new_access"
-}
-
-# Resolve OAuth token via 4-step chain:
-# 1. File cache (fastest) → 2. Statusline Keychain → 3. CC Keychain fallback → 4. Stale fallback
+# Read CC's current access token — CC manages its own token lifecycle
 get_oauth_token() {
-  local now_ms=$(($(date +%s) * 1000))
-  # Step 1: File cache (~1ms) — access token only, no refresh token
-  if [ -f /tmp/claude-statusline-token.json ]; then
-    local ct=$(jq -r '.accessToken // empty' /tmp/claude-statusline-token.json 2>/dev/null)
-    local ce=$(jq -r '.expiresAt // 0' /tmp/claude-statusline-token.json 2>/dev/null)
-    if [ -n "$ct" ] && [ "$ce" -gt $((now_ms + 60000)) ] 2>/dev/null; then
-      echo "$ct"
-      return 0
-    fi
-  fi
-  # Step 2: Statusline Keychain entry (~50ms) — has refresh token for self-healing
-  local sb=$(security find-generic-password -s "Claude Code-statusline-token" -w 2>/dev/null)
-  if [ -n "$sb" ]; then
-    local st=$(echo "$sb" | jq -r '.accessToken // empty' 2>/dev/null)
-    local se=$(echo "$sb" | jq -r '.expiresAt // 0' 2>/dev/null)
-    if [ -n "$st" ] && [ "$se" -gt $((now_ms + 60000)) ] 2>/dev/null; then
-      # Populate file cache (access token + expiry only)
-      echo "{\"accessToken\":\"${st}\",\"expiresAt\":${se}}" > /tmp/claude-statusline-token.json
-      chmod 600 /tmp/claude-statusline-token.json 2>/dev/null
-      echo "$st"
-      return 0
-    fi
-    # Token expired — try refresh using statusline's own refresh token
-    local sr=$(echo "$sb" | jq -r '.refreshToken // empty' 2>/dev/null)
-    if [ -n "$sr" ]; then
-      local result=$(attempt_token_refresh "$sr")
-      if [ -n "$result" ]; then
-        echo "$result"
-        return 0
-      fi
-    fi
-  fi
-  # Step 3: CC Keychain refresh token (bootstrap/fallback)
   local cb=$(security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null)
-  local cr=$(echo "$cb" | grep -o '"refreshToken":"[^"]*"' | head -1 | cut -d'"' -f4)
-  if [ -n "$cr" ]; then
-    local result=$(attempt_token_refresh "$cr")
-    if [ -n "$result" ]; then
-      echo "$result"
-      return 0
-    fi
+  if [ -n "$cb" ]; then
+    # Try jq first (clean JSON parse), then grep fallback (handles truncated JSON)
+    local token=$(echo "$cb" | jq -r '.claudeAiOauth.accessToken // empty' 2>/dev/null)
+    [ -z "$token" ] && token=$(echo "$cb" | grep -o '"accessToken":"[^"]*"' | head -1 | cut -d'"' -f4)
+    [ -n "$token" ] && echo "$token" && return 0
   fi
-  # Step 4: Stale CC access token as last resort (will likely fail but triggers ! indicator)
-  local cc=$(echo "$cb" | grep -o '"accessToken":"[^"]*"' | head -1 | cut -d'"' -f4)
-  if [ -n "$cc" ]; then
-    echo "$cc"
-    return 0
-  fi
-  echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) get_oauth_token: all paths exhausted" >> /tmp/claude-oauth-debug.log
+  echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) get_oauth_token: CC Keychain empty" >> /tmp/claude-oauth-debug.log
   return 1
 }
 
@@ -308,7 +207,7 @@ refresh_ccusage_bg() {
   ) &>/dev/null & disown 2>/dev/null
 }
 
-# Background OAuth refresh — uses get_oauth_token() for self-healing token resolution
+# Background OAuth refresh — reads token from CC Keychain, no self-managed refresh
 refresh_oauth_bg() {
   # Dynamic cooldown: file contains epoch (seconds) of when retry is allowed
   if [ -f /tmp/claude-oauth-api-cooldown ]; then
@@ -342,10 +241,7 @@ refresh_oauth_bg() {
     if jq -e '.five_hour' "$tmp" >/dev/null 2>&1; then
       mv "$tmp" "$oauth_cache"
     else
-      echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) oauth API rejected — invalidating cached token" >> /tmp/claude-oauth-debug.log
-      # Invalidate cached token — may be revoked, force re-resolution on next cycle
-      rm -f /tmp/claude-statusline-token.json
-      security delete-generic-password -s "Claude Code-statusline-token" 2>/dev/null
+      echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) oauth API rejected (token from CC Keychain)" >> /tmp/claude-oauth-debug.log
       # Dynamic cooldown from retry-after header (minimum 300s)
       ra=$(grep -i "retry-after" "$hdr_tmp" 2>/dev/null | tr -d "\r" | awk '{print $2}')
       ra=${ra:-300}
@@ -510,35 +406,6 @@ OAuth API response cached for 60 seconds:
 }
 ```
 
-### /tmp/claude-statusline-token.json
-
-File cache for OAuth access token (hot path, ~1ms read). **No refresh token stored here.**
-
-```json
-{
-  "accessToken": "eyJ...",
-  "expiresAt": 1740000000000
-}
-```
-
-**Permissions:** `chmod 600` (owner-only), created with `umask 077`
-**Lifecycle:** Lost on reboot → repopulated from Keychain on next statusline render
-
-### Keychain: "Claude Code-statusline-token"
-
-Persistent OAuth token store with refresh token (macOS Keychain, encrypted at rest).
-
-```json
-{
-  "accessToken": "eyJ...",
-  "refreshToken": "eyJ...",
-  "expiresAt": 1740000000000
-}
-```
-
-**Created by:** `attempt_token_refresh()` via `security add-generic-password -U`
-**Bootstrap:** First created using CC Keychain's refresh token, then self-sustaining
-
 ### /tmp/claude-usage-log.csv
 
 Append-only log for ratio analysis (rotated >500KB → keep last 1000 lines):
@@ -548,10 +415,6 @@ timestamp,5h%,7d%,sonnet%
 1765864379,25,20,2
 1765864438,25,20,2
 ```
-
-### /tmp/claude-oauth-refresh-cooldown
-
-Empty touch file. Prevents refresh token hammering after a failed attempt. Checked by `stat -f %m` — if younger than 300s (5 min), refresh is skipped.
 
 ### /tmp/claude-oauth-api-cooldown
 
@@ -615,8 +478,8 @@ Next call after refresh: Shows updated values
    b. If exists AND age ≤ 120s → return early (skip refresh)
 3. Write lock file: /tmp/claude-ccusage.lock (or claude-oauth.lock)
 4. Set trap for cleanup on EXIT (handles crashes)
-5. Do work...
-6. On failure: invalidate cached token + write retry epoch to /tmp/claude-oauth-api-cooldown (OAuth only)
+5. Do work (OAuth: read token from CC Keychain, call usage API)
+6. On failure: write retry epoch to /tmp/claude-oauth-api-cooldown (OAuth only)
 7. Remove lock file
 ```
 
@@ -650,23 +513,18 @@ Next call after refresh: Shows updated values
 3. **Fallback values**: All jq queries use `// 0` or `// null` to prevent errors
 4. **Silent failures**: `2>/dev/null` on all external commands
 5. **Cache TTL**: 60-second refresh prevents API rate limiting and slow statusline
-6. **Token extraction**: CC Keychain uses `grep -o` + `cut` instead of `jq` to handle truncated keychain JSON (credential blob exceeds `security -w` output limit)
+6. **Token extraction**: CC Keychain uses `jq` (primary) with `grep -o` + `cut` fallback to handle truncated keychain JSON
 7. **Debug breadcrumb**: Token operations logged to `/tmp/claude-oauth-debug.log` with ISO timestamp
-8. **OAuth API rejection logging**: Failed API responses (expired token, error) logged to debug log
+8. **OAuth API rejection logging**: Failed API responses logged to debug log
 9. **Stale data indicator**: `!` suffix on 5h/7d/son values when OAuth cache > 300s old (background refresh failing)
 10. **Null check**: Context usage gracefully handles null current_usage
 11. **Separate caches**: Fault isolation - ccusage failure doesn't break OAuth data
-12. **Self-healing tokens**: `get_oauth_token()` 4-step resolution chain auto-refreshes expired tokens
-13. **Refresh cooldown**: 5-minute cooldown after failed token refresh prevents endpoint hammering (`/tmp/claude-oauth-refresh-cooldown`)
-14. **API call cooldown**: Dynamic cooldown after failed OAuth usage API call prevents rate limit feedback loops (`/tmp/claude-oauth-api-cooldown`). Parses `retry-after` header for duration (minimum 300s). File contains retry epoch, not just empty touch.
-15. **Token invalidation on API rejection**: When the usage API returns non-200 (429, 401, etc.), both file cache and Keychain statusline entry are deleted. Forces `get_oauth_token()` to fall through to Step 3 (CC Keychain refresh token) on next cycle, obtaining a fresh access token. Prevents revoked/rate-limited tokens from being reused indefinitely.
-16. **Retry-after header parsing**: `curl -D` captures response headers; `grep -i "retry-after"` extracts the value. Cooldown duration adapts to server-specified wait time rather than using a fixed 5-minute interval.
-15. **No refresh token in /tmp**: File cache stores only `{accessToken, expiresAt}` — refresh token stays in Keychain
-16. **File permissions**: `chmod 600` on file cache, `umask 077` in background subshell
-17. **Rotation-safe refresh**: Keeps previous refresh token if OAuth response omits new one
-18. **URL-encoded POST body**: `--data-urlencode` handles special chars in tokens safely
-19. **curl timeout**: `--max-time 10` on all curl calls prevents hanging
-20. **Log rotation**: Debug log (>50KB → 20 lines) and usage CSV (>500KB → 1000 lines)
+12. **Direct CC Keychain read**: `get_oauth_token()` reads CC's own access token directly — CC manages token lifecycle (refresh, rotation)
+13. **API call cooldown**: Dynamic cooldown after failed OAuth usage API call prevents rate limit feedback loops (`/tmp/claude-oauth-api-cooldown`). Parses `retry-after` header for duration (minimum 300s). File contains retry epoch.
+14. **Retry-after header parsing**: `curl -D` captures response headers; `grep -i "retry-after"` extracts the value. Cooldown duration adapts to server-specified wait time.
+15. **umask 077**: Background subshell sets restrictive umask for temp files
+16. **curl timeout**: `--max-time 10` on all curl calls prevents hanging
+17. **Log rotation**: Debug log (>50KB → 20 lines) and usage CSV (>500KB → 1000 lines)
 
 ## Time Remaining Calculation
 
@@ -708,6 +566,7 @@ Line 2: 💰 $0.13 today / $0.13 block (4h 25m) | 📊 5h: 25% / 7d: 21% / son: 
 
 ## Version History
 
+- **2026-03-06**: **OAuth simplification — direct CC Keychain read.** Removed `attempt_token_refresh()` function and 4-step `get_oauth_token()` chain (~85 lines). Replaced with 1-step direct read from CC's Keychain entry (`Claude Code-credentials`). CC manages its own token lifecycle (refresh, rotation); statusline just reads the current access token. Eliminates stale refresh token `invalid_grant` cascades that caused rate limiting. Also implemented dynamic `retry-after` cooldown (was documented but never deployed to settings.json). Removed: `/tmp/claude-statusline-token.json`, Keychain `Claude Code-statusline-token`, `/tmp/claude-oauth-refresh-cooldown`. Token extraction now uses `jq` primary with `grep -o`/`cut` fallback.
 - **2026-03-05**: Token invalidation on API rejection + dynamic retry-after cooldown. (1) When usage API returns non-200, cached token is invalidated (file cache + Keychain statusline entry deleted), forcing `get_oauth_token()` to re-resolve via CC Keychain refresh token on next cycle. Fixes revoked tokens being reused indefinitely. (2) API cooldown file changed from empty touch file (mtime-based, fixed 5-min) to epoch-in-file format. Parses `retry-after` header from 429 responses for dynamic cooldown duration (minimum 300s). (3) `curl -D` captures response headers for retry-after extraction. Root cause: token rotation by CC invalidated cached access token; `get_oauth_token()` only checked expiry not API acceptance; 277 failed calls triggered account-level rate limiting.
 - **2026-03-02**: Moved 📊 usage block from Line 1 to end of Line 2. New layout: Line 1 (dir │ branch │ model | ctx), Line 2 (cost | usage).
 - **2026-03-01**: Two-line layout and block reorder. Line 1: dir │ branch │ model | context | usage. Line 2: cost (daily/block + time remaining). Resolves line wrapping/cutoff issue (GitHub #22115). Added full CC JSON stdin schema documentation (all available fields including unused: cost.*, version, session_id, vim.mode, agent.name). Added block layout reference table for easy rearranging.
