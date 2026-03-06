@@ -1,6 +1,6 @@
 # Codex MCP Server Setup
 
-Setup guide for the OpenAI Codex CLI MCP server, integrating GPT-5.3 models with Claude Code and Claude Desktop.
+Setup guide for the OpenAI Codex CLI MCP server, integrating GPT-5.4 with Claude Code and Claude Desktop.
 
 ## Prerequisites
 
@@ -34,7 +34,7 @@ mkdir -p ~/.codex
 cat > ~/.codex/config.toml << 'EOF'
 sandbox_mode    = "workspace-write"
 approval_policy = "never"
-model           = "gpt-5.3-codex"
+model           = "gpt-5.4"
 model_reasoning_effort = "high"
 
 [features]
@@ -47,12 +47,12 @@ EOF
 
 ### 4. Add MCP Server
 
-**CRITICAL:** The `-c model="gpt-5.3-codex"` flag is required at startup to prevent empty responses.
+**CRITICAL:** The `-c model="gpt-5.4"` flag is required at startup to prevent empty responses.
 
 #### Claude Code
 
 ```bash
-claude mcp add --scope user codex codex mcp-server -c 'model="gpt-5.3-codex"'
+claude mcp add --scope user codex codex mcp-server -c 'model="gpt-5.4"' -c 'model_reasoning_effort="high"'
 ```
 
 Or manually add to `~/.claude.json`:
@@ -66,7 +66,9 @@ Or manually add to `~/.claude.json`:
       "args": [
         "mcp-server",
         "-c",
-        "model=\"gpt-5.3-codex\""
+        "model=\"gpt-5.4\"",
+        "-c",
+        "model_reasoning_effort=\"high\""
       ],
       "env": {},
       "autoapprove": [
@@ -90,7 +92,9 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
       "args": [
         "mcp-server",
         "-c",
-        "model=\"gpt-5.3-codex\""
+        "model=\"gpt-5.4\"",
+        "-c",
+        "model_reasoning_effort=\"high\""
       ]
     }
   }
@@ -113,7 +117,7 @@ use codex low: Return "MCP test successful"
 
 **Cause:** Model not configured at MCP server startup.
 
-**Fix:** Ensure args include `-c model="gpt-5.3-codex"`, then restart.
+**Fix:** Ensure args include `-c model="gpt-5.4"`, then restart.
 
 ### Authentication Issues
 

@@ -1,34 +1,21 @@
 ---
 name: codex
-description: Route requests to OpenAI GPT-5.3 models via Codex MCP for second opinions, hard problems, and code review. Triggers on /codex, "use codex", with -g flag for general model and reasoning levels (none/low/medium/high/xhigh).
+description: Route requests to OpenAI GPT-5.4 via Codex MCP for second opinions, hard problems, and code review. Triggers on /codex, "use codex", with reasoning levels (none/low/medium/high/xhigh).
 allowed-tools: mcp__codex__codex, mcp__codex__codex-reply
 ---
 
-# Codex Skill - OpenAI GPT-5.3 Integration
+# Codex Skill - OpenAI GPT-5.4 Integration
 
-Access OpenAI's GPT-5.3 models for second opinions, hard problems, and code review. Runs in main thread—context flows TO Codex, responses flow BACK for integration.
+Access OpenAI's GPT-5.4 (unified coding + reasoning model) for second opinions, hard problems, and code review. Runs in main thread—context flows TO Codex, responses flow BACK for integration.
 
 ## Quick Reference
 
 | Trigger | Model | Reasoning |
 |---------|-------|-----------|
-| `/codex` or `use codex` | gpt-5.3-codex | high (explicit) |
-| `use codex -g` | gpt-5.3 | high |
-| `use codex [level]` | gpt-5.3-codex | specified level |
-| `use codex -g [level]` | gpt-5.3 | specified level |
+| `/codex` or `use codex` | gpt-5.4 | high (default) |
+| `use codex [level]` | gpt-5.4 | specified level |
 
 **Reasoning Levels:** `none` → `low` → `medium` → `high` → `xhigh` (always pass explicitly)
-
-## Models
-
-| Aspect | gpt-5.3-codex (default) | gpt-5.3 (-g flag) |
-|--------|-------------------------|-------------------|
-| **Focus** | Specialized coding | General reasoning |
-| **Strengths** | Multi-file reasoning, debugging, refactoring, performance optimization | Broad knowledge, research, strategy, documentation |
-| **Best for** | Code problems, architecture, debugging | Non-code technical, cross-domain, research |
-| **Context** | 400K tokens | 400K tokens |
-
-**Model Selection:** ALWAYS use `gpt-5.3-codex` unless the user explicitly passes the `-g` flag. The `-g` flag exists for non-code problems (research, strategy, cross-domain) but the decision to use it belongs to the USER, not to the AI. Do NOT autonomously switch to `gpt-5.3` based on your own assessment of the problem type — only switch when `-g` is explicitly present in the user's input.
 
 ## When to Use Codex
 
@@ -84,7 +71,7 @@ Access OpenAI's GPT-5.3 models for second opinions, hard problems, and code revi
 mcp__codex__codex({
   prompt: "[prepared prompt]",
   config: {
-    "model": "gpt-5.3-codex",
+    "model": "gpt-5.4",
     "model_reasoning_effort": "high"  // ALWAYS pass explicitly - do not omit
   }
 })
@@ -95,7 +82,7 @@ mcp__codex__codex({
 mcp__codex__codex({
   prompt: "[prepared prompt]",
   config: {
-    "model": "gpt-5.3-codex",
+    "model": "gpt-5.4",
     "model_reasoning_effort": "medium"  // only include when user explicitly requests: none/low/medium/xhigh
   }
 })
