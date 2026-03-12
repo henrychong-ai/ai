@@ -1,6 +1,6 @@
 ---
 name: codex
-description: Route requests to OpenAI GPT-5.4 via Codex MCP for second opinions, hard problems, and code review. Triggers on /codex, "use codex", with reasoning levels (none/low/medium/high/xhigh).
+description: Route requests to OpenAI GPT-5.4 via Codex MCP for second opinions, hard problems, and code review. Triggers on /codex, "use codex", with reasoning levels (none/low/medium/high/xhigh) and service tier (fast/standard).
 allowed-tools: mcp__codex__codex, mcp__codex__codex-reply
 ---
 
@@ -10,12 +10,21 @@ Access OpenAI's GPT-5.4 (unified coding + reasoning model) for second opinions, 
 
 ## Quick Reference
 
-| Trigger | Model | Reasoning |
-|---------|-------|-----------|
-| `/codex` or `use codex` | gpt-5.4 | high (default) |
-| `use codex [level]` | gpt-5.4 | specified level |
+| Trigger | Model | Reasoning | Service Tier |
+|---------|-------|-----------|--------------|
+| `/codex` | gpt-5.4 | high | fast (default) |
+| `/codex [level]` | gpt-5.4 | specified | fast |
+| `/codex standard` or `/codex normal` | gpt-5.4 | high | standard |
+| `/codex [level] standard` | gpt-5.4 | specified | standard |
 
 **Reasoning Levels:** `none` → `low` → `medium` → `high` → `xhigh` (always pass explicitly)
+**Service Tiers:** `fast` (default, 1.5x speed, 2x tokens) • `standard`/`normal` (opt-in to disable fast)
+
+### Argument Parsing
+
+Arguments can appear in any order. Extract:
+1. **Reasoning level** — any of: `none`, `low`, `medium`, `high`, `xhigh` (default: `high`)
+2. **Service tier** — `fast` (default, explicit is valid), `standard` or `normal` disables fast mode
 
 ## When to Use Codex
 
@@ -61,29 +70,44 @@ Access OpenAI's GPT-5.4 (unified coding + reasoning model) for second opinions, 
 - No success criteria
 - Asking what Claude can answer confidently
 - **Downgrading reasoning level** (using `medium` or lower instead of `high`) without explicit user request
+- **Disabling fast mode** (omitting `service_tier`) without user passing `standard` or `normal`
 
 ## MCP Syntax
 
-**CRITICAL: Always use `high` reasoning unless user explicitly requests a different level.** Do not downgrade to `medium` or lower without explicit user instruction.
+**Defaults: `high` reasoning + `fast` service tier.** Do not downgrade either without explicit user request.
 
-### Primary Session (Default - high reasoning)
+### Default Session (high reasoning, fast tier)
 ```
 mcp__codex__codex({
   prompt: "[prepared prompt]",
   config: {
     "model": "gpt-5.4",
-    "model_reasoning_effort": "high"  // ALWAYS pass explicitly - do not omit
+    "model_reasoning_effort": "high",
+    "service_tier": "fast"
   }
 })
 ```
 
-### With Different Reasoning Level (only when user explicitly requests)
+### With Different Reasoning Level (fast tier maintained)
 ```
 mcp__codex__codex({
   prompt: "[prepared prompt]",
   config: {
     "model": "gpt-5.4",
-    "model_reasoning_effort": "medium"  // only include when user explicitly requests: none/low/medium/xhigh
+    "model_reasoning_effort": "medium",  // user-specified: none/low/medium/xhigh
+    "service_tier": "fast"
+  }
+})
+```
+
+### Standard Tier (only when user passes `standard` or `normal`)
+```
+mcp__codex__codex({
+  prompt: "[prepared prompt]",
+  config: {
+    "model": "gpt-5.4",
+    "model_reasoning_effort": "high"  // or user-specified level
+    // service_tier omitted = standard processing
   }
 })
 ```
