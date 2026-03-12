@@ -69,12 +69,17 @@ Arguments can appear in any order. Extract:
 - Missing technology context
 - No success criteria
 - Asking what Claude can answer confidently
+- **Omitting the `config` block** — model, reasoning effort, and service tier must ALWAYS be passed explicitly
 - **Downgrading reasoning level** (using `medium` or lower instead of `high`) without explicit user request
-- **Disabling fast mode** (omitting `service_tier`) without user passing `standard` or `normal`
+- **Omitting `service_tier`** — always pass `"fast"` (default) or `"standard"` (only when user requests)
 
 ## MCP Syntax
 
-**Defaults: `high` reasoning + `fast` service tier.** Do not downgrade either without explicit user request.
+### MANDATORY: Always Pass Config Block
+
+**CRITICAL:** Every `mcp__codex__codex` call MUST include the `config` object with `model`, `model_reasoning_effort`, and `service_tier` explicitly set. Never rely on Codex config.toml defaults — always pass these three parameters so the user can see exactly what model configuration is being used.
+
+**Defaults: `gpt-5.4` model + `high` reasoning + `fast` service tier.** Do not downgrade any without explicit user request.
 
 ### Default Session (high reasoning, fast tier)
 ```
@@ -106,11 +111,13 @@ mcp__codex__codex({
   prompt: "[prepared prompt]",
   config: {
     "model": "gpt-5.4",
-    "model_reasoning_effort": "high"  // or user-specified level
-    // service_tier omitted = standard processing
+    "model_reasoning_effort": "high",  // or user-specified level
+    "service_tier": "standard"
   }
 })
 ```
+
+**Note:** `service_tier` must always be explicitly passed — `"fast"` (default) or `"standard"` (when user requests). Never omit it.
 
 ### Continue Conversation
 ```
