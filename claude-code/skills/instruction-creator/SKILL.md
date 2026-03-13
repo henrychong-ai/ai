@@ -416,6 +416,7 @@ hooks: {...}
 - [ ] Description includes trigger terms
 - [ ] If using `agent` field, ensure `context: fork` is set
 - [ ] Bundled resources properly organized
+- [ ] MCP tool calls: schema reference table, correct/incorrect examples, parameter nesting documented (see `mcp-tool-documentation-guide.md`)
 
 ### For Commands
 - [ ] Natural language instructions clear
@@ -464,6 +465,7 @@ Detailed guides in `references/` subdirectory:
 - **common-instruction-patterns.md**: Proven structures and templates
 - **cross-platform-conversion-guide.md**: Claude Code > Claude.ai conversion
 - **mcp-setup-guide-framework.md**: MCP server setup guide creation framework, scope decision matrix, credential security
+- **mcp-tool-documentation-guide.md**: Best practices for documenting MCP tool calls in skills — `input_examples` API field, parameter nesting, correct/incorrect examples
 - **creation-checklists.md**: File type selection matrix, MUST/SHOULD/MAY requirements, model selection, sanitisation
 
 ## Scripts

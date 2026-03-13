@@ -1,161 +1,142 @@
 ---
 name: codex
-description: Route requests to OpenAI GPT-5.4 via Codex MCP for second opinions, hard problems, and code review. Triggers on /codex, "use codex", with reasoning levels (none/low/medium/high/xhigh) and service tier (fast/standard).
+description: This skill should be used to route requests to OpenAI GPT-5.4 via Codex MCP for second opinions, hard problems, and code review. Triggers on /codex, "use codex", with reasoning levels (none/low/medium/high/xhigh) and service tier (fast/standard).
 allowed-tools: mcp__codex__codex, mcp__codex__codex-reply
 ---
 
-# Codex Skill - OpenAI GPT-5.4 Integration
+# Codex Skill — OpenAI GPT-5.4
 
-Access OpenAI's GPT-5.4 (unified coding + reasoning model) for second opinions, hard problems, and code review. Runs in main thread—context flows TO Codex, responses flow BACK for integration.
+Second opinions, hard problems, code review via GPT-5.4. Runs in main thread — context flows TO Codex, responses flow BACK for integration.
 
 ## Quick Reference
 
-| Trigger | Model | Reasoning | Service Tier |
-|---------|-------|-----------|--------------|
-| `/codex` | gpt-5.4 | high | fast (default) |
-| `/codex [level]` | gpt-5.4 | specified | fast |
-| `/codex standard` or `/codex normal` | gpt-5.4 | high | standard |
-| `/codex [level] standard` | gpt-5.4 | specified | standard |
+| Trigger | Reasoning | Service Tier |
+|---------|-----------|--------------|
+| `/codex` | high | fast (default) |
+| `/codex [level]` | specified | fast |
+| `/codex standard` | high | standard |
+| `/codex [level] standard` | specified | standard |
 
-**Reasoning Levels:** `none` → `low` → `medium` → `high` → `xhigh` (always pass explicitly)
-**Service Tiers:** `fast` (default, 1.5x speed, 2x tokens) • `standard`/`normal` (opt-in to disable fast)
+**Reasoning:** `none` → `low` → `medium` → `high` (default) → `xhigh`
+**Tiers:** `fast` (default, 1.5x speed) • `standard`/`normal` (opt-in)
 
-### Argument Parsing
-
-Arguments can appear in any order. Extract:
-1. **Reasoning level** — any of: `none`, `low`, `medium`, `high`, `xhigh` (default: `high`)
-2. **Service tier** — `fast` (default, explicit is valid), `standard` or `normal` disables fast mode
-
-## When to Use Codex
-
-**USE FOR:** Stuck after multiple attempts • Unfamiliar errors • Architecture decisions • Algorithm design • Unfamiliar tech • Solution validation • Debugging not progressing • Second opinions
-
-**DON'T USE FOR:** Simple operations • Standard CRUD • Well-documented APIs • Tasks you're handling confidently • Minimal context situations
-
-**PROACTIVE:** Before major architecture decisions • After same error 2+ times • When user wants alternatives • Complex multi-file refactoring
+Arguments appear in any order. Extract reasoning level + service tier from user input.
 
 ## Context Preparation
 
-**Quality of response depends on context preparation.**
+Curate context before calling — quality in = quality out:
+1. Extract relevant code snippets (not entire files)
+2. Include full error traces if debugging
+3. State what's been tried
+4. Define what "solved" looks like
+5. Mention constraints (performance, security, compatibility)
 
-### Checklist
-1. **Extract relevant code** - Curated snippets, not entire files
-2. **Include errors** - Full stack trace if debugging
-3. **State what's tried** - Avoid redundant suggestions
-4. **Define success** - What does "solved" look like?
-5. **Mention constraints** - Performance, security, compatibility
+**Anti-patterns:** Dumping entire files • Vague questions • Missing tech context • No success criteria
 
-### Prompt Structure
-```
-## Context
-[Language/Framework], [Project description], [Current state]
+## MCP Tool Schema
 
-## Relevant Code
-[Minimal, curated snippets]
+### `mcp__codex__codex`
 
-## Problem
-[Specific, focused question]
+| Parameter | Type | Required | Notes |
+|-----------|------|----------|-------|
+| `prompt` | string | **Yes** | Initial user prompt |
+| `model` | string | No | Top-level override (also in config — use config for consistency) |
+| `config` | object | No | config.toml overrides (`additionalProperties: true`) |
+| `cwd` | string | No | Working directory |
+| `sandbox` | enum | No | `read-only` / `workspace-write` / `danger-full-access` |
+| `approval-policy` | enum | No | `untrusted` / `on-failure` / `on-request` / `never` |
+| `profile` | string | No | Config profile from config.toml |
+| `base-instructions` | string | No | Replace default instructions |
+| `developer-instructions` | string | No | Injected as developer role message |
+| `compact-prompt` | string | No | Prompt used when compacting the conversation |
 
-## Constraints
-[Requirements, limitations]
+### `mcp__codex__codex-reply`
 
-## Expected Output
-[Code, explanation, comparison, etc.]
-```
-
-### Anti-Patterns
-- Dumping entire files without curation
-- Vague questions ("make this better")
-- Missing technology context
-- No success criteria
-- Asking what Claude can answer confidently
-- **Omitting the `config` block** — model, reasoning effort, and service tier must ALWAYS be passed explicitly
-- **Downgrading reasoning level** (using `medium` or lower instead of `high`) without explicit user request
-- **Omitting `service_tier`** — always pass `"fast"` (default) or `"standard"` (only when user requests)
+| Parameter | Type | Required | Notes |
+|-----------|------|----------|-------|
+| `prompt` | string | **Yes** | Follow-up prompt |
+| `threadId` | string | Yes (effectively) | Thread ID from previous response |
+| ~~`conversationId`~~ | — | — | **DEPRECATED** — use `threadId` |
 
 ## MCP Syntax
 
 ### MANDATORY: Always Pass Config Block
 
-**CRITICAL:** Every `mcp__codex__codex` call MUST include the `config` object with `model`, `model_reasoning_effort`, and `service_tier` explicitly set. Never rely on Codex config.toml defaults — always pass these three parameters so the user can see exactly what model configuration is being used.
+Every call MUST include `config` with `model`, `model_reasoning_effort`, and `service_tier`. Never rely on config.toml defaults.
 
-**Defaults: `gpt-5.4` model + `high` reasoning + `fast` service tier.** Do not downgrade any without explicit user request.
+**Defaults:** `gpt-5.4` + `high` + `fast`. Do not downgrade without explicit user request.
 
-### Default Session (high reasoning, fast tier)
+> **Parameter Placement:**
+> - `model_reasoning_effort` and `service_tier` are **NOT** top-level params — **only work inside `config`**
+> - `model` exists at top level AND in config — **always use `config`** for consistency
+> - Top-level `model_reasoning_effort` or `service_tier` will **silently fail**
+
+### Correct Syntax
 ```
 mcp__codex__codex({
   prompt: "[prepared prompt]",
   config: {
-    "model": "gpt-5.4",
-    "model_reasoning_effort": "high",
-    "service_tier": "fast"
+    "model": "gpt-5.4",                   // always gpt-5.4
+    "model_reasoning_effort": "high",      // or user-specified: none/low/medium/xhigh
+    "service_tier": "fast"                 // default; "standard" only when user requests
   }
 })
 ```
-
-### With Different Reasoning Level (fast tier maintained)
-```
-mcp__codex__codex({
-  prompt: "[prepared prompt]",
-  config: {
-    "model": "gpt-5.4",
-    "model_reasoning_effort": "medium",  // user-specified: none/low/medium/xhigh
-    "service_tier": "fast"
-  }
-})
-```
-
-### Standard Tier (only when user passes `standard` or `normal`)
-```
-mcp__codex__codex({
-  prompt: "[prepared prompt]",
-  config: {
-    "model": "gpt-5.4",
-    "model_reasoning_effort": "high",  // or user-specified level
-    "service_tier": "standard"
-  }
-})
-```
-
-**Note:** `service_tier` must always be explicitly passed — `"fast"` (default) or `"standard"` (when user requests). Never omit it.
 
 ### Continue Conversation
 ```
 mcp__codex__codex-reply({
-  conversationId: "[from previous response]",
+  threadId: "[from previous response]",
   prompt: "[follow-up]"
+})
+```
+
+### Parallel Queries
+```
+mcp__codex__codex({
+  prompt: "Analyze approach A...",
+  config: { "model": "gpt-5.4", "model_reasoning_effort": "high", "service_tier": "fast" }
+})
+mcp__codex__codex({
+  prompt: "Analyze approach B...",
+  config: { "model": "gpt-5.4", "model_reasoning_effort": "high", "service_tier": "fast" }
+})
+```
+
+### Common Mistakes
+
+**❌ Config values at top level**
+```
+mcp__codex__codex({
+  prompt: "...",
+  model_reasoning_effort: "high",    // ❌ NOT top-level — silently ignored
+  service_tier: "fast"               // ❌ NOT top-level — silently ignored
+})
+```
+
+**❌ Missing config block**
+```
+mcp__codex__codex({
+  prompt: "...",
+  model: "gpt-5.4"                   // ❌ Only sets model, loses reasoning + tier
+})
+```
+
+**❌ Deprecated conversationId**
+```
+mcp__codex__codex-reply({
+  conversationId: "...",             // ❌ Use threadId instead
+  prompt: "..."
 })
 ```
 
 ## Response Integration
 
-**Don't just pass through—INTEGRATE with main thread context.**
+Don't pass through — INTEGRATE with main thread context.
 
 | Pattern | When | Action |
 |---------|------|--------|
-| **Direct Implementation** | Codex provides working code | Verify fit → Adapt style → Implement → Test |
-| **Synthesis** | Second opinion | Present both perspectives → Highlight agreements/differences → Unified recommendation |
-| **Iterative** | Response needs refinement | Use `codex-reply` → Provide feedback → Repeat |
-| **Conflict** | Claude and Codex disagree | Present both → Explain trade-offs → Recommend with rationale |
-
-## Use Case Patterns
-
-**Second Opinion:** Share implementation + ask "Is this sound? Alternatives? Edge cases?"
-
-**Debugging:** Error + relevant code + what's tried + "What's causing this?"
-
-**Architecture:** Options considered + requirements + constraints + "Which approach and why?"
-
-**Performance:** Current code + metrics + target + "What optimizations?"
-
-**Code Review:** Code + review focus areas + "What issues and fixes?"
-
-**Alternatives:** Current approach + likes/dislikes + "What other approaches? Trade-offs?"
-
-## Parallel Execution
-
-Run multiple queries concurrently for independent analyses:
-```
-mcp__codex__codex({ prompt: "Analyze A...", config: {...} })
-mcp__codex__codex({ prompt: "Analyze B...", config: {...} })
-```
+| **Implement** | Working code returned | Verify fit → Adapt style → Implement → Test |
+| **Synthesise** | Second opinion | Both perspectives → Agreements/differences → Recommendation |
+| **Iterate** | Needs refinement | `codex-reply` → Feedback → Repeat |
+| **Conflict** | Disagreement | Both approaches → Trade-offs → Recommend with rationale |

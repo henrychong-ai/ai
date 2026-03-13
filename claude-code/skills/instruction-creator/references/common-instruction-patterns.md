@@ -238,6 +238,57 @@ Coordinate [multi-step process] to achieve [outcome].
 
 ---
 
+## MCP Tool Integration Pattern
+
+### MCP Tool Wrapper Skill
+**Use When:** Skill wraps one or more MCP tool calls and needs to guide correct parameter usage
+
+**Structure:**
+```markdown
+# [Tool Name] Skill
+
+[Brief description of what the MCP tool does and when to use it]
+
+## Quick Reference
+[Trigger table, defaults, argument parsing]
+
+## MCP Tool Schema Reference
+
+### `mcp__server__tool` — Top-Level Parameters
+| Parameter | Type | Required | Notes |
+|-----------|------|----------|-------|
+| `param_a` | string | **Yes** | Description |
+| `config` | object | No | Pass-through overrides (additionalProperties: true) |
+
+> **Parameter Placement Warning:**
+> - `setting_x` and `setting_y` only work inside `config`
+> - Putting them at the top level will silently fail
+
+## MCP Syntax
+
+### Default Call
+[Annotated example with correct nesting]
+
+### Common Mistakes
+[Incorrect/correct example pairs]
+
+### Continue Conversation (if applicable)
+[Follow-up tool example with correct param names]
+```
+
+**Key Principles:**
+- Document actual schema (top-level params vs pass-through objects)
+- Use correct/incorrect example pairs for ambiguous parameters
+- Show progressive complexity (minimal > typical > full)
+- Mark deprecated parameters with strikethrough
+- Since MCP tools cannot use Claude API `input_examples`, skill examples are the **only** mechanism for usage guidance
+
+**Reference:** See `mcp-tool-documentation-guide.md` for comprehensive MCP documentation practices
+
+**Examples:** codex skill
+
+---
+
 ## Integration Patterns
 
 ### Agent + Project Instructions
