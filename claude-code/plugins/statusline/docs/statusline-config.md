@@ -29,13 +29,13 @@ Complete documentation for the Claude Code statusline hook.
 Two-line display (CC allocates rows by counting `\n`):
 
 ```
-Line 1: repos │ main │ 🤖 Opus 4.6 | 🧠 146k/200k (73%)
+Line 1: repos │ main │ 🤖 Opus 4.6 [medium] | 🧠 146k/200k (73%)
 Line 2: 💰 $21.13 today / $21.13 block (4h 25m) | 📊 5h: 25% / 7d: 21% / son: 2%
 ```
 
 When OAuth data is stale (token expired, API unreachable):
 ```
-Line 1: repos │ main │ 🤖 Opus 4.6 | 🧠 146k/200k (73%)
+Line 1: repos │ main │ 🤖 Opus 4.6 [medium] | 🧠 146k/200k (73%)
 Line 2: 💰 $21.13 today / $21.13 block (4h 25m) | 📊 5h: 25%! / 7d: 21%! / son: 2%!
 ```
 
@@ -49,7 +49,7 @@ Each block is an independent `printf` argument. To reorder, swap the variable po
 |----------|-------|----------|--------|-------------|
 | 1 | `repos` | `$(basename "$current_dir")` | **Local filesystem** (`pwd`) | Current directory name |
 | 2 | `main` | `$git_branch` | **Git** (`git branch --show-current`) | Git branch (omitted if not in repo) |
-| 3 | `🤖 Opus 4.6` | `$model` | **CC JSON stdin** (`.model.display_name`) | Current model |
+| 3 | `🤖 Opus 4.6 [medium]` | `$model [$effort]` | **CC JSON stdin** (`.model.display_name`) + **settings.json** (`.effortLevel`) | Current model + effort level (`auto` if unset) |
 | 4 | `🧠 146k/200k (73%)` | `$ctx_str` | **CC JSON stdin** (`.context_window.current_usage`) | Context window usage (v2.0.70+) |
 
 **Line 2 blocks:**
@@ -59,7 +59,7 @@ Each block is an independent `printf` argument. To reorder, swap the variable po
 | 1 | `💰 $21.13 today / $21.13 block (4h 25m)` | `$cost_str` | **ccusage** (cached) + **OAuth API** (`resets_at`) | Daily/block cost + time remaining |
 | 2 | `📊 5h: 25% / 7d: 21% / son: 2%` | `$usage_str` | **OAuth API** (cached) | 5h/7d/sonnet utilization |
 
-**Stale indicator:** `%!` suffix on usage values when OAuth cache > 300s old.
+**Stale indicator:** `%!` suffix on usage values when error flag exists (last API call failed) or cache > 600s old (daemon not running).
 
 ### Available CC JSON Stdin Fields (unused)
 
@@ -82,7 +82,7 @@ These fields are available from CC's JSON stdin but not currently displayed:
 
 1. **CC JSON stdin** (instant, piped by Claude Code each render) — model, context window, session cost/duration/lines
 2. **ccusage CLI** (background refresh, 60s cache at `/tmp/claude-ccusage-cache.json`) — daily/block costs
-3. **Anthropic OAuth API** (background refresh, 60s cache at `/tmp/claude-usage-cache.json`) — utilization %, time remaining
+3. **launchd daemon** (300s / 5-min interval, writes `/tmp/claude-usage-cache.json`) — utilization %, time remaining. See `~/Library/LaunchAgents/com.henrychong.claude-oauth-usage.plist` and `~/scripts/claude-oauth-usage.sh`.
 
 ## Data Flow
 
@@ -90,12 +90,13 @@ These fields are available from CC's JSON stdin but not currently displayed:
 Claude Code JSON stdin ──┬── model.display_name ──────────────────────────────┐
                          ├── context_window.current_usage ────────────────────┤
                          │   (also available: cost.*, version, session_id)    │
+settings.json ───────────┤── effortLevel ("auto" if unset) ──────────────────┤
                          │                                                    │
 ccusage cache (/tmp/claude-ccusage-cache.json, 60s TTL) ──────────────────────┤
-  └── daily/block costs (read first, background refresh)                      │
+  └── daily/block costs (read first, background refresh in-statusline)        │
                                                                               │
-OAuth API cache (/tmp/claude-usage-cache.json, 60s TTL) ──────────────────────┤
-  ├── 5h/7d/son utilization (read first, background refresh)                 │
+OAuth cache (/tmp/claude-usage-cache.json, written by launchd daemon) ────────┤
+  ├── 5h/7d/son utilization (read-only by statusline)                        │
   └── five_hour.resets_at ────────────────────────────────────────────────────┤
                                                                               │
                       Line 1: dir │ branch │ model | ctx | usage  ◄───────────┘
@@ -104,52 +105,70 @@ OAuth API cache (/tmp/claude-usage-cache.json, 60s TTL) ────────
                       /tmp/claude-usage-log.csv (append, rotated >500KB)
 ```
 
-**Key Design Principle:** Read cache FIRST, display immediately, then trigger background refresh if stale. This ensures the statusline never blocks on network calls and always shows last-known-good values.
+**Key Design Principles:**
+- Read cache FIRST, display immediately — statusline never blocks on network calls
+- OAuth data is updated externally by launchd daemon (single caller, no rate limit risk)
+- ccusage still refreshes in-statusline (local CLI, no API rate limit concern)
 
-## OAuth Token Resolution
+## OAuth Usage Data Architecture
 
-When `refresh_oauth_bg()` needs a token, `get_oauth_token()` reads it directly from CC's Keychain:
+**As of 2026-03-06, OAuth polling is handled by a launchd daemon, not by the statusline command.**
+
+### Architecture
 
 ```
-1. Keychain "Claude Code-credentials" (CC's own, CC manages lifecycle)
-   → JSON blob: {"claudeAiOauth":{"accessToken":"...","refreshToken":"..."}}
-   → extract accessToken via jq (primary) or grep (fallback for truncated JSON)
-   → if found: USE IT
+launchd (com.henrychong.claude-oauth-usage, every 300s / 5 min)
+  └── ~/scripts/claude-oauth-usage.sh
+        ├── Reads OAuth token from CC Keychain
+        ├── Calls https://api.anthropic.com/api/oauth/usage
+        ├── Writes /tmp/claude-usage-cache.json (atomic: mktemp + mv)
+        ├── On success: removes /tmp/claude-oauth-error
+        ├── On failure: writes /tmp/claude-oauth-error (reason)
+        └── Logs to /tmp/claude-oauth-debug.log
 
-2. Failure
-   → stale fallback — use whatever's in /tmp/claude-usage-cache.json + "!" indicator
+Statusline (read-only)
+  └── Reads /tmp/claude-usage-cache.json (never writes, never calls API)
+  └── Checks /tmp/claude-oauth-error for "!" indicator
 ```
 
-### Design Rationale
+### Why Launchd Daemon
 
-CC actively manages its own OAuth tokens (access + refresh) in the macOS Keychain. Rather than maintaining a separate token lifecycle (refresh endpoint, cooldowns, rotation handling), the statusline reads CC's current access token directly. This eliminates:
-- Stale refresh token `invalid_grant` cascades
-- Token rotation conflicts between CC and statusline
-- Bootstrap/seed complexity
-- The entire `attempt_token_refresh()` function (~45 lines removed)
+Multiple CC sessions + Claude Desktop all sharing the same OAuth token caused aggregate polling rates that triggered the undocumented rate limit on `/api/oauth/usage` (GitHub issues #30930, #31055). A single daemon eliminates multi-session collision entirely.
 
-### Security Model
+### Token Source
 
-| Store | Contains | Security |
-|-------|----------|----------|
-| Keychain `Claude Code-credentials` | CC's own blob (read-only) | macOS Keychain encryption |
+The daemon reads CC's current access token from macOS Keychain entry `Claude Code-credentials`. CC manages token lifecycle (refresh, rotation); the daemon just reads the current access token.
 
-## Complete Command
+### Error Handling (daemon)
+
+| HTTP Code | Action |
+|-----------|--------|
+| 200 | Update cache, remove error flag, exit |
+| 429 | Log, write error flag, exit. Next 5-min cycle retries |
+| 401/403 | Log auth failure, write error flag, exit (next 5-min cycle retries with fresh token) |
+| 000/other | Log error, write error flag, exit |
+
+**Error flag:** `/tmp/claude-oauth-error` — contains reason string. Present = last call failed. Statusline shows `!` suffix on usage values. Cleared on next successful 200 response.
+
+### Future
+
+GitHub issue #29604 proposes including usage data in CC's statusline JSON stdin. If implemented, the daemon can be removed entirely.
+
+## Complete Command (Simplified — OAuth handled by launchd daemon)
+
+The statusline command is now read-only for OAuth data. Only ccusage still refreshes in-statusline.
 
 ```bash
 input=$(cat)
 current_dir=$(pwd)
 git_branch=$(git branch --show-current 2>/dev/null)
 
-# Extract model from JSON input
 model=$(echo "$input" | jq -r '.model.display_name // "?"')
-
-# Context window from current_usage field (v2.0.70+)
+effort=$(jq -r '.effortLevel // "auto"' ~/.claude/settings.json 2>/dev/null)
 context_size=$(echo "$input" | jq -r '.context_window.context_window_size // 200000')
 current_usage=$(echo "$input" | jq '.context_window.current_usage // null')
 
 if [ "$current_usage" != "null" ]; then
-  # Sum all token types (no +45k - CC 2.1.0+ shows buffer separately in /context)
   ctx_tokens=$(echo "$current_usage" | jq '(.input_tokens // 0) + (.output_tokens // 0) + (.cache_creation_input_tokens // 0) + (.cache_read_input_tokens // 0)')
   ctx_pct=$((ctx_tokens * 100 / context_size))
   ctx_k=$((ctx_tokens / 1000))
@@ -163,28 +182,7 @@ now=$(date +%s)
 ccusage_cache="/tmp/claude-ccusage-cache.json"
 oauth_cache="/tmp/claude-usage-cache.json"
 
-# ============================================
-# OAUTH TOKEN (read directly from CC Keychain)
-# ============================================
-
-# Read CC's current access token — CC manages its own token lifecycle
-get_oauth_token() {
-  local cb=$(security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null)
-  if [ -n "$cb" ]; then
-    # Try jq first (clean JSON parse), then grep fallback (handles truncated JSON)
-    local token=$(echo "$cb" | jq -r '.claudeAiOauth.accessToken // empty' 2>/dev/null)
-    [ -z "$token" ] && token=$(echo "$cb" | grep -o '"accessToken":"[^"]*"' | head -1 | cut -d'"' -f4)
-    [ -n "$token" ] && echo "$token" && return 0
-  fi
-  echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) get_oauth_token: CC Keychain empty" >> /tmp/claude-oauth-debug.log
-  return 1
-}
-
-# ============================================
-# BACKGROUND REFRESH FUNCTIONS (non-blocking)
-# ============================================
-
-# Background ccusage refresh with lock file guard + stale lock cleanup + atomic write
+# Background ccusage refresh (local CLI, no API rate limit concern)
 refresh_ccusage_bg() {
   if [ -f /tmp/claude-ccusage.lock ]; then
     lock_ts=$(stat -f %m /tmp/claude-ccusage.lock 2>/dev/null || echo 0)
@@ -207,83 +205,26 @@ refresh_ccusage_bg() {
   ) &>/dev/null & disown 2>/dev/null
 }
 
-# Background OAuth refresh — reads token from CC Keychain, no self-managed refresh
-refresh_oauth_bg() {
-  # Dynamic cooldown: file contains epoch (seconds) of when retry is allowed
-  if [ -f /tmp/claude-oauth-api-cooldown ]; then
-    local retry_until=$(cat /tmp/claude-oauth-api-cooldown 2>/dev/null)
-    [ -n "$retry_until" ] && [ "$retry_until" -gt "$now" ] 2>/dev/null && return
-    rm -f /tmp/claude-oauth-api-cooldown
-  fi
-  if [ -f /tmp/claude-oauth.lock ]; then
-    lock_ts=$(stat -f %m /tmp/claude-oauth.lock 2>/dev/null || echo 0)
-    [ $((now - lock_ts)) -gt 120 ] && rm -f /tmp/claude-oauth.lock || return
-  fi
-  (
-    umask 077
-    echo $$ > /tmp/claude-oauth.lock
-    trap 'rm -f /tmp/claude-oauth.lock' EXIT
-    # Debug log rotation (>50KB → keep last 20 lines)
-    if [ -f /tmp/claude-oauth-debug.log ]; then
-      sz=$(stat -f %z /tmp/claude-oauth-debug.log 2>/dev/null || echo 0)
-      [ "$sz" -gt 51200 ] && { tail -20 /tmp/claude-oauth-debug.log > /tmp/claude-oauth-debug.log.tmp && mv /tmp/claude-oauth-debug.log.tmp /tmp/claude-oauth-debug.log; }
-    fi
-    token=$(get_oauth_token)
-    if [ -z "$token" ]; then
-      rm -f /tmp/claude-oauth.lock
-      return
-    fi
-    tmp="${oauth_cache}.tmp.$$"
-    hdr_tmp="${oauth_cache}.hdr.$$"
-    curl -s -D "$hdr_tmp" --max-time 10 "https://api.anthropic.com/api/oauth/usage" \
-      -H "Authorization: Bearer $token" \
-      -H "anthropic-beta: oauth-2025-04-20" > "$tmp" 2>/dev/null
-    if jq -e '.five_hour' "$tmp" >/dev/null 2>&1; then
-      mv "$tmp" "$oauth_cache"
-    else
-      echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) oauth API rejected (token from CC Keychain)" >> /tmp/claude-oauth-debug.log
-      # Dynamic cooldown from retry-after header (minimum 300s)
-      ra=$(grep -i "retry-after" "$hdr_tmp" 2>/dev/null | tr -d "\r" | awk '{print $2}')
-      ra=${ra:-30}
-      [ "$ra" -lt 5 ] && ra=5
-      [ "$ra" -gt 300 ] && ra=300
-      echo "$(($(date +%s) + ra))" > /tmp/claude-oauth-api-cooldown
-      rm -f "$tmp"
-    fi
-    rm -f "$hdr_tmp"
-    rm -f /tmp/claude-oauth.lock
-  ) &>/dev/null & disown 2>/dev/null
-}
-
-# ============================================
-# READ CACHE VALUES FIRST (always instant)
-# ============================================
-
+# Read cache values (always instant)
 daily_raw=$(jq -r '.daily // 0' "$ccusage_cache" 2>/dev/null)
-daily_fmt=$(printf '%.2f' "${daily_raw:-0}" 2>/dev/null)
-daily_fmt=${daily_fmt:-0.00}
-
+daily_fmt=$(printf '%.2f' "${daily_raw:-0}" 2>/dev/null); daily_fmt=${daily_fmt:-0.00}
 block_raw=$(jq -r '.block // 0' "$ccusage_cache" 2>/dev/null)
-block_fmt=$(printf '%.2f' "${block_raw:-0}" 2>/dev/null)
-block_fmt=${block_fmt:-0.00}
+block_fmt=$(printf '%.2f' "${block_raw:-0}" 2>/dev/null); block_fmt=${block_fmt:-0.00}
 
-five_hr=$(jq -r '.five_hour.utilization // 0' "$oauth_cache" 2>/dev/null | xargs printf '%.0f' 2>/dev/null)
-five_hr=${five_hr:-0}
+five_hr=$(jq -r '.five_hour.utilization // 0' "$oauth_cache" 2>/dev/null | xargs printf '%.0f' 2>/dev/null); five_hr=${five_hr:-0}
+seven_day=$(jq -r '.seven_day.utilization // 0' "$oauth_cache" 2>/dev/null | xargs printf '%.0f' 2>/dev/null); seven_day=${seven_day:-0}
+sonnet=$(jq -r '.seven_day_sonnet.utilization // 0' "$oauth_cache" 2>/dev/null | xargs printf '%.0f' 2>/dev/null); sonnet=${sonnet:-0}
 
-seven_day=$(jq -r '.seven_day.utilization // 0' "$oauth_cache" 2>/dev/null | xargs printf '%.0f' 2>/dev/null)
-seven_day=${seven_day:-0}
-
-sonnet=$(jq -r '.seven_day_sonnet.utilization // 0' "$oauth_cache" 2>/dev/null | xargs printf '%.0f' 2>/dev/null)
-sonnet=${sonnet:-0}
-
-# Detect stale OAuth cache (>5 min = background refresh failing)
+# Error/stale indicator (error flag = last API call failed, >600s = daemon not running)
 oauth_stale=""
-if [ -f "$oauth_cache" ]; then
+if [ -f /tmp/claude-oauth-error ]; then
+  oauth_stale="!"
+elif [ -f "$oauth_cache" ]; then
   oauth_age=$((now - $(stat -f %m "$oauth_cache" 2>/dev/null || echo $now)))
-  [ "$oauth_age" -gt 300 ] && oauth_stale="!"
+  [ "$oauth_age" -gt 600 ] && oauth_stale="!"
 fi
 
-# Calculate time remaining from API's resets_at (server-authoritative)
+# Time remaining from resets_at
 reset_at=$(jq -r '.five_hour.resets_at // empty' "$oauth_cache" 2>/dev/null)
 time_left=""
 if [ -n "$reset_at" ]; then
@@ -293,17 +234,13 @@ if [ -n "$reset_at" ]; then
     now_utc=$(date -u +%s)
     remaining=$((reset_epoch - now_utc))
     if [ "$remaining" -gt 0 ]; then
-      hrs=$((remaining / 3600))
-      mins=$(((remaining % 3600) / 60))
+      hrs=$((remaining / 3600)); mins=$(((remaining % 3600) / 60))
       time_left=" (${hrs}h ${mins}m)"
     fi
   fi
 fi
 
-# ============================================
-# TRIGGER BACKGROUND REFRESH IF STALE
-# ============================================
-
+# Trigger ccusage refresh if stale (OAuth handled by launchd daemon)
 if [ -f "$ccusage_cache" ]; then
   file_ts=$(stat -f %m "$ccusage_cache" 2>/dev/null || echo 0)
   age=$((now - file_ts))
@@ -312,34 +249,21 @@ else
   refresh_ccusage_bg
 fi
 
-if [ -f "$oauth_cache" ]; then
-  file_ts=$(stat -f %m "$oauth_cache" 2>/dev/null || echo 0)
-  age=$((now - file_ts))
-  [ "$age" -gt 60 ] && refresh_oauth_bg
-else
-  refresh_oauth_bg
-fi
-
-# ============================================
-# BUILD OUTPUT STRINGS
-# ============================================
-
 cost_str="💰 \$$daily_fmt today / \$$block_fmt block$time_left"
 
-# Usage CSV log rotation (>500KB → keep last 1000 lines)
+# Usage CSV log (rotated >500KB)
 if [ -f /tmp/claude-usage-log.csv ]; then
   sz=$(stat -f %z /tmp/claude-usage-log.csv 2>/dev/null || echo 0)
   [ "$sz" -gt 512000 ] && { tail -1000 /tmp/claude-usage-log.csv > /tmp/claude-usage-log.csv.tmp && mv /tmp/claude-usage-log.csv.tmp /tmp/claude-usage-log.csv; }
 fi
-
 echo "$now,$five_hr,$seven_day,$sonnet" >> /tmp/claude-usage-log.csv
 
 usage_str="📊 5h: ${five_hr}%${oauth_stale} / 7d: ${seven_day}%${oauth_stale} / son: ${sonnet}%${oauth_stale}"
 
 if [ -n "$git_branch" ]; then
-  printf "%s │ %s │ 🤖 %s | %s\n%s | %s" "$(basename "$current_dir")" "$git_branch" "$model" "$ctx_str" "$cost_str" "$usage_str"
+  printf "%s │ %s │ 🤖 %s [%s] | %s\n%s | %s" "$(basename "$current_dir")" "$git_branch" "$model" "$effort" "$ctx_str" "$cost_str" "$usage_str"
 else
-  printf "%s │ 🤖 %s | %s\n%s | %s" "$(basename "$current_dir")" "$model" "$ctx_str" "$cost_str" "$usage_str"
+  printf "%s │ 🤖 %s [%s] | %s\n%s | %s" "$(basename "$current_dir")" "$model" "$effort" "$ctx_str" "$cost_str" "$usage_str"
 fi
 ```
 
@@ -388,7 +312,7 @@ ccusage cost data cached for 60 seconds:
 
 ### /tmp/claude-usage-cache.json
 
-OAuth API response cached for 60 seconds:
+Written by launchd daemon (`com.henrychong.claude-oauth-usage`) every 300 seconds (5 min):
 
 ```json
 {
@@ -417,17 +341,13 @@ timestamp,5h%,7d%,sonnet%
 1765864438,25,20,2
 ```
 
-### /tmp/claude-oauth-api-cooldown
-
-Contains a Unix epoch (seconds) indicating when the next API retry is allowed. Prevents OAuth usage API hammering after a failed API call. Checked at the start of `refresh_oauth_bg()` — if current time < stored epoch, refresh is skipped entirely.
-
-**Dynamic duration:** Parses `retry-after` header from 429 responses (floor 5s, cap 300s). Eliminates self-inflicted 5-minute blackouts when server sends `retry-after: 0`.
-
-**Format (2026-03-05):** Changed from empty touch file (mtime-based, fixed 5-min) to epoch-in-file (dynamic duration from retry-after header).
-
 ### /tmp/claude-oauth-debug.log
 
-Debug breadcrumbs for OAuth operations (rotated >50KB → keep last 20 lines).
+Debug breadcrumbs for OAuth operations. Written by launchd daemon. Rotated >50KB → keep last 20 lines. Includes HTTP status codes since 2026-03-06.
+
+### /tmp/claude-oauth-launchd.log
+
+Launchd stdout/stderr for the OAuth daemon process.
 
 ## Caching Architecture
 
@@ -440,10 +360,11 @@ Debug breadcrumbs for OAuth operations (rotated >50KB → keep last 20 lines).
 │     ┌──────────────────┐      ┌──────────────────┐              │
 │     │  ccusage cache   │      │   OAuth cache    │              │
 │     │ (cost data)      │      │ (utilization)    │              │
+│     │ (in-statusline)  │      │ (launchd daemon) │              │
 │     └────────┬─────────┘      └────────┬─────────┘              │
 │              │                         │                         │
 │              ▼                         ▼                         │
-│     read + fallback            read + fallback                   │
+│     read + fallback            read-only (daemon writes)         │
 │     (~0.1s)                    (~0.1s)                           │
 │              │                         │                         │
 │              └────────┬────────────────┘                         │
@@ -451,81 +372,67 @@ Debug breadcrumbs for OAuth operations (rotated >50KB → keep last 20 lines).
 │  2. DISPLAY OUTPUT (instant, uses cached values)                │
 │                       │                                          │
 │                       ▼                                          │
-│  3. CHECK IF STALE & TRIGGER BACKGROUND REFRESH                 │
-│     ┌──────────────────┐      ┌──────────────────┐              │
-│     │ age > 60s?       │      │ age > 60s?       │              │
-│     │ Yes → bg refresh │      │ Yes → bg refresh │              │
-│     │ (non-blocking)   │      │ (non-blocking)   │              │
-│     └──────────────────┘      └──────────────────┘              │
-│                                                                  │
-│  Background processes update cache files for NEXT call          │
+│  3. TRIGGER CCUSAGE BACKGROUND REFRESH IF STALE                 │
+│     ┌──────────────────┐                                        │
+│     │ age > 60s?       │   OAuth: no refresh here — daemon      │
+│     │ Yes → bg refresh │   handles it independently every 60s   │
+│     │ (non-blocking)   │                                        │
+│     └──────────────────┘                                        │
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
 
 Performance (all cases): ~0.2s (never blocks on network)
-First run: Shows 0% values, triggers background refresh
-Next call after refresh: Shows updated values
+First run: Shows 0% values (daemon populates cache within 60s)
 ```
 
-### Background Refresh Details
+### ccusage Background Refresh Details
 
 **Lock File Guard Pattern (with stale lock cleanup):**
 ```
-1. Check API cooldown file (OAuth only)
-   a. If exists AND stored epoch > now → return early (skip refresh)
-   b. If exists AND stored epoch ≤ now → remove cooldown, continue
-2. Check lock file exists
+1. Check lock file exists
    a. If exists AND age > 120s → remove stale lock, continue
    b. If exists AND age ≤ 120s → return early (skip refresh)
-3. Write lock file: /tmp/claude-ccusage.lock (or claude-oauth.lock)
-4. Set trap for cleanup on EXIT (handles crashes)
-5. Do work (OAuth: read token from CC Keychain, call usage API)
-6. On failure: write retry epoch to /tmp/claude-oauth-api-cooldown (OAuth only)
-7. Remove lock file
+2. Write lock file: /tmp/claude-ccusage.lock
+3. Set trap for cleanup on EXIT (handles crashes)
+4. Run ccusage CLI, write to temp file, validate, atomic mv
+5. Remove lock file
 ```
-
-**Atomic Write Pattern:**
-```
-1. Write to temp file: ${cache}.tmp.$$
-2. Validate JSON: jq -e . "$tmp"
-3. If valid: mv "$tmp" "$cache" (atomic)
-4. If invalid: rm -f "$tmp" (keep old cache)
-```
-
-**Benefits:**
-- Lock file prevents concurrent ccusage/oauth process storms
-- Never blocks statusline rendering
-- Failed refreshes don't corrupt cache
-- Partial writes can't cause parse errors
-- Last-known-good values always displayed
-- Stale lock file worst case: delays refresh by one prompt cycle
 
 ## Dependencies
 
+### Statusline command
 - **jq**: JSON processor (for parsing stdin JSON and cache files)
 - **ccusage**: Global binary at `~/.bun/bin/ccusage` (installed via bun, for daily/block costs)
+
+### Launchd daemon (`~/scripts/claude-oauth-usage.sh`)
+- **jq**: JSON processor
 - **curl**: OAuth API calls
 - **security**: macOS Keychain access for OAuth token
 
 ## Error Prevention
 
-1. **Lock file guard**: Prevents concurrent ccusage/oauth process storms (`/tmp/claude-ccusage.lock`, `/tmp/claude-oauth.lock`)
+### Statusline command
+1. **Lock file guard**: Prevents concurrent ccusage process storms (`/tmp/claude-ccusage.lock`)
 2. **Trap cleanup**: `trap 'rm -f lockfile' EXIT` ensures lock removal even on crash
 3. **Fallback values**: All jq queries use `// 0` or `// null` to prevent errors
 4. **Silent failures**: `2>/dev/null` on all external commands
-5. **Cache TTL**: 60-second refresh prevents API rate limiting and slow statusline
-6. **Token extraction**: CC Keychain uses `jq` (primary) with `grep -o` + `cut` fallback to handle truncated keychain JSON
-7. **Debug breadcrumb**: Token operations logged to `/tmp/claude-oauth-debug.log` with ISO timestamp
-8. **OAuth API rejection logging**: Failed API responses logged to debug log
-9. **Stale data indicator**: `!` suffix on 5h/7d/son values when OAuth cache > 300s old (background refresh failing)
-10. **Null check**: Context usage gracefully handles null current_usage
-11. **Separate caches**: Fault isolation - ccusage failure doesn't break OAuth data
-12. **Direct CC Keychain read**: `get_oauth_token()` reads CC's own access token directly — CC manages token lifecycle (refresh, rotation)
-13. **API call cooldown**: Dynamic cooldown after failed OAuth usage API call prevents rate limit feedback loops (`/tmp/claude-oauth-api-cooldown`). Parses `retry-after` header for duration (floor 5s, cap 300s). File contains retry epoch.
-14. **Retry-after header parsing**: `curl -D` captures response headers; `grep -i "retry-after"` extracts the value. Bounds: floor 5s (was 300s), cap 300s. Eliminates self-inflicted 5-minute blackouts when server sends `retry-after: 0`.
-15. **umask 077**: Background subshell sets restrictive umask for temp files
-16. **curl timeout**: `--max-time 10` on all curl calls prevents hanging
-17. **Log rotation**: Debug log (>50KB → 20 lines) and usage CSV (>500KB → 1000 lines)
+5. **Cache TTL**: 60-second ccusage refresh prevents slow statusline
+6. **Error/stale indicator**: `!` suffix on 5h/7d/son values when error flag exists (last API call failed) or cache > 600s old (daemon not running)
+7. **Null check**: Context usage gracefully handles null current_usage
+8. **Separate caches**: Fault isolation — ccusage failure doesn't break OAuth data and vice versa
+9. **Usage CSV rotation**: `/tmp/claude-usage-log.csv` trimmed to 1000 lines when > 500KB
+
+### Launchd daemon (`com.henrychong.claude-oauth-usage`)
+10. **Single-instance guarantee**: launchd ensures only one daemon process runs (every 300s) — eliminates multi-session rate limit amplification
+20. **Error flag signalling**: On any non-200 response, writes reason to `/tmp/claude-oauth-error`. On 200 success, removes flag. Statusline reads flag for `!` indicator — decouples failure detection from cache staleness
+11. **Token extraction**: CC Keychain uses `jq` (primary) with `grep -o` + `cut` fallback to handle truncated keychain JSON
+12. **HTTP status differentiation**: `curl -w '%{http_code}'` distinguishes 200/429/401/403/000 (old code logged generic "rejected")
+13. **5-min polling interval**: Reduced from 60s to 300s to minimize API calls (~288/day vs ~1440/day). On any failure, error flag written and next 5-min cycle retries naturally — no separate cooldown mechanism needed
+15. **Atomic writes**: `mktemp` + validate + `mv` prevents statusline from reading partial JSON
+16. **Never deletes good cache**: On API failure, stale data persists (better than no data)
+17. **Debug breadcrumb**: All API calls logged to `/tmp/claude-oauth-debug.log` with ISO timestamp and HTTP status
+18. **curl timeout**: `--max-time 10` prevents hanging
+19. **Log rotation**: Debug log (>50KB → 20 lines)
 
 ## Time Remaining Calculation
 
@@ -561,13 +468,18 @@ time_left=" (${hrs}h ${mins}m)"
 **Fix (applied 2026-03-01):** Split final `printf` into 2 lines via `\n` in format string. CC counts the `\n` and allocates 2 rows.
 
 ```
-Line 1: repos │ main │ 🤖 Opus 4.6 | 🧠 146k/200k (73%)
+Line 1: repos │ main │ 🤖 Opus 4.6 [medium] | 🧠 146k/200k (73%)
 Line 2: 💰 $0.13 today / $0.13 block (4h 25m) | 📊 5h: 25% / 7d: 21% / son: 2%
 ```
 
 ## Version History
 
-- **2026-03-06 (b)**: **Fix retry-after bounds.** Changed from 300s minimum floor to 5s floor / 300s cap. Eliminates self-inflicted 5-minute blackouts when Anthropic's `/api/oauth/usage` returns `retry-after: 0`. The old code clamped any value below 300s up to 300s, meaning a server response of "retry immediately" was interpreted as "wait 5 minutes".
+- **2026-03-15**: **Added effort level display.** Reads `effortLevel` from `~/.claude/settings.json` and displays as `[effort]` after model name (e.g., `🤖 Opus 4.6 [medium]`). Shows `[auto]` when field is unset (model default). New data source: `settings.json` read via `jq` (~0.1s). Note: effort is a global setting shared across all sessions — changing `/effort` in one session affects the display in all sessions.
+- **2026-03-08 (b)**: **Fix curl error code concatenation bug.** When curl failed with a network error, `-w '%{http_code}'` output "000" then `|| echo "000"` appended another "000", producing "000000" which missed the `000)` case and fell through to `*) unexpected`. Fixed by replacing `|| echo "000"` with `|| true` + empty check fallback. Now network errors correctly match `000)` and log "network/timeout error".
+- **2026-03-08 (a)**: **5-min polling interval + error flag signalling.** Changed launchd daemon `StartInterval` from 60s to 300s (5 min), reducing API calls from ~1440/day to ~288/day. Replaced 429 cooldown mechanism (`/tmp/claude-oauth-cooldown`) with error flag (`/tmp/claude-oauth-error`) — on any non-200 response, daemon writes reason to error flag; on 200 success, removes it. Statusline `!` indicator now checks error flag (last call failed) OR cache age > 600s (daemon not running), replacing the old 180s staleness check. Removed: `$COOLDOWN` variable, cooldown file check/write, `$hdr` temp file and `-D` header capture from curl. Added: `$ERROR_FLAG` variable, error flag writes on all failure paths including keychain/token extraction failures.
+- **2026-03-06 (d)**: **429 cooldown backoff (5 min).** On 429, daemon writes expiry timestamp to `/tmp/claude-oauth-cooldown`. Subsequent 60s launchd cycles check file and exit without API call until cooldown expires. On 200 success, cooldown file is cleared. Reduces ~60 wasted network calls and log lines per rate limit window to 1.
+- **2026-03-06 (c)**: **Removed retry on 429.** OAuth daemon now logs rate limit and exits immediately — no sleep, no retry. Launchd naturally retries on next 60s cycle. Prevents compounding rate limit pressure from overlapping sleep+retry with next invocation. Removed retry-after header parsing, `curl -D` header capture, and `$hdr` temp file.
+- **2026-03-06 (b)**: **Launchd daemon for OAuth polling.** Extracted all OAuth API calls from statusline into standalone launchd daemon (`com.henrychong.claude-oauth-usage`, `~/scripts/claude-oauth-usage.sh`). Daemon polls `/api/oauth/usage` every 60s and writes to `/tmp/claude-usage-cache.json`. Statusline becomes read-only consumer — removed `get_oauth_token()`, `refresh_oauth_bg()`, all OAuth lock/cooldown logic (~100 lines). Fixes chronic staleness caused by multi-session rate limit amplification (3+ CC sessions each polling independently). Retry-after bounds changed from 300s floor to 5s floor / 120s cap. Stale threshold changed from 300s to 180s. Removed: `/tmp/claude-oauth.lock`, `/tmp/claude-oauth-api-cooldown`. Added: `/tmp/claude-oauth-launchd.log`. See `~/.claude/skills/infra-hc/references/automations/macbook-automations.md` for daemon documentation.
 - **2026-03-06 (a)**: **OAuth simplification — direct CC Keychain read.** Removed `attempt_token_refresh()` function and 4-step `get_oauth_token()` chain (~85 lines). Replaced with 1-step direct read from CC's Keychain entry (`Claude Code-credentials`). CC manages its own token lifecycle (refresh, rotation); statusline just reads the current access token. Eliminates stale refresh token `invalid_grant` cascades that caused rate limiting. Also implemented dynamic `retry-after` cooldown (was documented but never deployed to settings.json). Removed: `/tmp/claude-statusline-token.json`, Keychain `Claude Code-statusline-token`, `/tmp/claude-oauth-refresh-cooldown`. Token extraction now uses `jq` primary with `grep -o`/`cut` fallback.
 - **2026-03-05**: Token invalidation on API rejection + dynamic retry-after cooldown. (1) When usage API returns non-200, cached token is invalidated (file cache + Keychain statusline entry deleted), forcing `get_oauth_token()` to re-resolve via CC Keychain refresh token on next cycle. Fixes revoked tokens being reused indefinitely. (2) API cooldown file changed from empty touch file (mtime-based, fixed 5-min) to epoch-in-file format. Parses `retry-after` header from 429 responses for dynamic cooldown duration (minimum 300s). (3) `curl -D` captures response headers for retry-after extraction. Root cause: token rotation by CC invalidated cached access token; `get_oauth_token()` only checked expiry not API acceptance; 277 failed calls triggered account-level rate limiting.
 - **2026-03-02**: Moved 📊 usage block from Line 1 to end of Line 2. New layout: Line 1 (dir │ branch │ model | ctx), Line 2 (cost | usage).
@@ -589,6 +501,7 @@ Line 2: 💰 $0.13 today / $0.13 block (4h 25m) | 📊 5h: 25% / 7d: 21% / son: 
 
 ## Related KG Entities
 
+- "Statusline OAuth Launchd Daemon Architecture" — architectural decision: single launchd daemon for OAuth polling
 - "Statusline Block Layout and Data Sources" — current block positions, variables, and data source mapping
 - "Statusline CC JSON Stdin Schema" — full schema of fields available from CC's JSON input
 - "Why Statusline Shows Shell CWD Not Claude Code Workspace" — design decision for pwd vs workspace.current_dir
