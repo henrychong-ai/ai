@@ -1,13 +1,13 @@
 ---
 name: instruction-creator
-description: Master architect for Claude instruction ecosystems including agents, skills, slash commands, MCP servers, and project instructions. Creates optimal instruction hierarchies. Provides skill creation templates, 5-step workflow guidance, model configuration guidance (aliases, inheritance, override), and script references (init_skill.py, package_skill.py). Use PROACTIVELY for creating/updating agents, creating/updating skills, creating/updating slash commands, MCP setup guide creation, complex multi-file instruction creation, system-wide optimization, team distribution preparation (sanitization), instruction ecosystem review, YAML frontmatter format, agent-vs-skill decisions, content placement, rules vs CLAUDE.md, token budgets, hooks, and cross-platform conversion. Triggers: "YAML frontmatter", "agent vs skill", "where should I put", "rules vs CLAUDE.md", "content placement", "token budget", "auto-loading", "instruction template", "context fork", "hooks", "team sharing", "sanitization", "create agent", "create skill", "review instructions".
+description: Master architect for Claude instruction ecosystems including agents, skills, slash commands, MCP servers, and project instructions. Creates optimal instruction hierarchies. Provides skill creation templates, 5-step workflow guidance, model configuration guidance (aliases, inheritance, override), and script references (init_skill.py, package_skill.py). Use PROACTIVELY for creating/updating agents, creating/updating skills, creating/updating slash commands, MCP setup guide creation, complex multi-file instruction creation, system-wide optimization, team distribution preparation (sanitization), instruction ecosystem review, YAML frontmatter format, agent-vs-skill decisions, content placement, rules vs CLAUDE.md, token budgets, hooks, effort levels, and cross-platform conversion. Triggers: "YAML frontmatter", "agent vs skill", "where should I put", "rules vs CLAUDE.md", "content placement", "token budget", "auto-loading", "instruction template", "context fork", "hooks", "effort", "effort level", "team sharing", "sanitization", "create agent", "create skill", "review instructions".
 ---
 
 # Instruction Creator Skill
 
 This skill provides complete guidance for creating and reviewing Claude instruction files across the entire instruction ecosystem.
 
-**Updated:** 2026-01-20 (Claude Code v2.1.3+)
+**Updated:** 2026-03-20 (Claude Code v2.1.80+)
 
 ## Skills & Slash Commands Merge (v2.1.3)
 
@@ -217,6 +217,29 @@ agent: Explore         # Use fast read-only agent
 | `Plan` | Sonnet | Read-only | Research before planning |
 | `general-purpose` | Sonnet | All | Complex tasks with edits |
 | Custom agent | Per config | Per config | Domain-specific work |
+
+### Effort Level Override
+
+Use `effort` to control reasoning depth when a skill/command is invoked:
+
+```yaml
+---
+name: quick-lookup
+description: Fast reference lookup
+effort: low
+---
+```
+
+| Value | Symbol | Use When |
+|-------|--------|----------|
+| `low` | ○ | Quick lookups, simple transforms, high-volume tasks |
+| `medium` | ◐ | Balanced analysis, most general tasks |
+| `high` | ● | Complex reasoning, strategic analysis, deep research |
+| (omit) | — | Inherit session effort (default, most common) |
+
+**Priority:** `CLAUDE_CODE_EFFORT_LEVEL` env var > frontmatter > session `/effort` > model default
+
+**Behaviour:** Overrides session effort while skill/agent/command is active; reverts when complete.
 
 ### Skill Directory Structure
 

@@ -1,7 +1,7 @@
 # YAML Frontmatter Complete Guide
 
 **Comprehensive reference for all instruction file YAML frontmatter fields**
-**Updated: 2026-01-13 (Claude Code v2.1.3+)**
+**Updated: 2026-03-20 (Claude Code v2.1.80+)**
 
 ---
 
@@ -79,6 +79,15 @@ hooks:                              # Optional: lifecycle hooks scoped to agent
 2. Agent YAML `model` field
 3. `inherit` from parent conversation
 4. System default (sonnet)
+
+#### `effort` (Optional)
+- **Format:** String enum
+- **Purpose:** Override model effort level during agent execution
+- **Values:** `low` (○), `medium` (◐), `high` (●)
+- **Default:** Inherits session effort level
+- **Behaviour:** Overrides session effort while agent is active; reverts when complete
+- **Note:** Cannot override `CLAUDE_CODE_EFFORT_LEVEL` env var
+- **Priority:** env var > frontmatter > session `/effort` > model default
 
 #### `tools` (Optional)
 - **Format:** Comma-separated string or YAML list
@@ -201,6 +210,14 @@ hooks:                              # Optional: lifecycle hooks scoped to skill
 - **Purpose:** Override model when skill is active
 - **Values:** `opus`, `sonnet`, `haiku`
 
+#### `effort` (Optional)
+- **Format:** String enum
+- **Purpose:** Override model effort level when skill is invoked
+- **Values:** `low` (○), `medium` (◐), `high` (●)
+- **Default:** Inherits session effort level
+- **Behaviour:** Overrides session effort while skill is active; reverts when complete
+- **Note:** Cannot override `CLAUDE_CODE_EFFORT_LEVEL` env var
+
 #### `context` (Optional)
 - **Format:** String
 - **Purpose:** Set to `fork` to run skill in isolated sub-agent context
@@ -298,6 +315,13 @@ hooks:                                  # Optional: lifecycle hooks
 - **Format:** Model alias or full ID
 - **Purpose:** Override default model for command
 - **Values:** `opus`, `sonnet`, `haiku`
+
+#### `effort` (Optional)
+- **Format:** String enum
+- **Purpose:** Override model effort level when command is invoked
+- **Values:** `low` (○), `medium` (◐), `high` (●)
+- **Default:** Inherits session effort level
+- **Behaviour:** Overrides session effort while command is active; reverts when complete
 
 #### `context` (Optional)
 - **Format:** String
@@ -440,6 +464,7 @@ Is your skill/command doing complex work?
 | `name` | Yes | - | kebab-case identifier |
 | `description` | Yes | - | Specialization + "Use PROACTIVELY" |
 | `model` | No | `sonnet` | opus/sonnet/haiku/inherit |
+| `effort` | No | Inherit | low/medium/high effort override |
 | `tools` | No | All | Tools agent can use |
 | `disallowedTools` | No | None | Tools to deny |
 | `permissionMode` | No | `default` | Permission behavior |
@@ -454,6 +479,7 @@ Is your skill/command doing complex work?
 | `description` | Yes | - | Third-person usage description |
 | `allowed-tools` | No | None | Tools without permission |
 | `model` | No | Inherit | Model override |
+| `effort` | No | Inherit | low/medium/high effort override |
 | `context` | No | None | `fork` for isolation |
 | `agent` | No | `general-purpose` | Agent type (requires context: fork) |
 | `user-invocable` | No | `true` | Show in /menu |
@@ -468,6 +494,7 @@ Is your skill/command doing complex work?
 | `allowed-tools` | No | All | Tool restrictions |
 | `argument-hint` | No | - | Expected parameters |
 | `model` | No | Inherit | Model override |
+| `effort` | No | Inherit | low/medium/high effort override |
 | `context` | No | None | `fork` for isolation |
 | `agent` | No | `general-purpose` | Agent type (requires context: fork) |
 | `disable-model-invocation` | No | `false` | Block programmatic invocation |
@@ -498,5 +525,5 @@ Is your skill/command doing complex work?
 
 ---
 
-**Last Updated:** 2026-01-13
-**Claude Code Version:** 2.1.3+
+**Last Updated:** 2026-03-20
+**Claude Code Version:** 2.1.80+
