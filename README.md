@@ -1,6 +1,6 @@
 # AI Resources
 
-A collection of Claude Code extensions (agents, skills, commands) and Gemini Custom Gems.
+A collection of Claude Code extensions (agents, skills, commands, plugins) and Gemini Custom Gems.
 
 ## Installation
 
@@ -14,7 +14,10 @@ cp -r claude-code/skills/typescript ~/.claude/skills/
 cp claude-code/agents/file-converter.md ~/.claude/agents/
 
 # Copy a command
-cp commands/kg.md ~/.claude/commands/
+cp claude-code/commands/kg.md ~/.claude/commands/
+
+# Copy a plugin
+cp -r claude-code/plugins/statusline ~/.claude/plugins/
 ```
 
 Or point Claude Code at this repo and ask it to install what you need.
@@ -38,7 +41,6 @@ Bundled knowledge packages with reference materials. Copy entire folder to `~/.c
 | Skill | Description |
 |-------|-------------|
 | [1password](claude-code/skills/1password/) | 1Password CLI, secrets management, op run setup |
-| [claude-code-config](claude-code/skills/claude-code-config/) | Statusline setup with real-time cost, context, and OAuth utilization metrics |
 | [codex](claude-code/skills/codex/) | OpenAI Codex MCP integration for second opinions |
 | [dotnet](claude-code/skills/dotnet/) | .NET development specialist for enterprise applications |
 | [ffmpeg](claude-code/skills/ffmpeg/) | Video/audio processing with ffmpeg |
@@ -50,6 +52,14 @@ Bundled knowledge packages with reference materials. Copy entire folder to `~/.c
 | [pdf](claude-code/skills/pdf/) | PDF manipulation toolkit (extract, create, merge, split, forms) |
 | [typescript](claude-code/skills/typescript/) | TypeScript development specialist with Cloudflare Workers, React, Node.js patterns |
 | [typescript-version-upgrade](claude-code/skills/typescript-version-upgrade/) | Node.js/TypeScript version upgrade protocols |
+
+### Plugins
+
+Reusable configuration packages. Copy entire folder to `~/.claude/plugins/`.
+
+| Plugin | Description |
+|--------|-------------|
+| [statusline](claude-code/plugins/statusline/) | Real-time statusline with cost tracking, context usage, and OAuth utilization metrics |
 
 ### Commands
 
@@ -76,6 +86,8 @@ ai/
 ├── claude-code/
 │   ├── agents/           # Autonomous domain specialists
 │   ├── commands/         # Custom slash commands
+│   ├── plugins/          # Reusable configuration packages
+│   │   └── statusline/   # Cost, context, and utilization metrics
 │   └── skills/           # Bundled knowledge packages
 └── gemini-gems/
     ├── dossier/          # OSINT intelligence dossier generator
