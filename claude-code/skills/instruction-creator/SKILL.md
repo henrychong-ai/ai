@@ -7,7 +7,39 @@ description: Master architect for Claude instruction ecosystems including agents
 
 This skill provides complete guidance for creating and reviewing Claude instruction files across the entire instruction ecosystem.
 
-**Updated:** 2026-03-20 (Claude Code v2.1.80+)
+**Updated:** 2026-04-20 (Claude Code v2.1.80+; Claude Opus 4.7 released 2026-04-16)
+
+## ⚠️ Claude Opus 4.7 Instruction-Handling (MANDATORY)
+
+**Opus 4.7 takes instructions literally.** It will not silently generalise, infer unstated intent, or loosely interpret directive language the way 4.5/4.6 did. Apply these rules to all new and existing instructions.
+
+### Core Rules
+
+| Rule | One-liner |
+|------|-----------|
+| **1. Positive over negative** | Rewrite "No X" / "Don't Y" as "Do positive equivalent" |
+| **2. State scope explicitly** | "Apply to all items" — not "apply this pattern" |
+| **3. Resolve conflicts with precedence** | When two rules could clash, state which wins under what conditions |
+| **4. Mark illustrative lists** | Add "(illustrative — not required outputs)" to example lists |
+| **5. Skip motivational framing** | "Do your best", "maximise value" are no-ops; use `effort:` YAML instead |
+| **6. Scope rhetorical language** | Mark self-talk and user-aspirational language so Claude doesn't echo it |
+| **7. Calibrate length to task** | Replace "< N lines" caps with "match length to task complexity" |
+| **8. Specify tone positively** | If you want warmth, say "respond in a friendly, encouraging tone" |
+
+### Effort Is a Harness Parameter, Not Prompt Content
+
+Instruction file prose cannot escalate effort. Do not write "assume high effort" or "think deeply" in CLAUDE.md / SKILL.md body content. Effort is set via:
+- `/effort low|medium|high|xhigh` (per-session)
+- `effort:` field in YAML frontmatter (per-skill/agent/command)
+- `CLAUDE_CODE_EFFORT_LEVEL` env var (highest priority)
+
+### Deep Dive
+
+For rule-by-rule expansion with before/after examples, the 6-step migration audit checklist (for reviewing pre-4.7 instructions), common failure modes observed in the field, and research sources: see **`references/claude-opus-4-7-compatibility.md`**.
+
+Load the reference file whenever auditing an existing CLAUDE.md / skill / agent / command for 4.7 compatibility.
+
+---
 
 ## Skills & Slash Commands Merge (v2.1.3)
 
@@ -55,6 +87,15 @@ As of Claude Code v2.1.3, **skills and slash commands have been merged** under a
 | Each rules file | 50-200 lines | ~300 lines |
 | Project CLAUDE.md | 100-300 lines | ~500 lines |
 
+**Writing Style for CLAUDE.md (MANDATORY):**
+All CLAUDE.md content loads into every message context — every token costs context budget. When writing or updating CLAUDE.md files (global or repo-scoped):
+- Directive-style, no prose or explanation. Terse.
+- Tables/lists over paragraphs
+- Optimise for AI comprehension, not human readability (human-readable is a bonus, not a goal)
+- No redundant phrasing ("Please note that...", "It is important to...")
+- Compress: if 3 words convey the same as 10, use 3
+- **Apply Opus 4.7 literal-interpretation rules** (see top of this skill): positive framings over negative constraints, explicit scope, resolved precedence for conflicting directives, marked illustrative lists, scoped rhetorical language, task-complexity calibration for length.
+
 ### Rules Directory Patterns
 
 ```
@@ -78,7 +119,7 @@ As of Claude Code v2.1.3, **skills and slash commands have been merged** under a
 | Content | Location |
 |---------|----------|
 | Core identity/preferences | Global CLAUDE.md |
-| Small cross-cutting config | `rules/environments/` |
+| Small cross-cutting config | `rules/config/` |
 | Large documentation | Skill `references/` |
 | Project context | Project CLAUDE.md |
 | Personal overrides | CLAUDE.local.md |
@@ -120,7 +161,7 @@ hooks:                              # Lifecycle hooks (see Hooks section)
 
 - **Use aliases**: `opus`, `sonnet`, `haiku` (automatically use latest version)
 - **`inherit`**: Inherit model from parent conversation
-- **Priority order**: Task tool override > Agent YAML > Inherit > System default
+- **Priority order**: Task tool override → Agent YAML → Inherit → System default
 - **Model capabilities**:
   - `opus`: Complex reasoning, strategic analysis, multi-step workflows
   - `sonnet`: General-purpose, balanced performance, technical tasks
@@ -482,11 +523,12 @@ For complex multi-file operations (e.g., creating an entire instruction ecosyste
 ## References
 
 Detailed guides in `references/` subdirectory:
+- **claude-opus-4-7-compatibility.md**: Expanded rule rationale with before/after examples, migration audit checklist for pre-4.7 instructions, common failure modes, research sources
 - **yaml-frontmatter-complete-guide.md**: All valid fields and options (COMPREHENSIVE)
 - **agent-vs-skill-decision-guide.md**: Complete decision matrix for agents vs skills
 - **rules-and-content-placement-guide.md**: CLAUDE.md, rules, skills placement decisions
 - **common-instruction-patterns.md**: Proven structures and templates
-- **cross-platform-conversion-guide.md**: Claude Code > Claude.ai conversion
+- **cross-platform-conversion-guide.md**: Claude Code → Claude.ai conversion
 - **mcp-setup-guide-framework.md**: MCP server setup guide creation framework, scope decision matrix, credential security
 - **mcp-tool-documentation-guide.md**: Best practices for documenting MCP tool calls in skills — `input_examples` API field, parameter nesting, correct/incorrect examples
 - **creation-checklists.md**: File type selection matrix, MUST/SHOULD/MAY requirements, model selection, sanitisation
