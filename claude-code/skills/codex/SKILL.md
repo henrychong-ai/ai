@@ -1,12 +1,12 @@
 ---
 name: codex
-description: This skill should be used to route requests to OpenAI GPT-5.4 via Codex MCP for second opinions, hard problems, and code review. Triggers on /codex, "use codex", with reasoning levels (none/low/medium/high/xhigh) and service tier (fast/standard).
+description: This skill should be used to route requests to OpenAI GPT-5.5 via Codex MCP for second opinions, hard problems, and code review. Triggers on /codex, "use codex", with reasoning levels (none/low/medium/high/xhigh) and service tier (fast/standard).
 allowed-tools: mcp__codex__codex, mcp__codex__codex-reply
 ---
 
-# Codex Skill — OpenAI GPT-5.4
+# Codex Skill — OpenAI GPT-5.5
 
-Second opinions, hard problems, code review via GPT-5.4. Runs in main thread — context flows TO Codex, responses flow BACK for integration.
+Second opinions, hard problems, code review via GPT-5.5. Runs in main thread — context flows TO Codex, responses flow BACK for integration.
 
 ## Quick Reference
 
@@ -64,7 +64,7 @@ Curate context before calling — quality in = quality out:
 
 Every call MUST include `config` with `model`, `model_reasoning_effort`, and `service_tier`. Never rely on config.toml defaults.
 
-**Defaults:** `gpt-5.4` + `high` + `fast`. Do not downgrade without explicit user request.
+**Defaults:** `gpt-5.5` + `high` + `fast`. Do not downgrade without explicit user request.
 
 > **Parameter Placement:**
 > - `model_reasoning_effort` and `service_tier` are **NOT** top-level params — **only work inside `config`**
@@ -76,7 +76,7 @@ Every call MUST include `config` with `model`, `model_reasoning_effort`, and `se
 mcp__codex__codex({
   prompt: "[prepared prompt]",
   config: {
-    "model": "gpt-5.4",                   // always gpt-5.4
+    "model": "gpt-5.5",                   // always gpt-5.5
     "model_reasoning_effort": "high",      // or user-specified: none/low/medium/xhigh
     "service_tier": "fast"                 // default; "standard" only when user requests
   }
@@ -95,11 +95,11 @@ mcp__codex__codex-reply({
 ```
 mcp__codex__codex({
   prompt: "Analyze approach A...",
-  config: { "model": "gpt-5.4", "model_reasoning_effort": "high", "service_tier": "fast" }
+  config: { "model": "gpt-5.5", "model_reasoning_effort": "high", "service_tier": "fast" }
 })
 mcp__codex__codex({
   prompt: "Analyze approach B...",
-  config: { "model": "gpt-5.4", "model_reasoning_effort": "high", "service_tier": "fast" }
+  config: { "model": "gpt-5.5", "model_reasoning_effort": "high", "service_tier": "fast" }
 })
 ```
 
@@ -118,7 +118,7 @@ mcp__codex__codex({
 ```
 mcp__codex__codex({
   prompt: "...",
-  model: "gpt-5.4"                   // ❌ Only sets model, loses reasoning + tier
+  model: "gpt-5.5"                   // ❌ Only sets model, loses reasoning + tier
 })
 ```
 
