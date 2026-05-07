@@ -15,7 +15,7 @@ op://<vault>/<item>[/section]/<field>
 ```
 
 **Examples:**
-- `op://Personal/Sunsama/password`
+- `op://Personal/Neo4j/password`
 - `op://Work/GitHub/api-token`
 - `op://${VAULT:-dev}/database/connection-string` (with default)
 
@@ -274,7 +274,7 @@ aws s3 ls
 ### Credential File Organization
 ```
 ~/.config/mcp-credentials/
-├── sunsama.env      # Sunsama MCP credentials
+├── kg.env           # Knowledge Graph (Neo4j) MCP credentials
 ├── github.env       # GitHub MCP credentials
 ├── database.env     # Database credentials
 └── ...

@@ -152,7 +152,7 @@ op run --env-file="$ENV_FILE" -- "${@:2}"
 chmod +x ~/.config/1password/op-mcp-wrapper
 
 # Use with MCP config
-~/.config/1password/op-mcp-wrapper sunsama npx mcp-sunsama
+~/.config/1password/op-mcp-wrapper kg npx -y @henrychong-ai/mcp-neo4j-knowledge-graph
 ```
 
 ## Environment Variables

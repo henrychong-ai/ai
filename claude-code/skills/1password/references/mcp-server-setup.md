@@ -19,9 +19,11 @@ Simplest approach - configure op run directly in MCP config.
 ```bash
 mkdir -p ~/.config/mcp-credentials
 
-cat > ~/.config/mcp-credentials/sunsama.env << 'EOF'
-SUNSAMA_EMAIL=op://Personal/Sunsama/email
-SUNSAMA_PASSWORD=op://Personal/Sunsama/password
+cat > ~/.config/mcp-credentials/kg.env << 'EOF'
+NEO4J_URL=op://Personal/Neo4j/url
+NEO4J_USERNAME=op://Personal/Neo4j/username
+NEO4J_PASSWORD=op://Personal/Neo4j/password
+OPENAI_API_KEY=op://Personal/OpenAI/api-key
 EOF
 ```
 
@@ -31,14 +33,15 @@ For Claude Code (`~/.claude.json`):
 ```json
 {
   "mcpServers": {
-    "sunsama": {
+    "kg": {
       "command": "op",
       "args": [
         "run",
-        "--env-file=/Users/USERNAME/.config/mcp-credentials/sunsama.env",
+        "--env-file=/Users/USERNAME/.config/mcp-credentials/kg.env",
         "--",
         "npx",
-        "mcp-sunsama"
+        "-y",
+        "@henrychong-ai/mcp-neo4j-knowledge-graph"
       ]
     }
   }
@@ -85,9 +88,9 @@ chmod +x ~/.config/1password/op-mcp-wrapper
 ```json
 {
   "mcpServers": {
-    "sunsama": {
+    "kg": {
       "command": "/Users/USERNAME/.config/1password/op-mcp-wrapper",
-      "args": ["sunsama", "npx", "mcp-sunsama"]
+      "args": ["kg", "npx", "-y", "@henrychong-ai/mcp-neo4j-knowledge-graph"]
     },
     "github": {
       "command": "/Users/USERNAME/.config/1password/op-mcp-wrapper",
@@ -119,14 +122,15 @@ which npx    # /opt/homebrew/bin/npx
 ```json
 {
   "mcpServers": {
-    "sunsama": {
+    "kg": {
       "command": "/opt/homebrew/bin/op",
       "args": [
         "run",
-        "--env-file=/Users/USERNAME/.config/mcp-credentials/sunsama.env",
+        "--env-file=/Users/USERNAME/.config/mcp-credentials/kg.env",
         "--",
         "/opt/homebrew/bin/npx",
-        "mcp-sunsama"
+        "-y",
+        "@henrychong-ai/mcp-neo4j-knowledge-graph"
       ]
     }
   }
@@ -138,7 +142,7 @@ which npx    # /opt/homebrew/bin/npx
 ### Recommended Structure
 ```
 ~/.config/mcp-credentials/
-├── sunsama.env       # Sunsama MCP
+├── kg.env            # Knowledge Graph (Neo4j) MCP
 ├── github.env        # GitHub MCP
 ├── linear.env        # Linear MCP
 ├── database.env      # Database MCP
@@ -181,7 +185,7 @@ EOF
 **To recover:**
 ```bash
 # Option 1: In Claude Code
-/mcp restart sunsama
+/mcp restart kg
 
 # Option 2: Restart Claude Code entirely
 # Quit and reopen the application
@@ -243,12 +247,12 @@ op://company.1password.com/Work/Item/field
 
 2. **Verify credentials file exists:**
    ```bash
-   cat ~/.config/mcp-credentials/sunsama.env
+   cat ~/.config/mcp-credentials/kg.env
    ```
 
 3. **Test op run manually:**
    ```bash
-   op run --env-file=~/.config/mcp-credentials/sunsama.env -- env | grep SUNSAMA
+   op run --env-file=~/.config/mcp-credentials/kg.env -- env | grep -E 'NEO4J|OPENAI'
    ```
 
 4. **Check MCP server logs:**
@@ -271,12 +275,12 @@ op://company.1password.com/Work/Item/field
 
 1. Verify item exists:
    ```bash
-   op item get "Sunsama" --vault="Personal"
+   op item get "Neo4j" --vault="Personal"
    ```
 
 2. Check field name:
    ```bash
-   op item get "Sunsama" --vault="Personal" --format=json | jq '.fields[].label'
+   op item get "Neo4j" --vault="Personal" --format=json | jq '.fields[].label'
    ```
 
 3. Correct the reference in .env file
