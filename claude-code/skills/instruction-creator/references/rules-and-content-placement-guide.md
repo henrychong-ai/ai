@@ -132,8 +132,8 @@ skill-name/
 | Content Type | Recommended Location | Rationale |
 |--------------|---------------------|-----------|
 | **User identity/preferences** | Global CLAUDE.md | Core behavior, always needed |
-| **Small cross-cutting config** (~50-100 lines) | `rules/environments/` | Always available, organized |
-| **API keys, account IDs, paths** | `rules/environments/` | Cross-cutting, sensitive |
+| **Small cross-cutting config** (~50-100 lines) | `rules/config/` | Always available, organized |
+| **API keys, account IDs, paths** | `rules/config/` | Cross-cutting, sensitive |
 | **Large domain documentation** (>200 lines) | Skill `references/` | On-demand, token efficient |
 | **Project-specific context** | Project CLAUDE.md | Scoped to project |
 | **Project-specific patterns** | Project `rules/` | Organized, reusable within project |
@@ -147,7 +147,7 @@ skill-name/
 
 ### Cloud Provider Credentials
 
-**Location:** `~/.claude/rules/environments/`
+**Location:** `~/.claude/rules/config/`
 
 **Pattern:** One file per account/provider
 ```markdown
@@ -172,7 +172,7 @@ skill-name/
 
 ### Path Registries
 
-**For Global Paths:** `~/.claude/rules/environments/paths.md`
+**For Global Paths:** `~/.claude/rules/config/paths.md`
 ```markdown
 # paths.md
 | Alias | Path |
@@ -257,7 +257,7 @@ Where should this content go?
 │
 ├─ Needed EVERY session regardless of project?
 │  ├─ YES, and it's core identity/behavior → Global CLAUDE.md
-│  ├─ YES, and it's config/credentials → Global rules/environments/
+│  ├─ YES, and it's config/credentials → Global rules/config/
 │  └─ NO → Continue
 │
 ├─ Project-specific?
@@ -289,7 +289,7 @@ Where should this content go?
 ## Common Scenarios
 
 ### Scenario 1: API Credentials for Cloud Provider
-**Decision:** Global `rules/environments/provider.md`
+**Decision:** Global `rules/config/provider.md`
 - Small (~50-100 lines)
 - Needed across many projects
 - Cross-cutting concern
@@ -323,7 +323,7 @@ Where should this content go?
 - Local to that project's context
 
 ### Scenario 6: Multi-Account Credentials (Work vs Personal)
-**Decision:** Separate files in `rules/environments/`
+**Decision:** Separate files in `rules/config/`
 - `1password-work.md` - work account defaults
 - `1password-personal.md` - personal account with flags
 - Clear separation, both always available
@@ -364,8 +364,8 @@ Before syncing a skill to team repos:
 
 | Content | Location | Why |
 |---------|----------|-----|
-| Personal credentials | Global `rules/environments/` | Never synced, always available |
-| Personal paths | Global `rules/environments/paths.md` | Cross-cutting, private |
+| Personal credentials | Global `rules/config/` | Never synced, always available |
+| Personal paths | Global `rules/config/paths.md` | Cross-cutting, private |
 | Personal overrides | CLAUDE.local.md | Gitignored per project |
 | Personal project context | That project's CLAUDE.md | Scoped appropriately |
 
@@ -377,7 +377,7 @@ Before syncing a skill to team repos:
 ```
 # DON'T
 ~/.claude/CLAUDE.md: Contains Cloudflare account config
-~/.claude/rules/environments/cloudflare.md: Same Cloudflare config again
+~/.claude/rules/config/cloudflare.md: Same Cloudflare config again
 ```
 
 **Solution:** Pick one location, reference it if needed elsewhere.
@@ -415,7 +415,7 @@ Periodically check for:
 When CLAUDE.md becomes too large:
 
 1. Identify focused sections (credentials, paths, tool configs)
-2. Extract to `rules/environments/section-name.md`
+2. Extract to `rules/config/section-name.md`
 3. Remove from CLAUDE.md
 4. Verify rules load correctly
 
@@ -433,7 +433,7 @@ When documentation is too large for auto-loading:
 When small config should always load:
 
 1. Identify small cross-cutting config in skill
-2. Extract to `rules/environments/`
+2. Extract to `rules/config/`
 3. Remove from skill references
 4. Update skill to reference rules location if needed
 
@@ -471,7 +471,7 @@ When content is project-specific:
 - Reserve rules for frequently-needed small content
 
 **All Config in CLAUDE.md**
-- Split environment config to `rules/environments/`
+- Split environment config to `rules/config/`
 - Organize by category (cloud providers, credentials, paths)
 - Keep CLAUDE.md focused on behavior/identity
 

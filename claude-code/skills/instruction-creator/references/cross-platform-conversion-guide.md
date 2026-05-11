@@ -44,6 +44,20 @@ Claude skills exist in two separate ecosystems:
 
 The only conversion needed is: **Claude Code → Claude.ai**
 
+### Two Distribution Mechanisms (CD-S vs CD-P)
+
+| Type | Label | Method | Scope | Storage |
+|------|-------|--------|-------|---------|
+| **Skills** | CD-S | Upload `.zip` to Settings > Custom Skills | Auto-activate on trigger phrases across all conversations | `~/Desktop/claude-skills/` |
+| **Projects** | CD-P | Set up as Project in Claude Desktop/iOS | Scoped to conversations within that project | User-defined (commonly a dedicated project-knowledge directory) |
+
+**Use CD-S when:** Skill is knowledge-only, moderate size (< 30MB), should activate globally.
+**Use CD-P when:** Skill has large reference files (PDFs, etc.), needs scoped context, or exceeds zip size limits.
+
+### DXT/MCPB Extensions (Separate System)
+
+DXT (now MCPB) extensions are for bundling **MCP servers** into Claude Desktop — not for knowledge/skills. They use `manifest.json` + server code, created via `mcpb init` / `mcpb pack`. Do not confuse with skill zips.
+
 ---
 
 ## Platform Comparison Matrix
@@ -75,13 +89,12 @@ Skills that rely primarily on **knowledge and methodology** rather than tool exe
 - Knowledge-based content (frameworks, methodologies, reference data)
 
 **Examples of Portable Skills:**
-- `tony-robbins-trainer` - Pure coaching methodology
-- `cooking` - Dietary framework and recipes
 - `legal-harvey-ai` - Legal knowledge and templates
 - `islamic-finance` - Financial principles and structures
 - `compliance` - Regulatory knowledge
 - `analyzing-financial-statements` - Financial analysis methodology
 - `content-marketer` - Content creation frameworks
+- Any pure-methodology or pure-reference skill with no tool execution
 
 ### Non-Portable Skills (Claude Code Only)
 
@@ -110,10 +123,10 @@ Some skills have both portable knowledge AND non-portable tool dependencies:
 
 **Strategy:** Create a "lite" version that extracts only the portable knowledge.
 
-**Example:** `medical` skill
-- **Non-Portable:** DayOne MCP, KG medical domain queries, local scripts
-- **Portable:** Dietary framework, condition protocols, biomarker targets
-- **Solution:** Create `medical-lite` with just the knowledge content
+**Example:** A health/wellness skill that combines portable knowledge with local tool dependencies
+- **Non-Portable:** Personal-data MCP servers (journal apps, knowledge graph queries against private nodes), local scripts
+- **Portable:** Reference protocols, methodology frameworks, generic checklists
+- **Solution:** Create a `*-lite` variant that exposes only the portable knowledge layer
 
 ---
 
@@ -145,8 +158,8 @@ platforms: [claude-ai, claude-desktop, claude-ios]
 **BEFORE (Claude Code):**
 ```yaml
 ---
-name: cooking
-description: This skill should be used for cooking, recipe, meal planning...
+name: legal-harvey-ai
+description: This skill should be used for legal research, contract drafting...
 allowed-tools: Read, Grep, WebSearch
 ---
 ```
@@ -154,8 +167,8 @@ allowed-tools: Read, Grep, WebSearch
 **AFTER (Claude.ai):**
 ```yaml
 ---
-name: cooking
-description: This skill should be used for cooking, recipe, meal planning...
+name: legal-harvey-ai
+description: This skill should be used for legal research, contract drafting...
 ---
 ```
 
@@ -200,7 +213,7 @@ Convert the PDF to markdown format.
 ```markdown
 # BEFORE (CC)
 See `references/dietary-framework.md` for complete food lists.
-Load `~/.claude/skills/cooking/references/recipes.md` for examples.
+Load `~/.claude/skills/legal-harvey-ai/references/templates.md` for examples.
 
 # AFTER (Claude.ai)
 See the Dietary Framework section below for complete food lists.
@@ -243,32 +256,36 @@ Calculate the financial ratios using the formulas below:
 **Include in zip:**
 - `SKILL.md` (required, converted)
 - `references/*.md` files (knowledge content)
+- `references/*.pdf` files (insurance docs, guides — Claude can read PDFs)
 - `templates/*.md` files (document templates)
-- Small assets (< 1MB each)
+- `templates/*.csv`, `*.json` (structured templates)
 
-**Exclude from zip:**
-- `scripts/` directory (won't execute on Claude.ai)
-- Large PDFs (> 10MB total)
-- Binary files
+**Exclude from zip (non-portable artifacts):**
+- `scripts/` directory (Python/shell — won't execute on Claude.ai)
+- `.DS_Store` (macOS Finder metadata)
+- `__pycache__/`, `*.pyc` (Python bytecode cache)
 - Credentials or sensitive data
 
 ### Size Considerations
 
-- **Individual file limit:** 30MB
+- **Individual file limit:** 30MB per file
 - **Recommended total:** < 10MB for fast loading
-- **Large references:** Summarize key content inline, reference full docs
+- **Tested sizes:** Zips up to ~50MB have been successfully created — upload acceptance varies
+- **Very large skills (400MB+):** Use CD-P (Project) instead of CD-S (Skill zip)
+- **Large references:** Consider CD-P for skills with many large PDFs
 
 ### Bundling Decision Matrix
 
 | Content Type | Include? | Notes |
 |--------------|----------|-------|
 | Reference markdown | Yes | Core knowledge |
-| Templates | Yes | Output patterns |
-| Small PDFs (< 2MB) | Maybe | Consider text extraction |
-| Large PDFs (> 5MB) | No | Too large, summarize instead |
-| Python scripts | No | Won't execute |
-| Binary assets | No | Not portable |
-| API keys/credentials | Never | Security risk |
+| Templates (md/csv/json) | Yes | Output patterns |
+| PDFs (any size) | Yes | Claude can read PDFs in skills |
+| Images (jpg/png) | Yes | Claude can view images |
+| Python scripts | **No** | Won't execute — non-portable |
+| `.DS_Store` | **No** | macOS metadata — non-portable |
+| `__pycache__/` | **No** | Python cache — non-portable |
+| API keys/credentials | **Never** | Security risk |
 
 ---
 
@@ -279,20 +296,20 @@ Calculate the financial ratios using the formulas below:
 ```bash
 # Convert a single skill
 uv run --with pyyaml python ~/.claude/skills/instruction-creator/scripts/convert_to_claudeai.py \
-    ~/.claude/skills/cooking \
-    ~/Desktop/claude-ai-skills/
+    ~/.claude/skills/<skill-name> \
+    ~/Desktop/claude-skills/
 
-# Output: ~/Desktop/claude-ai-skills/cooking.zip
+# Output: ~/Desktop/claude-skills/<skill-name>.zip
 ```
 
 ### Batch Conversion
 
 ```bash
 # Convert multiple skills
-for skill in cooking legal-harvey-ai islamic-finance; do
+for skill in legal-harvey-ai islamic-finance compliance; do
     uv run --with pyyaml python ~/.claude/skills/instruction-creator/scripts/convert_to_claudeai.py \
         ~/.claude/skills/$skill \
-        ~/Desktop/claude-ai-skills/
+        ~/Desktop/claude-skills/
 done
 ```
 
@@ -315,8 +332,8 @@ Options:
 ### Step 1: Generate Zip
 
 ```bash
-uv run --with pyyaml python convert_to_claudeai.py ~/.claude/skills/cooking ~/Desktop/
-# Creates: ~/Desktop/cooking.zip
+uv run --with pyyaml python convert_to_claudeai.py ~/.claude/skills/<skill-name> ~/Desktop/claude-skills/
+# Creates: ~/Desktop/claude-skills/<skill-name>.zip
 ```
 
 ### Step 2: Upload to Claude.ai
@@ -339,8 +356,8 @@ uv run --with pyyaml python convert_to_claudeai.py ~/.claude/skills/cooking ~/De
 
 Start a conversation and use a skill trigger:
 ```
-User: Help me check if this recipe is compliant with my dietary framework
-Claude: [Should activate cooking skill and apply dietary rules]
+User: Help me draft a non-disclosure agreement for a vendor relationship
+Claude: [Should activate legal-harvey-ai skill and apply contract templates]
 ```
 
 ---
@@ -401,6 +418,24 @@ skill.zip
 3. Ensure no broken file references
 4. Validate markdown formatting
 
+### Description Too Long (Upload Validation Failure)
+
+**Symptoms:** Upload rejected with `field 'description' in SKILL.md must be at most 1024 characters`.
+
+**Cause:** Claude Desktop validates description length on upload. Limit is **1024 characters** (target: 1–2 lines of dense content). CC-only skills often accumulate longer descriptions over time because no equivalent validation runs locally.
+
+**Solutions:**
+1. Count current length:
+   ```bash
+   awk '/^description:/{sub(/^description: /,""); desc=$0; while ((getline line) > 0 && line !~ /^[a-z-]+:/ && line !~ /^---$/) desc = desc " " line; print "Length:", length(desc); exit}' SKILL.md
+   ```
+2. Trim techniques (preserve trigger terms — they drive auto-invocation):
+   - Replace "including A, B, C" with "(A, B, C)"
+   - Collapse repeated verbs: "creating/updating agents, creating/updating skills" → "creating/updating agents/skills"
+   - Drop fillers: "optimal", "complex", "and" before final list item
+   - Remove duplicate trigger phrases (e.g. drop `"effort level"` if `"effort"` is already in the list — superstring matching covers it)
+3. Re-zip and re-upload. No validation runs in Claude Code, so the Claude Desktop upload step is the only gate.
+
 ### Content Not Available
 
 **Symptoms:** Skill activates but can't access reference content.
@@ -446,11 +481,11 @@ Based on analysis of common Claude Code skills:
 
 | Skill | Conversion Effort | Mobile Value |
 |-------|-------------------|--------------|
-| tony-robbins-trainer | Minimal | High |
-| cooking | Minimal | Very High |
 | legal-harvey-ai | Low | High |
 | islamic-finance | Minimal | High |
 | compliance | Low | High |
+| content-marketer | Minimal | High |
+| analyzing-financial-statements | Low | High |
 
 ### Priority 2 (Moderate Value)
 

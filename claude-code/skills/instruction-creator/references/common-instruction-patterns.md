@@ -279,7 +279,7 @@ Coordinate [multi-step process] to achieve [outcome].
 **Key Principles:**
 - Document actual schema (top-level params vs pass-through objects)
 - Use correct/incorrect example pairs for ambiguous parameters
-- Show progressive complexity (minimal > typical > full)
+- Show progressive complexity (minimal → typical → full)
 - Mark deprecated parameters with strikethrough
 - Since MCP tools cannot use Claude API `input_examples`, skill examples are the **only** mechanism for usage guidance
 

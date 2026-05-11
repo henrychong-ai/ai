@@ -9,9 +9,9 @@ Usage:
     uv run --with pyyaml python convert_to_claudeai.py <skill_path> [output_dir] [options]
 
 Examples:
-    uv run --with pyyaml python convert_to_claudeai.py ~/.claude/skills/cooking
-    uv run --with pyyaml python convert_to_claudeai.py ~/.claude/skills/cooking ~/Desktop/
-    uv run --with pyyaml python convert_to_claudeai.py ~/.claude/skills/cooking ~/Desktop/ --verbose
+    uv run --with pyyaml python convert_to_claudeai.py ~/.claude/skills/legal-harvey-ai
+    uv run --with pyyaml python convert_to_claudeai.py ~/.claude/skills/legal-harvey-ai ~/Desktop/
+    uv run --with pyyaml python convert_to_claudeai.py ~/.claude/skills/legal-harvey-ai ~/Desktop/ --verbose
 
 Output:
     Creates a zip file ready for upload to Claude.ai Settings > Capabilities
@@ -376,9 +376,9 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-    %(prog)s ~/.claude/skills/cooking
-    %(prog)s ~/.claude/skills/cooking ~/Desktop/
-    %(prog)s ~/.claude/skills/cooking ~/Desktop/ --verbose --dry-run
+    %(prog)s ~/.claude/skills/legal-harvey-ai
+    %(prog)s ~/.claude/skills/legal-harvey-ai ~/Desktop/
+    %(prog)s ~/.claude/skills/legal-harvey-ai ~/Desktop/ --verbose --dry-run
 
 The output zip can be uploaded to Claude.ai via Settings > Capabilities.
 Skills uploaded to any Claude.ai platform will sync to all others automatically.

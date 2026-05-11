@@ -57,6 +57,7 @@ Detailed guidance for choosing where content belongs. Each entry shows what SHOU
 - [ ] Create references/ by default; other subdirs only when needed (YAGNI)
 - [ ] Include specific trigger terms in description for activation
 - [ ] If using `agent` field, ensure `context: fork` is also set
+- [ ] No skill version numbers in SKILL.md (body or frontmatter `metadata.version`) — skills are versioned via git, not embedded strings. Tool/library versions referenced in content are fine.
 
 ### All Skills SHOULD:
 - [ ] Test with 3 scenarios: normal, edge cases, out-of-scope
@@ -159,10 +160,12 @@ For transforming personal/proprietary instruction files into team-ready versions
 - Personal communication styles
 
 **Proprietary Methodology (Strip):**
-- Personal methodology frameworks and life area optimisation
+- Named personal optimisation frameworks (life-area systems, identity engines, etc.)
 - Personal philosophical frameworks
 - Personal optimisation protocols
 - Proprietary decision-making frameworks
+
+(For concrete before/after string-substitution examples, see the Pattern Library below — those illustrate the conversion mechanics with sample phrasings.)
 
 **Path and System (Generalise/Remove):**
 - Personal directory paths → Generic examples or removal
