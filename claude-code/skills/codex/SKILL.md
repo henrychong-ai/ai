@@ -1,12 +1,12 @@
 ---
 name: codex
 description: This skill should be used to route requests to OpenAI GPT-5.5 via Codex MCP for second opinions, hard problems, and code review. Triggers on /codex, "use codex", with reasoning levels (none/low/medium/high/xhigh) and service tier (fast/standard).
-allowed-tools: mcp__codex__codex, mcp__codex__codex-reply
+allowed-tools: Agent, mcp__codex__codex, mcp__codex__codex-reply
 ---
 
 # Codex Skill — OpenAI GPT-5.5
 
-Second opinions, hard problems, code review via GPT-5.5. Runs in main thread — context flows TO Codex, responses flow BACK for integration.
+Second opinions, hard problems, code review via GPT-5.5. **Dispatch runs in the background via the Agent tool** — the main thread stays free while Codex thinks; the harness notifies on completion and Claude integrates the response then.
 
 ## Quick Reference
 
@@ -33,6 +33,31 @@ Curate context before calling — quality in = quality out:
 
 **Anti-patterns:** Dumping entire files • Vague questions • Missing tech context • No success criteria
 
+## Execution: Background Dispatch (MANDATORY)
+
+Every `/codex` invocation dispatches the Codex MCP call via the `Agent` tool with `run_in_background: true`. The main thread does **not** call `mcp__codex__codex` synchronously — that would block until Codex returns.
+
+After dispatch, reply to the user with one short line (e.g. `Codex query dispatched; will surface response when ready`) and continue with other work. When the harness fires the background-completion notification, surface and integrate the Codex output per the **Response Integration** section below.
+
+### Dispatch Pattern
+
+```
+Agent({
+  description: "Codex: [3-5 word topic]",
+  subagent_type: "general-purpose",
+  run_in_background: true,
+  prompt: "Call mcp__codex__codex once with the prompt and config below. Return Codex's full response verbatim — no summarisation, no commentary.\n\nPrompt:\n[prepared prompt]\n\nConfig:\n  model: gpt-5.5\n  model_reasoning_effort: [high | user-specified]\n  service_tier: [fast | standard]"
+})
+```
+
+### Continue an Existing Thread
+
+For follow-ups, dispatch the same way but instruct the background agent to call `mcp__codex__codex-reply` with the `threadId` from the prior response plus the new `prompt`.
+
+### Parallel Queries
+
+Spawn multiple background `Agent` calls in a single message — one per branch (e.g. approach A vs approach B). Each fires its own completion notification; integrate as they return.
+
 ## MCP Tool Schema
 
 ### `mcp__codex__codex`
@@ -58,7 +83,9 @@ Curate context before calling — quality in = quality out:
 | `threadId` | string | Yes (effectively) | Thread ID from previous response |
 | ~~`conversationId`~~ | — | — | **DEPRECATED** — use `threadId` |
 
-## MCP Syntax
+## MCP Syntax (Reference for the Background Agent)
+
+The patterns below describe how the spawned background agent calls `mcp__codex__codex`. The `/codex` skill itself never calls these MCP tools from the main thread — it only spawns the wrapper Agent.
 
 ### MANDATORY: Always Pass Config Block
 
@@ -132,11 +159,11 @@ mcp__codex__codex-reply({
 
 ## Response Integration
 
-Don't pass through — INTEGRATE with main thread context.
+Triggered when the background Agent's completion notification fires. Don't pass through — INTEGRATE with main thread context.
 
 | Pattern | When | Action |
 |---------|------|--------|
 | **Implement** | Working code returned | Verify fit → Adapt style → Implement → Test |
 | **Synthesise** | Second opinion | Both perspectives → Agreements/differences → Recommendation |
-| **Iterate** | Needs refinement | `codex-reply` → Feedback → Repeat |
+| **Iterate** | Needs refinement | Dispatch a fresh background Agent that calls `codex-reply` with the prior `threadId` |
 | **Conflict** | Disagreement | Both approaches → Trade-offs → Recommend with rationale |
