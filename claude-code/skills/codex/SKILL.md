@@ -1,6 +1,6 @@
 ---
 name: codex
-description: This skill should be used to route requests to OpenAI GPT-5.5 via Codex MCP for second opinions, hard problems, and code review. Triggers on /codex, "use codex", with reasoning levels (none/low/medium/high/xhigh) and service tier (fast/standard).
+description: This skill should be used to route requests to OpenAI GPT-5.5 via Codex MCP for second opinions, hard problems, and code review. Triggers on /codex, "use codex", with reasoning levels (none/low/medium/high/xhigh, default xhigh) and service tier (fast/standard).
 allowed-tools: Agent, mcp__codex__codex, mcp__codex__codex-reply
 ---
 
@@ -12,12 +12,12 @@ Second opinions, hard problems, code review via GPT-5.5. **Dispatch runs in the 
 
 | Trigger | Reasoning | Service Tier |
 |---------|-----------|--------------|
-| `/codex` | high | fast (default) |
+| `/codex` | xhigh | fast (default) |
 | `/codex [level]` | specified | fast |
-| `/codex standard` | high | standard |
+| `/codex standard` | xhigh | standard |
 | `/codex [level] standard` | specified | standard |
 
-**Reasoning:** `none` → `low` → `medium` → `high` (default) → `xhigh`
+**Reasoning:** `none` → `low` → `medium` → `high` → `xhigh` (default)
 **Tiers:** `fast` (default, 1.5x speed) • `standard`/`normal` (opt-in)
 
 Arguments appear in any order. Extract reasoning level + service tier from user input.
@@ -46,7 +46,7 @@ Agent({
   description: "Codex: [3-5 word topic]",
   subagent_type: "general-purpose",
   run_in_background: true,
-  prompt: "Call mcp__codex__codex once with the prompt and config below. Return Codex's full response verbatim — no summarisation, no commentary.\n\nPrompt:\n[prepared prompt]\n\nConfig:\n  model: gpt-5.5\n  model_reasoning_effort: [high | user-specified]\n  service_tier: [fast | standard]"
+  prompt: "Call mcp__codex__codex once with the prompt and config below. Return Codex's full response verbatim — no summarisation, no commentary.\n\nPrompt:\n[prepared prompt]\n\nConfig:\n  model: gpt-5.5\n  model_reasoning_effort: [xhigh | user-specified]\n  service_tier: [fast | standard]"
 })
 ```
 
@@ -91,7 +91,7 @@ The patterns below describe how the spawned background agent calls `mcp__codex__
 
 Every call MUST include `config` with `model`, `model_reasoning_effort`, and `service_tier`. Never rely on config.toml defaults.
 
-**Defaults:** `gpt-5.5` + `high` + `fast`. Do not downgrade without explicit user request.
+**Defaults:** `gpt-5.5` + `xhigh` + `fast`. Do not downgrade without explicit user request.
 
 > **Parameter Placement:**
 > - `model_reasoning_effort` and `service_tier` are **NOT** top-level params — **only work inside `config`**
@@ -104,7 +104,7 @@ mcp__codex__codex({
   prompt: "[prepared prompt]",
   config: {
     "model": "gpt-5.5",                   // always gpt-5.5
-    "model_reasoning_effort": "high",      // or user-specified: none/low/medium/xhigh
+    "model_reasoning_effort": "xhigh",     // default; or user-specified: none/low/medium/high
     "service_tier": "fast"                 // default; "standard" only when user requests
   }
 })
@@ -122,11 +122,11 @@ mcp__codex__codex-reply({
 ```
 mcp__codex__codex({
   prompt: "Analyze approach A...",
-  config: { "model": "gpt-5.5", "model_reasoning_effort": "high", "service_tier": "fast" }
+  config: { "model": "gpt-5.5", "model_reasoning_effort": "xhigh", "service_tier": "fast" }
 })
 mcp__codex__codex({
   prompt: "Analyze approach B...",
-  config: { "model": "gpt-5.5", "model_reasoning_effort": "high", "service_tier": "fast" }
+  config: { "model": "gpt-5.5", "model_reasoning_effort": "xhigh", "service_tier": "fast" }
 })
 ```
 
@@ -136,7 +136,7 @@ mcp__codex__codex({
 ```
 mcp__codex__codex({
   prompt: "...",
-  model_reasoning_effort: "high",    // ❌ NOT top-level — silently ignored
+  model_reasoning_effort: "xhigh",   // ❌ NOT top-level — silently ignored
   service_tier: "fast"               // ❌ NOT top-level — silently ignored
 })
 ```
