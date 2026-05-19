@@ -296,6 +296,14 @@ skill-name/
     └── assets/     - Static files
 ```
 
+### Content Formats & Source-File Archive
+
+Skills carry content best loaded inline by Claude — `.md` for prose, `.csv` for tabular data, `.jsonl` for record streams, etc. Binary files (PDFs, images, audio, video, scanned documents) are not loadable as context — extract their substance to text, then archive the originals outside the skill in a companion directory.
+
+**Universal archive location:** `~/.claude/skill-originals/<skill-name>/...` (preserves original subdir structure).
+
+Load **`references/skill-content-formats-guide.md`** for the format-by-content-type table (.md / .csv / .tsv / .jsonl / .yaml / Mermaid / etc.), conversion toolbox (`pdftotext`, `tesseract`, `markitdown`, `pandoc`, `whisper`), the SKILL.md pointer pattern, the 11-step migration playbook for skills with existing binaries, and CD-S/CD-T/CD-P implications.
+
 ### Visibility Controls
 
 | Field | Effect |
@@ -422,48 +430,7 @@ hooks:
 
 ## YAML Frontmatter Quick Reference
 
-### Agent (Required: name, description)
-```yaml
----
-name: agent-name
-description: [Specialization]. Use PROACTIVELY for [triggers].
-model: sonnet
-tools: Read, Grep, Glob, Bash
-disallowedTools: Write, Edit
-permissionMode: default
-skills: skill-a, skill-b
-hooks: {...}
----
-```
-
-### Skill (Required: name, description)
-```yaml
----
-name: skill-name
-description: This skill should be used when [use cases].
-allowed-tools: Read, Grep
-model: sonnet
-context: fork
-agent: Explore
-user-invocable: true
-disable-model-invocation: false
-hooks: {...}
----
-```
-
-### Command (All Optional)
-```yaml
----
-description: Brief purpose
-allowed-tools: Tool(commands)
-argument-hint: [format]
-model: sonnet
-context: fork
-agent: general-purpose
-disable-model-invocation: false
-hooks: {...}
----
-```
+Agent / Skill / Command frontmatter blocks are documented inline under each "Creating ..." section above. For the complete cross-reference of every valid field (required vs optional, defaults, value enums, gotchas), load **`references/yaml-frontmatter-complete-guide.md`**.
 
 ## Review Checklist
 
@@ -511,6 +478,32 @@ which npx        # Returns: /opt/homebrew/bin/npx
 "command": "npx"                      # Will fail
 ```
 
+### Claude Desktop Skill Zip Packaging
+
+Skill `.zip` uploads to Claude Desktop Settings → Capabilities → Skills go to `~/.claude/claude-desktop-skills/<skill-name>.zip`. Wrapper-folder structure is required; **30 MB hard cap** applies.
+
+Load **`references/claude-desktop-packaging-guide.md`** for the full skill-zip convention: directory structure, filename patterns, `package_skill.py` / `convert_to_claudeai.py` invocation, size-reduction strategies, pre-upload verification, and real-world examples.
+
+### Claude Desktop Project Knowledge Bundles (directory format)
+
+Project Knowledge bundles uploaded to a specific Claude Desktop Project's Knowledge panel are **regular directories** (NOT `.zip` archives) containing a `<skill>-project-instructions.md` paste-ready file plus all knowledge files flat at the directory root. Output dir is `~/.claude/claude-desktop-projects/<project>/`.
+
+Each skill that backs a CD-P carries a single recipe file at `references/cd-project-recipe.md` (Custom Instructions + File Manifest + Sync Log). `/instruction-creator` is the engine that materialises the bundle dir from that recipe on demand — the skill never stores the bundle output inside itself.
+
+Load **`references/cd-project-bundle-guide.md`** for the recipe schema, generation procedure, cross-skill invocation pattern, and scaffolding workflow for new Projects.
+
+### Distribution-Marker Compliance (when authoring/editing a skill)
+
+Before finalising any new or modified skill, **check your distribution manifest** for the target skill's distribution markers and enforce compliance:
+
+| Marker | Required pattern in the skill |
+|---|---|
+| **CD-S** (Skill .zip uploaded to Claude.ai) | Skill is portable for Claude.ai (no CC-only frontmatter fields like `allowed-tools` / `model` / `context: fork` / `hooks` — strip via `convert_to_claudeai.py`), no personal paths in distributed text, total folder under 30 MB. |
+| **CD-P** (Project Knowledge bundle) | Recipe file present at `references/cd-project-recipe.md` with all three sections (Custom Instructions, File Manifest, Sync Log). Skill must NOT contain a `project-desktop/` subdir (legacy pattern — migrate to recipe). SKILL.md carries the one-line activation cue: *"When asked to (re)build the Project bundle for this skill, load `/instruction-creator` and follow its `cd-project-bundle-guide.md`."* |
+| **Content format hygiene** (universal — applies to every skill) | No binary files (PDFs, images, audio, video) loose in `references/` if their content is meant to be Claude-readable. Extract to AI-friendly text formats (`.md` / `.csv` / `.jsonl` / etc. per `references/skill-content-formats-guide.md`) and archive originals to `~/.claude/skill-originals/<skill>/`. Skill stays lightweight + searchable; originals stay recoverable. |
+
+When setting up or editing a skill, treat these as **mandatory compliance checks** — if a skill is marked CD-S/CD-P in your manifest, the corresponding pattern must exist in the skill, and missing patterns must be scaffolded before the edit is considered complete. The content-format hygiene check applies regardless of distribution markers.
+
 ## Execution Model
 
 This skill runs in the **main thread context** with full access to all tools (Read, Write, Edit, Bash, Glob, Grep, etc.). This is optimal because:
@@ -529,6 +522,9 @@ Detailed guides in `references/` subdirectory:
 - **rules-and-content-placement-guide.md**: CLAUDE.md, rules, skills placement decisions
 - **common-instruction-patterns.md**: Proven structures and templates
 - **cross-platform-conversion-guide.md**: Claude Code → Claude.ai conversion
+- **claude-desktop-packaging-guide.md**: Skill `.zip` packaging — output dir, 30 MB upload cap, size-reduction strategies, `package_skill.py` / `convert_to_claudeai.py` patterns
+- **cd-project-bundle-guide.md**: Claude Desktop Project Knowledge bundles (directory format) — recipe schema, generation procedure, cross-skill invocation pattern, scaffolding workflow for new Projects
+- **skill-content-formats-guide.md**: Format-by-content-type mapping (`.md` / `.csv` / `.jsonl` / `.yaml` / Mermaid / etc.), conversion toolbox (`pdftotext`, `tesseract`, `markitdown`, `pandoc`, `whisper`), source-file archive convention (`~/.claude/skill-originals/<skill>/`), 11-step migration playbook
 - **mcp-setup-guide-framework.md**: MCP server setup guide creation framework, scope decision matrix, credential security
 - **mcp-tool-documentation-guide.md**: Best practices for documenting MCP tool calls in skills — `input_examples` API field, parameter nesting, correct/incorrect examples
 - **creation-checklists.md**: File type selection matrix, MUST/SHOULD/MAY requirements, model selection, sanitisation

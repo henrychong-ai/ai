@@ -48,8 +48,8 @@ The only conversion needed is: **Claude Code → Claude.ai**
 
 | Type | Label | Method | Scope | Storage |
 |------|-------|--------|-------|---------|
-| **Skills** | CD-S | Upload `.zip` to Settings > Custom Skills | Auto-activate on trigger phrases across all conversations | `~/Desktop/claude-skills/` |
-| **Projects** | CD-P | Set up as Project in Claude Desktop/iOS | Scoped to conversations within that project | User-defined (commonly a dedicated project-knowledge directory) |
+| **Skills** | CD-S | Upload `.zip` to Settings > Custom Skills | Auto-activate on trigger phrases across all conversations | `~/.claude/claude-desktop-skills/` |
+| **Project Knowledge bundles** | CD-P | Upload directory contents to a specific Project's Knowledge panel | Scoped to one Project; per-skill `references/cd-project-recipe.md` materialised by `/instruction-creator` per `cd-project-bundle-guide.md` | `~/.claude/claude-desktop-projects/<project>/` (directory, not zip) |
 
 **Use CD-S when:** Skill is knowledge-only, moderate size (< 30MB), should activate globally.
 **Use CD-P when:** Skill has large reference files (PDFs, etc.), needs scoped context, or exceeds zip size limits.
@@ -297,9 +297,9 @@ Calculate the financial ratios using the formulas below:
 # Convert a single skill
 uv run --with pyyaml python ~/.claude/skills/instruction-creator/scripts/convert_to_claudeai.py \
     ~/.claude/skills/<skill-name> \
-    ~/Desktop/claude-skills/
+    ~/.claude/claude-desktop-skills/
 
-# Output: ~/Desktop/claude-skills/<skill-name>.zip
+# Output: ~/.claude/claude-desktop-skills/<skill-name>.zip
 ```
 
 ### Batch Conversion
@@ -309,7 +309,7 @@ uv run --with pyyaml python ~/.claude/skills/instruction-creator/scripts/convert
 for skill in legal-harvey-ai islamic-finance compliance; do
     uv run --with pyyaml python ~/.claude/skills/instruction-creator/scripts/convert_to_claudeai.py \
         ~/.claude/skills/$skill \
-        ~/Desktop/claude-skills/
+        ~/.claude/claude-desktop-skills/
 done
 ```
 
@@ -332,8 +332,8 @@ Options:
 ### Step 1: Generate Zip
 
 ```bash
-uv run --with pyyaml python convert_to_claudeai.py ~/.claude/skills/<skill-name> ~/Desktop/claude-skills/
-# Creates: ~/Desktop/claude-skills/<skill-name>.zip
+uv run --with pyyaml python convert_to_claudeai.py ~/.claude/skills/<skill-name> ~/.claude/claude-desktop-skills/
+# Creates: ~/.claude/claude-desktop-skills/<skill-name>.zip
 ```
 
 ### Step 2: Upload to Claude.ai
