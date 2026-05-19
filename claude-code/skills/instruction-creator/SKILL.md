@@ -7,7 +7,7 @@ description: Master architect for Claude instruction ecosystems (agents, skills,
 
 This skill provides complete guidance for creating and reviewing Claude instruction files across the entire instruction ecosystem.
 
-**Updated:** 2026-04-20 (Claude Code v2.1.80+; Claude Opus 4.7 released 2026-04-16)
+**Updated:** 2026-05-19 (Claude Code v2.1.80+; Claude Opus 4.7 released 2026-04-16)
 
 ## ⚠️ Claude Opus 4.7 Instruction-Handling (MANDATORY)
 
@@ -40,17 +40,6 @@ For rule-by-rule expansion with before/after examples, the 6-step migration audi
 Load the reference file whenever auditing an existing CLAUDE.md / skill / agent / command for 4.7 compatibility.
 
 ---
-
-## Skills & Slash Commands Merge (v2.1.3)
-
-As of Claude Code v2.1.3, **skills and slash commands have been merged** under a unified `Skill` tool:
-
-- Both handled by the same underlying mechanism
-- Skills visible in `/` menu by default (opt-out with `user-invocable: false`)
-- Both can use `context: fork` and `agent` fields for isolated execution
-- **Distinction is now purely organizational:**
-  - **Skills**: Directory structure (SKILL.md + bundled resources)
-  - **Commands**: Single .md files for quick prompts
 
 ## Instruction File Types
 
