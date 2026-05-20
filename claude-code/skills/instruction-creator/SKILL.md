@@ -1,6 +1,6 @@
 ---
 name: instruction-creator
-description: Master architect for Claude instruction ecosystems (agents, skills, slash commands, MCP servers, project instructions). Creates optimal instruction hierarchies. Provides skill templates, 5-step workflow, model and effort configuration, and scripts (init_skill.py, package_skill.py). Use PROACTIVELY for creating/updating agents/skills/commands, MCP setup guides, multi-file instruction creation, team distribution sanitization, ecosystem review, YAML frontmatter, agent-vs-skill decisions, content placement, rules vs CLAUDE.md, token budgets, hooks, effort levels, cross-platform conversion. Triggers: "YAML frontmatter", "agent vs skill", "where should I put", "rules vs CLAUDE.md", "content placement", "token budget", "auto-loading", "instruction template", "context fork", "hooks", "effort", "team sharing", "sanitization", "create agent", "create skill", "review instructions".
+description: Master architect for Claude instruction ecosystems (agents, skills, slash commands, MCP servers, project instructions). Provides skill templates, 5-step workflow, model and effort configuration, packaging scripts, and Opus 4.7 compatibility audits. Use for creating/updating agents/skills/commands, MCP setup guides, and team distribution sanitization.
 ---
 
 # Instruction Creator Skill
@@ -189,7 +189,7 @@ Skills are specialized knowledge packages with bundled resources using progressi
 
 1. **Understand**: Clarify problem, triggers, success criteria, edge cases
 2. **Name**: kebab-case, max 64 characters
-3. **Description**: Third-person voice, concrete verbs, trigger terms (CRITICAL)
+3. **Description**: Third-person voice, concrete verbs, trigger terms (CRITICAL). **Max 1024 characters** — keep to 1–2 lines of dense content. Claude Desktop upload validation rejects skills with descriptions over 1024 chars with `field 'description' in SKILL.md must be at most 1024 characters`.
 4. **Instructions**: Clear hierarchy with examples and error handling
 5. **Package/Test**: Use validation scripts
 
@@ -289,7 +289,7 @@ skill-name/
 
 Skills carry content best loaded inline by Claude — `.md` for prose, `.csv` for tabular data, `.jsonl` for record streams, etc. Binary files (PDFs, images, audio, video, scanned documents) are not loadable as context — extract their substance to text, then archive the originals outside the skill in a companion directory.
 
-**Universal archive location:** `~/.claude/skill-originals/<skill-name>/...` (preserves original subdir structure).
+**Archive location:** `~/.claude/skill-originals/<skill-name>/...` (preserves original subdir structure).
 
 Load **`references/skill-content-formats-guide.md`** for the format-by-content-type table (.md / .csv / .tsv / .jsonl / .yaml / Mermaid / etc.), conversion toolbox (`pdftotext`, `tesseract`, `markitdown`, `pandoc`, `whisper`), the SKILL.md pointer pattern, the 11-step migration playbook for skills with existing binaries, and CD-S/CD-T/CD-P implications.
 
@@ -469,29 +469,32 @@ which npx        # Returns: /opt/homebrew/bin/npx
 
 ### Claude Desktop Skill Zip Packaging
 
-Skill `.zip` uploads to Claude Desktop Settings → Capabilities → Skills go to `~/.claude/claude-desktop-skills/<skill-name>.zip`. Wrapper-folder structure is required; **30 MB hard cap** applies.
+Skill `.zip` uploads to Claude.ai Settings → Capabilities → Skills go to `~/.claude/skills-claude-desktop/<skill-name>.zip`. Wrapper-folder structure is required; **30 MB hard cap** applies to both CD-S (personal Max/Pro plan) and CD-T (Team plan).
 
 Load **`references/claude-desktop-packaging-guide.md`** for the full skill-zip convention: directory structure, filename patterns, `package_skill.py` / `convert_to_claudeai.py` invocation, size-reduction strategies, pre-upload verification, and real-world examples.
 
-### Claude Desktop Project Knowledge Bundles (directory format)
+### Claude Desktop Project Custom Instructions (v3 single-file)
 
-Project Knowledge bundles uploaded to a specific Claude Desktop Project's Knowledge panel are **regular directories** (NOT `.zip` archives) containing a `<skill>-project-instructions.md` paste-ready file plus all knowledge files flat at the directory root. Output dir is `~/.claude/claude-desktop-projects/<project>/`.
+Under the v3 linked-skill pattern (2026-05-19), a skill that backs a Claude Desktop Project emits a **single paste-ready `.md` file** at `~/.claude/skills-claude-desktop/<skill>-project-instructions.md` — side-by-side with the matching `<skill>.zip`. Knowledge files are no longer duplicated into a separate bundle directory; they travel inside the skill `.zip` via Claude.ai's auto-synced skill mount at `/mnt/skills/user/<skill>/` and reach every consumer surface (Desktop, web, iOS, Android).
 
-Each skill that backs a CD-P carries a single recipe file at `references/cd-project-recipe.md` (Custom Instructions + File Manifest + Sync Log). `/instruction-creator` is the engine that materialises the bundle dir from that recipe on demand — the skill never stores the bundle output inside itself.
+Each skill that backs a CD-P carries a single recipe file at `references/cd-project-recipe.md` (Custom Instructions section with surface-aware capability matrix + File Manifest + Sync Log). `/instruction-creator` is the engine that emits the paste-ready `.md` from that recipe on demand — the skill never stores the output inside itself.
 
-Load **`references/cd-project-bundle-guide.md`** for the recipe schema, generation procedure, cross-skill invocation pattern, and scaffolding workflow for new Projects.
+Load **`references/cd-project-bundle-guide.md`** for the recipe schema, emission procedure, cross-skill invocation pattern, and scaffolding workflow for new Projects.
 
 ### Distribution-Marker Compliance (when authoring/editing a skill)
 
-Before finalising any new or modified skill, **check your distribution manifest** for the target skill's distribution markers and enforce compliance:
+Before finalising any new or modified skill, **check `~/.claude/skills/git/references/distribution-manifest.md`** for the target skill's distribution markers and enforce compliance:
 
 | Marker | Required pattern in the skill |
 |---|---|
-| **CD-S** (Skill .zip uploaded to Claude.ai) | Skill is portable for Claude.ai (no CC-only frontmatter fields like `allowed-tools` / `model` / `context: fork` / `hooks` — strip via `convert_to_claudeai.py`), no personal paths in distributed text, total folder under 30 MB. |
-| **CD-P** (Project Knowledge bundle) | Recipe file present at `references/cd-project-recipe.md` with all three sections (Custom Instructions, File Manifest, Sync Log). Skill must NOT contain a `project-desktop/` subdir (legacy pattern — migrate to recipe). SKILL.md carries the one-line activation cue: *"When asked to (re)build the Project bundle for this skill, load `/instruction-creator` and follow its `cd-project-bundle-guide.md`."* |
+| **CD-S ✓ / ○** (Skill .zip on a personal plan) | Skill is portable for Claude.ai (no CC-only frontmatter fields like `allowed-tools` / `model` / `context: fork` / `hooks` — strip via `convert_to_claudeai.py`), no personal paths in distributed text, total folder under 30 MB. |
+| **CD-T ✓ / ○** (Skill .zip on a Team plan) | Same as CD-S **plus** team-readiness: no personal context bleed-through, appropriate for any teammate to use. |
+| **CD-P ✓ / ○** (Linked Skill — paired Claude Desktop Project) | (1) Recipe file present at `references/cd-project-recipe.md` with all three sections (Custom Instructions, File Manifest, Sync Log). (2) **Custom Instructions section MUST contain a per-surface capability matrix** — Desktop / web / iOS / Android rows, with reachability of bundled files, MCP servers, scripts, dashboards, image attachments. (3) Both upload artifacts MUST be co-located at `~/.claude/skills-claude-desktop/`: `<skill>.zip` + `<skill>-project-instructions.md`. (4) Skill must NOT contain a `project-desktop/` subdir or perpetual bundle output directory (legacy v1/v2 patterns — migrate to v3 single-file recipe). (5) SKILL.md carries the one-line activation cue: *"When asked to (re)build the Project Custom Instructions for this skill, load `/instruction-creator` and follow its `cd-project-bundle-guide.md`."* (6) After material edits to skill references that change content reachable from the paired Project, prompt the user to re-emit the `.md` — do NOT auto-overwrite (paste-edits may be in flight). |
 | **Content format hygiene** (universal — applies to every skill) | No binary files (PDFs, images, audio, video) loose in `references/` if their content is meant to be Claude-readable. Extract to AI-friendly text formats (`.md` / `.csv` / `.jsonl` / etc. per `references/skill-content-formats-guide.md`) and archive originals to `~/.claude/skill-originals/<skill>/`. Skill stays lightweight + searchable; originals stay recoverable. |
 
-When setting up or editing a skill, treat these as **mandatory compliance checks** — if a skill is marked CD-S/CD-P in your manifest, the corresponding pattern must exist in the skill, and missing patterns must be scaffolded before the edit is considered complete. The content-format hygiene check applies regardless of distribution markers.
+When setting up or editing a skill, treat these as **mandatory compliance checks** — if a skill is marked CD-S/CD-T/CD-P in the manifest, the corresponding pattern must exist in the skill, and missing patterns must be scaffolded before the edit is considered complete. The content-format hygiene check applies regardless of distribution markers.
+
+**CD-only Projects (out of scope for /instruction-creator):** Users may have Claude Desktop Projects with NO backing Claude Code skill — these are managed in the Claude Desktop GUI only. They are NOT tracked in `distribution-manifest.md` and /instruction-creator has no responsibility for them. Only Projects with a paired CC skill (CD-P `✓`/`○`) require the recipe pattern + emitted `.md`.
 
 ## Execution Model
 

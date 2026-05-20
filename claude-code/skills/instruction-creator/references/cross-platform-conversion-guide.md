@@ -48,11 +48,10 @@ The only conversion needed is: **Claude Code → Claude.ai**
 
 | Type | Label | Method | Scope | Storage |
 |------|-------|--------|-------|---------|
-| **Skills** | CD-S | Upload `.zip` to Settings > Custom Skills | Auto-activate on trigger phrases across all conversations | `~/.claude/claude-desktop-skills/` |
-| **Project Knowledge bundles** | CD-P | Upload directory contents to a specific Project's Knowledge panel | Scoped to one Project; per-skill `references/cd-project-recipe.md` materialised by `/instruction-creator` per `cd-project-bundle-guide.md` | `~/.claude/claude-desktop-projects/<project>/` (directory, not zip) |
+| **Skill `.zip`** | CD-S | Upload `.zip` to Settings → Capabilities → Skills | Auto-activates on trigger phrases across every Claude.ai conversation; bundled files reach every consumer surface (Desktop, web, iOS, Android) via `/mnt/skills/user/<skill>/` | `~/.claude/skills-claude-desktop/<skill>.zip` |
+| **Project Custom Instructions** (linked-skill only) | CD-P | Paste contents into a specific Claude Desktop Project → Custom Instructions field | Scoped to that Project; carries per-surface capability matrix; the skill's `references/cd-project-recipe.md` is emitted to the .md by `/instruction-creator` per `cd-project-bundle-guide.md` | `~/.claude/skills-claude-desktop/<skill>-project-instructions.md` (single file, side-by-side with `<skill>.zip`) |
 
-**Use CD-S when:** Skill is knowledge-only, moderate size (< 30MB), should activate globally.
-**Use CD-P when:** Skill has large reference files (PDFs, etc.), needs scoped context, or exceeds zip size limits.
+**CD-S applies to every distributable skill.** **CD-P applies only to "linked skills"** — those with a paired Claude Desktop Project. Standalone skills need only CD-S. CD-only Projects (Claude Desktop Projects without a backing CC skill) are managed in the Claude Desktop GUI only and need no /instruction-creator artifacts.
 
 ### DXT/MCPB Extensions (Separate System)
 
@@ -89,12 +88,13 @@ Skills that rely primarily on **knowledge and methodology** rather than tool exe
 - Knowledge-based content (frameworks, methodologies, reference data)
 
 **Examples of Portable Skills:**
-- `legal-harvey-ai` - Legal knowledge and templates
-- `islamic-finance` - Financial principles and structures
-- `compliance` - Regulatory knowledge
-- `analyzing-financial-statements` - Financial analysis methodology
-- `content-marketer` - Content creation frameworks
-- Any pure-methodology or pure-reference skill with no tool execution
+- Coaching/methodology skills (pure knowledge content)
+- Dietary frameworks and recipe skills
+- Legal knowledge and templates
+- Financial principles and structures
+- Regulatory/compliance knowledge bases
+- Financial analysis methodologies
+- Marketing playbooks, brand voice files, content strategy
 
 ### Non-Portable Skills (Claude Code Only)
 
@@ -113,9 +113,8 @@ Skills that **require local tool execution**:
 - `git` - Requires git CLI
 - `images` - Requires ImageMagick
 - `ffmpeg` - Requires ffmpeg CLI
-- `obsidian` - Requires Obsidian MCP server
-- `things` - Requires Things MCP server
-- `infrastructure` - Requires SSH, system access
+- Note-taking integrations - Require app-specific MCP servers (e.g. Obsidian, Things)
+- Infrastructure skills - Require SSH, VPN, etc.
 
 ### Partially Portable Skills
 
@@ -123,10 +122,10 @@ Some skills have both portable knowledge AND non-portable tool dependencies:
 
 **Strategy:** Create a "lite" version that extracts only the portable knowledge.
 
-**Example:** A health/wellness skill that combines portable knowledge with local tool dependencies
-- **Non-Portable:** Personal-data MCP servers (journal apps, knowledge graph queries against private nodes), local scripts
-- **Portable:** Reference protocols, methodology frameworks, generic checklists
-- **Solution:** Create a `*-lite` variant that exposes only the portable knowledge layer
+**Example:** a personal-health skill
+- **Non-Portable:** Journal/MCP integrations, knowledge-graph domain queries, local scripts
+- **Portable:** Dietary framework, condition protocols, biomarker targets
+- **Solution:** Create a "lite" variant with just the knowledge content
 
 ---
 
@@ -158,8 +157,8 @@ platforms: [claude-ai, claude-desktop, claude-ios]
 **BEFORE (Claude Code):**
 ```yaml
 ---
-name: legal-harvey-ai
-description: This skill should be used for legal research, contract drafting...
+name: cooking
+description: This skill should be used for cooking, recipe, meal planning...
 allowed-tools: Read, Grep, WebSearch
 ---
 ```
@@ -167,8 +166,8 @@ allowed-tools: Read, Grep, WebSearch
 **AFTER (Claude.ai):**
 ```yaml
 ---
-name: legal-harvey-ai
-description: This skill should be used for legal research, contract drafting...
+name: cooking
+description: This skill should be used for cooking, recipe, meal planning...
 ---
 ```
 
@@ -213,7 +212,7 @@ Convert the PDF to markdown format.
 ```markdown
 # BEFORE (CC)
 See `references/dietary-framework.md` for complete food lists.
-Load `~/.claude/skills/legal-harvey-ai/references/templates.md` for examples.
+Load `~/.claude/skills/cooking/references/recipes.md` for examples.
 
 # AFTER (Claude.ai)
 See the Dietary Framework section below for complete food lists.
@@ -270,7 +269,7 @@ Calculate the financial ratios using the formulas below:
 
 - **Individual file limit:** 30MB per file
 - **Recommended total:** < 10MB for fast loading
-- **Tested sizes:** Zips up to ~50MB have been successfully created — upload acceptance varies
+- **Tested sizes:** 25MB and 52MB zips have been created successfully — upload acceptance varies
 - **Very large skills (400MB+):** Use CD-P (Project) instead of CD-S (Skill zip)
 - **Large references:** Consider CD-P for skills with many large PDFs
 
@@ -289,76 +288,94 @@ Calculate the financial ratios using the formulas below:
 
 ---
 
-## Conversion Script Usage
+## Conversion Methods
 
-### Basic Usage
+### Method 1: Manual Zip (Recommended for Batch)
 
-```bash
-# Convert a single skill
-uv run --with pyyaml python ~/.claude/skills/instruction-creator/scripts/convert_to_claudeai.py \
-    ~/.claude/skills/<skill-name> \
-    ~/.claude/claude-desktop-skills/
-
-# Output: ~/.claude/claude-desktop-skills/<skill-name>.zip
-```
-
-### Batch Conversion
+Faster, no dependencies, handles symlinked skills. Excludes non-portable artifacts automatically.
 
 ```bash
-# Convert multiple skills
-for skill in legal-harvey-ai islamic-finance compliance; do
-    uv run --with pyyaml python ~/.claude/skills/instruction-creator/scripts/convert_to_claudeai.py \
-        ~/.claude/skills/$skill \
-        ~/.claude/claude-desktop-skills/
+OUTDIR="$HOME/.claude/skills-claude-desktop"
+
+# Single skill (from parent directory to get wrapper folder)
+cd ~/.claude/skills && zip -r "$OUTDIR/<skill-name>.zip" <skill-name> \
+    -x "*/scripts/*" -x "*/.DS_Store" -x "*/__pycache__/*" -x "*.pyc"
+
+# Symlinked skill (use the physical target path)
+SRC="$HOME/path/to/skill-source-repo/skills"
+cd "$SRC" && zip -r "$OUTDIR/<skill-name>.zip" <skill-name> \
+    -x "*/scripts/*" -x "*/.DS_Store" -x "*/__pycache__/*" -x "*.pyc"
+
+# Batch (multiple skills)
+for skill in skill-a skill-b skill-c; do
+    cd ~/.claude/skills && zip -r "$OUTDIR/$skill.zip" "$skill" \
+        -x "*/scripts/*" -x "*/.DS_Store" -x "*/__pycache__/*" -x "*.pyc"
 done
 ```
 
-### Script Options
+**Key:** Always `cd` to the **parent directory** before zipping so the skill name becomes the wrapper folder in the zip.
+
+**Symlink handling:** If a skill in `~/.claude/skills/` is a symlink to a skill-source repo, `cd` to the physical target path before zipping.
+
+### Method 2: Convert Script (Content Transformation)
+
+Use when you need YAML field stripping (`allowed-tools` removal) and CC-specific content transformation.
 
 ```bash
-uv run --with pyyaml python convert_to_claudeai.py <skill_path> <output_dir> [options]
+# Single skill
+uv run --with pyyaml python ~/.claude/skills/instruction-creator/scripts/convert_to_claudeai.py \
+    ~/.claude/skills/<skill-name> \
+    ~/.claude/skills-claude-desktop/
 
-Options:
-  --dry-run        Show what would be converted without writing
-  --verbose        Show detailed conversion steps
-  --keep-tools     Keep allowed-tools field (not recommended)
-  --inline-refs    Inline all reference content into SKILL.md
+# Options: --dry-run, --verbose, --keep-tools, --inline-refs
 ```
+
+**Note:** The convert script transforms content (strips CC-specific fields) but does not currently exclude `scripts/`, `.DS_Store`, or `__pycache__/`. For pure knowledge skills that don't need content transformation, Method 1 is simpler.
 
 ---
 
-## Upload Process
+## Upload Process (CD-S Skills)
 
 ### Step 1: Generate Zip
 
-```bash
-uv run --with pyyaml python convert_to_claudeai.py ~/.claude/skills/<skill-name> ~/.claude/claude-desktop-skills/
-# Creates: ~/.claude/claude-desktop-skills/<skill-name>.zip
-```
+See "Conversion Methods" above. Zips output to `~/.claude/skills-claude-desktop/`.
 
 ### Step 2: Upload to Claude.ai
 
 1. Open Claude.ai (web) or Claude Desktop
 2. Go to **Settings** (gear icon)
-3. Navigate to **Capabilities** or **Features**
-4. Find **Custom Skills** section
-5. Click **Upload** or drag-drop the zip file
-6. Verify skill appears in list
+3. Navigate to **Custom Skills** section
+4. Click **Upload** or drag-drop the zip file from `~/.claude/skills-claude-desktop/`
+5. Verify skill appears in list
 
 ### Step 3: Verify Sync
 
-1. Open Claude iOS or Android app
-2. Check Settings > Skills
-3. Verify uploaded skill appears
-4. Test with a trigger phrase
+Skills auto-sync across all Claude.ai platforms (Web, Desktop, iOS, Android) once uploaded to any one.
 
-### Step 4: Test Functionality
+### Step 4: Test
 
-Start a conversation and use a skill trigger:
-```
-User: Help me draft a non-disclosure agreement for a vendor relationship
-Claude: [Should activate legal-harvey-ai skill and apply contract templates]
-```
+Start a conversation and use a skill trigger phrase to verify activation.
+
+---
+
+## Project Setup (CD-P Projects)
+
+For skills too large for zip upload or that benefit from scoped context.
+
+### Step 1: Prepare Project Files
+
+Copy/adapt SKILL.md and reference files to a working directory of your choice.
+
+### Step 2: Create Project in Claude Desktop
+
+1. Open Claude Desktop > Projects
+2. Create new project
+3. Add custom instructions (from SKILL.md content)
+4. Attach reference files
+
+### Step 3: Track in Manifest
+
+Update distribution manifest with `CD-P: ✓` and project path.
 
 ---
 
@@ -473,40 +490,35 @@ Before converting, verify:
 
 ---
 
-## Appendix: Recommended Skills for Conversion
+## Appendix: Example Distribution Patterns
 
-Based on analysis of common Claude Code skills:
+### CD-S (Skill Zips) — typical sizing
 
-### Priority 1 (High Value, Easy Conversion)
+| Skill type | Typical Zip Size | Notes |
+|-----------|------------------|-------|
+| Markdown-only knowledge skill | < 100 KB | Ship as-is |
+| Skill with a handful of reference PDFs | 1–10 MB | Comfortable upload size |
+| Skill with many reference PDFs (e.g. policies, statutes) | 10–25 MB | Approaching the 30 MB cap — audit before adding more |
+| Skill with very large PDF/media payload | > 30 MB | Cannot upload as a single .zip — see size-reduction strategies |
 
-| Skill | Conversion Effort | Mobile Value |
-|-------|-------------------|--------------|
-| legal-harvey-ai | Low | High |
-| islamic-finance | Minimal | High |
-| compliance | Low | High |
-| content-marketer | Minimal | High |
-| analyzing-financial-statements | Low | High |
+### CD-P (Projects)
 
-### Priority 2 (Moderate Value)
+CD-P is appropriate when a skill is too large for the 30 MB cap, when the user needs a scoped Project context, or when the skill backs a paired Claude Desktop Project that needs Custom Instructions text. See `cd-project-bundle-guide.md` for the v3 single-file recipe pattern.
 
-| Skill | Conversion Effort | Mobile Value |
-|-------|-------------------|--------------|
-| analyzing-financial-statements | Minimal | Medium |
-| creating-financial-models | Minimal | Medium |
-| content-marketer | Minimal | High |
-| travel | Low (sanitize personal data) | Very High |
+### Not Recommended for CD-S (Non-Portable)
 
-### Not Recommended (Non-Portable)
+| Skill type | Reason |
+|------------|--------|
+| `pdf`, `xlsx`, `docx`, `pptx` | Require Python libraries |
+| `git` | Requires git CLI + credentials |
+| `images`, `ffmpeg` | Require CLI tools |
+| Infrastructure skills | Require SSH, VPN, system access |
 
-| Skill | Reason |
-|-------|--------|
-| pdf, xlsx, docx, pptx | Require Python libraries |
-| git | Requires git CLI |
-| images, ffmpeg | Require CLI tools |
-| obsidian, things | Require MCP servers |
-| infrastructure, devops | Require SSH, system access |
+### Distribution Tracking
+
+If you maintain a multi-repo distribution setup (e.g. local + team + public copies of skills), a manifest file in your `/git` skill can track CD-S / CD-T / CD-P status with stale-check on push.
 
 ---
 
-*Last Updated: 2026-01-06*
+*Last Updated: 2026-03-25*
 *For use with instruction-creator skill*

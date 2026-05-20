@@ -8,15 +8,15 @@ Load this reference whenever packaging a **skill `.zip`** for upload to Claude D
 
 ## Output Directory (MANDATORY)
 
-**All Claude Desktop skill `.zip` uploads land in `~/.claude/claude-desktop-skills/`.** No exceptions — do not leave zips in `/tmp/`, the skill source directory, or anywhere else.
+**All Claude Desktop skill `.zip` uploads land in `~/.claude/skills-claude-desktop/`.** No exceptions — do not leave zips in `/tmp/`, the skill source directory, or anywhere else.
 
 | Artefact | Output directory | Filename | Structure | Upload target |
 |---|---|---|---|---|
-| **Skill zip** | `~/.claude/claude-desktop-skills/` | `<skill-name>.zip` (bare) | Wrapper folder + `SKILL.md` | Settings → Capabilities → Skills |
+| **Skill zip** | `~/.claude/skills-claude-desktop/` | `<skill-name>.zip` (bare) | Wrapper folder + `SKILL.md` | Settings → Capabilities → Skills |
 
 `~/.claude/` is the standard Claude Code config directory on every user's machine, so this path is portable across machines — no per-user customisation required. Create the directory on first use if it doesn't yet exist.
 
-Per-directory README documents the convention + structural requirements: `~/.claude/claude-desktop-skills/README.md`.
+Per-directory README documents the convention + structural requirements: `~/.claude/skills-claude-desktop/README.md`.
 
 ### Invocation patterns
 
@@ -24,15 +24,15 @@ Per-directory README documents the convention + structural requirements: `~/.cla
 # Skill zip (portable)
 python3 ~/.claude/skills/instruction-creator/scripts/package_skill.py \
     ~/.claude/skills/<skill-name> \
-    ~/.claude/claude-desktop-skills/
+    ~/.claude/skills-claude-desktop/
 
 # Skill zip (CC-specific → sanitised for Claude.ai)
 uv run --with pyyaml python ~/.claude/skills/instruction-creator/scripts/convert_to_claudeai.py \
     ~/.claude/skills/<skill-name> \
-    ~/.claude/claude-desktop-skills/
+    ~/.claude/skills-claude-desktop/
 ```
 
-For Project Knowledge bundle generation (directory format, not zip), see `cd-project-bundle-guide.md`.
+For Project Custom Instructions emission (the `.md` paste file for a linked skill's paired Claude Desktop Project, co-located with the `.zip` in `~/.claude/skills-claude-desktop/`), see `cd-project-bundle-guide.md`.
 
 ---
 
@@ -41,8 +41,8 @@ For Project Knowledge bundle generation (directory format, not zip), see `cd-pro
 **All Claude Desktop .zip skill uploads must be strictly under 30 MB total.**
 
 Skills exceeding 30 MB will fail to upload. This applies to BOTH:
-- **CD-S** (Henry's individual Claude Max plan)
-- **CD-T** (Fusang Claude Teams plan)
+- **CD-S** (an individual Claude Max/Pro plan)
+- **CD-T** (a Claude Team plan)
 
 ### Implications for Skill Packaging
 
@@ -74,12 +74,11 @@ ls -lh /path/to/skill.zip
 # -rw-r--r--  1 user  staff   62M  ...  skill.zip   ❌ Will fail upload
 ```
 
-### Real-World Examples (2026-05-13)
+### Real-World Examples
 
-| Skill | Initial Zip Size | Status | Required Action |
+| Skill type | Initial Zip Size | Status | Required Action |
 |---|---|---|---|
-| `compliance.zip` | 62 MB | ❌ Over limit | Split: ship .md content + 9 statute extracts under one zip; relocate 41 regulator PDFs to a separate distribution |
-| `fusang.zip` | 52 MB | ❌ Over limit | Strip strategy/product/market/commercial PDFs from CD-S/CD-T copy; keep markdown body |
-| `portcullis.zip` | 35 KB | ✅ Well under | Ship as-is — markdown-only skill |
+| Compliance skill with bundled regulator PDFs | 62 MB | ❌ Over limit | Split: ship .md content + key statute extracts under one zip; relocate bulk regulator PDFs to a separate distribution |
+| Markdown-only company-context skill | 35 KB | ✅ Well under | Ship as-is — markdown-only skill |
 
-**Convention**: When a skill folder grows past 30 MB total, fork a `<skill>-references-pdf/` directory inside the skill (still distributed via Fusang AI repo for git access), but exclude it from `package_skill.py` for Claude Desktop zipping. Document in the skill's TODO.md.
+**Convention**: When a skill folder grows past 30 MB total, fork a `<skill>-references-pdf/` directory inside the skill (still distributed via your source repo for git access), but exclude it from `package_skill.py` for Claude Desktop zipping. Document in the skill's TODO.md.

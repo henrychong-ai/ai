@@ -3,7 +3,7 @@
 Load this reference whenever a skill has — or is about to acquire — binary files (PDFs, images, audio, video, scanned documents) or any non-text content that AI cannot load inline. Two concerns:
 
 1. **Convert** the substantive content of each binary into an AI-friendly text format that lives inside the skill (`.md`, `.csv`, `.jsonl`, etc.) so it loads at zero cost into Claude's context.
-2. **Archive** the original binary outside the skill in a companion directory (`~/.claude/skill-originals/<skill>/...` universal, or a personal override location) for reverse-lookup if the canonical original is ever needed (legal, claims, signatures, exact-format reproduction).
+2. **Archive** the original binary outside the skill in a companion directory (`~/.claude/skill-originals/<skill>/...`) for reverse-lookup if the canonical original is ever needed (legal, claims, signatures, exact-format reproduction).
 
 The skill stays lightweight + searchable. The original binary stays preserved + recoverable.
 
@@ -45,7 +45,7 @@ Use these defaults when authoring a new skill OR converting existing binaries.
 
 ### Why CSV is the tabular default (and TSV is not)
 
-CSV with proper quoting (RFC 4180) handles fields containing commas without ambiguity — `"Chong, Henry",1980,HK` is parsed identically by every modern tool (pandas, Excel, Numbers, Sheets, every language stdlib, Claude itself). The folklore "use TSV when fields contain commas" is a 1990s hangover from naïve parsers and does not apply in 2026. TSV only earns a spot for bioinformatics community-standard formats (genome data, VCF, etc.), where the convention is fixed regardless of whether commas appear.
+CSV with proper quoting (RFC 4180) handles fields containing commas without ambiguity — `"Doe, Jane",1980,HK` is parsed identically by every modern tool (pandas, Excel, Numbers, Sheets, every language stdlib, Claude itself). The folklore "use TSV when fields contain commas" is a 1990s hangover from naïve parsers and does not apply in 2026. TSV only earns a spot for bioinformatics community-standard formats (genome data, VCF, etc.), where the convention is fixed regardless of whether commas appear.
 
 ### Formats deliberately NOT in this table
 
@@ -94,19 +94,9 @@ When a skill has binaries that have been converted to text, **move the originals
 
 **Why `skill-originals/`?** Pithy, descriptive (these are the canonical pre-conversion originals), and avoids the "archive" ambiguity that could imply deprecated skills. Matches the `~/.claude/skill-*` and `~/.claude/claude-desktop-*` naming convention.
 
-### Personal override locations
-
-Check `~/.claude/overrides/skills/instruction-creator.md` for a personal override. Henry's machine routes archives to:
-
-```
-~/Obsidian/memory-bank/_skills/<skill-name>/<original-subdir-structure>/<original-filename>.<ext>
-```
-
-This keeps Henry's personal skill-originals inside the Obsidian-synced memory-bank so they're backed up + searchable from Obsidian + accessible across devices.
-
 ### Subdir structure: preserve, don't flatten
 
-Always preserve the original subdirectory structure under the skill-name root. This makes reverse-lookup trivial — if the skill's `references/insurance/foris/forms/AXA-HK-Dental-Claim-Form-2025.md` is the extracted text, the original lives at the symmetric path `<archive-root>/medical/references/insurance/foris/forms/AXA-HK-Dental-Claim-Form-2025.pdf`. No mental translation needed.
+Always preserve the original subdirectory structure under the skill-name root. This makes reverse-lookup trivial — if the skill's `references/insurance/forms/dental-claim-form.md` is the extracted text, the original lives at the symmetric path `<archive-root>/<skill-name>/references/insurance/forms/dental-claim-form.pdf`. No mental translation needed.
 
 ### SKILL.md pointer pattern
 
@@ -115,8 +105,6 @@ Each skill that has archived originals documents the archive location in its SKI
 ```markdown
 **[Section title]** — text extracts in `references/<subdir>/*.md`. Original binaries archived to `<archive-root>/<skill-name>/references/<subdir>/` (preserved subdir structure) for reverse lookup if exact-format originals ever needed (legal, claims, signatures).
 ```
-
-Reference implementation: `~/.claude/skills/medical/SKILL.md` Insurance Coverage section.
 
 ---
 
@@ -145,7 +133,7 @@ When applying this pattern to a skill that currently has PDFs/images/etc. mixed 
 10. **Update the CD-P recipe** (if CD-P marked) — decide whether the new text content should join the Project bundle's File Manifest.
 11. **Update distribution manifest** — bump CD-S to `○` pending re-zip; same for CD-P if recipe changed.
 
-Reference run-through: the 2026-05-19 `/medical` insurance extraction (12 PDFs + 1 JPG → 13 `.md`; originals to `~/Obsidian/memory-bank/_skills/medical/`).
+Worked example: a personal-health skill's insurance extraction converted 12 PDFs + 1 JPG to 13 `.md` files inside `references/insurance/`, with originals moved to `<archive-root>/<skill-name>/references/insurance/` preserving subdir structure.
 
 ---
 
@@ -157,7 +145,7 @@ When a skill goes through this conversion + archive workflow:
 |---|---|
 | **CD-S** | Skill zip size shrinks dramatically when bulky binaries leave the skill. Re-zip after migration — see `claude-desktop-packaging-guide.md` for size-reduction strategies if still over 30 MB. |
 | **CD-T** | Same as CD-S. Verify the extracted `.md` content does not contain personal data that would have been "protected" by being PDF-buried — if any sensitive content surfaced in extraction, re-sanitise before team-plan re-upload. |
-| **CD-P** | Decide whether the new `.md` extracts belong in the Project Knowledge bundle. If yes, add them to the recipe's File Manifest at `references/cd-project-recipe.md` and rebuild the bundle dir. |
+| **CD-P** (linked skill) | If the skill is marked CD-P `✓`/`○` in the manifest, decide whether the new `.md` extracts are reachable from the paired Claude Desktop Project (they are, automatically, if they're inside `references/` of the skill — the skill `.zip` auto-syncs to `/mnt/skills/user/<skill>/` on every Claude.ai surface). Add the new files to the recipe's File Manifest at `references/cd-project-recipe.md` so the manifest documents what's reachable. Re-emit the Project Custom Instructions `.md` to `~/.claude/skills-claude-desktop/<skill>-project-instructions.md` **only if** the Custom Instructions text itself references the new file by name (most won't — they reference categories, not individual files). |
 
 ---
 
