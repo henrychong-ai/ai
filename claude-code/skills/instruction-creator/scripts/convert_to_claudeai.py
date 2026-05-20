@@ -9,9 +9,9 @@ Usage:
     uv run --with pyyaml python convert_to_claudeai.py <skill_path> [output_dir] [options]
 
 Examples:
-    uv run --with pyyaml python convert_to_claudeai.py ~/.claude/skills/legal-harvey-ai
-    uv run --with pyyaml python convert_to_claudeai.py ~/.claude/skills/legal-harvey-ai ~/Desktop/
-    uv run --with pyyaml python convert_to_claudeai.py ~/.claude/skills/legal-harvey-ai ~/Desktop/ --verbose
+    uv run --with pyyaml python convert_to_claudeai.py ~/.claude/skills/cooking
+    uv run --with pyyaml python convert_to_claudeai.py ~/.claude/skills/cooking ~/Desktop/
+    uv run --with pyyaml python convert_to_claudeai.py ~/.claude/skills/cooking ~/Desktop/ --verbose
 
 Output:
     Creates a zip file ready for upload to Claude.ai Settings > Capabilities
@@ -76,7 +76,10 @@ class SkillConverter:
 
     # Files/directories to exclude from bundle
     EXCLUDE_PATTERNS = [
-        'scripts/',       # Scripts won't execute on Claude.ai
+        # NOTE: scripts/ is INCLUDED — Claude.ai mounts the full skill at
+        # /mnt/skills/user/<skill>/ and the code execution tool can invoke them
+        # (this is how Anthropic's own docx/pdf/pptx/xlsx skills function in
+        # Claude.ai). The "Scripts won't execute" assumption was outdated.
         '*.pyc',
         '__pycache__/',
         '.DS_Store',
@@ -267,45 +270,43 @@ class SkillConverter:
         return cleaned
 
     def bundle_references(self, output_dir: Path) -> None:
-        """Copy reference files to output directory."""
-        refs_dir = self.skill_path / "references"
+        """Copy all skill files except SKILL.md (handled separately) to output dir.
 
-        if not refs_dir.exists():
-            self.log("No references directory found")
-            return
-
-        output_refs = output_dir / "references"
+        Walks the entire skill tree (not just references/) so scripts/, top-level
+        .md files (e.g. pdf/forms.md, pptx/editing.md), and LICENSE.txt are
+        included. Claude.ai mounts the full tree at /mnt/skills/user/<skill>/.
+        """
         total_size = 0
         files_copied = 0
 
-        for ref_file in refs_dir.rglob("*"):
-            if ref_file.is_file():
-                # Check exclusion patterns
-                rel_path = ref_file.relative_to(self.skill_path)
-                if self.should_exclude(rel_path):
-                    self.log(f"Excluded: {rel_path}")
-                    continue
+        for src_file in self.skill_path.rglob("*"):
+            if not src_file.is_file():
+                continue
+            rel_path = src_file.relative_to(self.skill_path)
+            if str(rel_path) == "SKILL.md":
+                continue  # written separately by write_skill_md()
+            if self.should_exclude(rel_path):
+                self.log(f"Excluded: {rel_path}")
+                continue
 
-                # Check file size
-                file_size = ref_file.stat().st_size
-                if file_size > self.MAX_SINGLE_FILE:
-                    self.warn(f"File too large ({file_size / 1024 / 1024:.1f}MB): {rel_path}")
-                    continue
+            file_size = src_file.stat().st_size
+            if file_size > self.MAX_SINGLE_FILE:
+                self.warn(f"File too large ({file_size / 1024 / 1024:.1f}MB): {rel_path}")
+                continue
 
-                total_size += file_size
+            total_size += file_size
 
-                # Copy file
-                dest = output_dir / rel_path
-                if not self.dry_run:
-                    dest.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copy2(ref_file, dest)
-                files_copied += 1
-                self.log(f"Bundled: {rel_path}")
+            dest = output_dir / rel_path
+            if not self.dry_run:
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(src_file, dest)
+            files_copied += 1
+            self.log(f"Bundled: {rel_path}")
 
         if total_size > self.WARN_TOTAL_SIZE:
             self.warn(f"Total size ({total_size / 1024 / 1024:.1f}MB) exceeds recommended 10MB")
 
-        self.changes.append(f"Bundled {files_copied} reference files ({total_size / 1024:.1f}KB)")
+        self.changes.append(f"Bundled {files_copied} files ({total_size / 1024:.1f}KB)")
 
     def should_exclude(self, path: Path) -> bool:
         """Check if path should be excluded from bundle."""
@@ -376,9 +377,9 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-    %(prog)s ~/.claude/skills/legal-harvey-ai
-    %(prog)s ~/.claude/skills/legal-harvey-ai ~/Desktop/
-    %(prog)s ~/.claude/skills/legal-harvey-ai ~/Desktop/ --verbose --dry-run
+    %(prog)s ~/.claude/skills/cooking
+    %(prog)s ~/.claude/skills/cooking ~/Desktop/
+    %(prog)s ~/.claude/skills/cooking ~/Desktop/ --verbose --dry-run
 
 The output zip can be uploaded to Claude.ai via Settings > Capabilities.
 Skills uploaded to any Claude.ai platform will sync to all others automatically.

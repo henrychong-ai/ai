@@ -36,13 +36,40 @@ For Project Custom Instructions emission (the `.md` paste file for a linked skil
 
 ---
 
+## Filename Character Validation (MANDATORY)
+
+Claude Desktop's upload validator rejects any zip path containing characters outside `[A-Za-z0-9._-/]` with the error **"Zip file contains path with invalid characters"**. Forbidden: spaces, apostrophes (smart `'` U+2019 AND ASCII `'`), em/en-dashes, parentheses, all other punctuation and non-ASCII bytes.
+
+**Rename bundled files to kebab-case before packaging.** Then update SKILL.md `Read references/...` paths to match.
+
+Pre-zip check (run against source dir):
+
+```bash
+find ~/.claude/skills/<name> -type f | LC_ALL=C grep -P '[^A-Za-z0-9._\-/]' && echo "FIX FILENAMES" || echo "OK"
+```
+
+Post-zip check (run against output zip):
+
+```bash
+python3 -c "
+import zipfile
+with zipfile.ZipFile('<zip-path>') as z:
+    p = set('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-/')
+    [print(f'BAD: {i.filename!r}') for i in z.infolist() if set(i.filename) - p] or print('CLEAN')
+"
+```
+
+Real-world bite (2026-05-20): `islamic-finance` rejected on upload — 6 PDFs had spaces, 1 had a smart-quote apostrophe, 1 had an ASCII apostrophe. Fix required kebab-casing all 7 + updating 5 SKILL.md path refs. Future enhancement: bake this check into `convert_to_claudeai.py` so it fails locally instead of at upload.
+
+---
+
 ## 30 MB Upload Limit (MANDATORY)
 
 **All Claude Desktop .zip skill uploads must be strictly under 30 MB total.**
 
 Skills exceeding 30 MB will fail to upload. This applies to BOTH:
-- **CD-S** (an individual Claude Max/Pro plan)
-- **CD-T** (a Claude Team plan)
+- **CD-S** (Henry's individual Claude Max plan)
+- **CD-T** (Fusang Claude Teams plan)
 
 ### Implications for Skill Packaging
 
@@ -74,11 +101,12 @@ ls -lh /path/to/skill.zip
 # -rw-r--r--  1 user  staff   62M  ...  skill.zip   ❌ Will fail upload
 ```
 
-### Real-World Examples
+### Real-World Examples (2026-05-13)
 
-| Skill type | Initial Zip Size | Status | Required Action |
+| Skill | Initial Zip Size | Status | Required Action |
 |---|---|---|---|
-| Compliance skill with bundled regulator PDFs | 62 MB | ❌ Over limit | Split: ship .md content + key statute extracts under one zip; relocate bulk regulator PDFs to a separate distribution |
-| Markdown-only company-context skill | 35 KB | ✅ Well under | Ship as-is — markdown-only skill |
+| `compliance.zip` | 62 MB | ❌ Over limit | Split: ship .md content + 9 statute extracts under one zip; relocate 41 regulator PDFs to a separate distribution |
+| `fusang.zip` | 52 MB | ❌ Over limit | Strip strategy/product/market/commercial PDFs from CD-S/CD-T copy; keep markdown body |
+| `portcullis.zip` | 35 KB | ✅ Well under | Ship as-is — markdown-only skill |
 
-**Convention**: When a skill folder grows past 30 MB total, fork a `<skill>-references-pdf/` directory inside the skill (still distributed via your source repo for git access), but exclude it from `package_skill.py` for Claude Desktop zipping. Document in the skill's TODO.md.
+**Convention**: When a skill folder grows past 30 MB total, fork a `<skill>-references-pdf/` directory inside the skill (still distributed via Fusang AI repo for git access), but exclude it from `package_skill.py` for Claude Desktop zipping. Document in the skill's TODO.md.
