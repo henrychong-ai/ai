@@ -1,6 +1,6 @@
 ---
 name: codex
-description: This skill should be used to route requests to OpenAI GPT-5.5 via Codex MCP for second opinions, hard problems, and code review. Triggers on /codex, "use codex", with reasoning levels (none/low/medium/high/xhigh, default xhigh) and service tier (fast/standard).
+description: This skill should be used to route requests to OpenAI GPT-5.5 via Codex MCP for second opinions, hard problems, and code review. Runs in the background by default via the Agent tool (main thread stays free; harness notifies on completion); foreground only on explicit request. Triggers on /codex, "use codex", with reasoning levels (none/low/medium/high/xhigh, default xhigh) and service tier (fast/standard).
 allowed-tools: Agent, mcp__codex__codex, mcp__codex__codex-reply
 ---
 
@@ -33,9 +33,11 @@ Curate context before calling — quality in = quality out:
 
 **Anti-patterns:** Dumping entire files • Vague questions • Missing tech context • No success criteria
 
-## Execution: Background Dispatch (MANDATORY)
+## Execution: Background Dispatch (DEFAULT)
 
-Every `/codex` invocation dispatches the Codex MCP call via the `Agent` tool with `run_in_background: true`. The main thread does **not** call `mcp__codex__codex` synchronously — that would block until Codex returns.
+**Every `/codex` invocation runs in the background by default.** Dispatch the Codex MCP call via the `Agent` tool with `run_in_background: true`. The main thread does **not** call `mcp__codex__codex` synchronously — that would block until Codex returns.
+
+**Foreground override (explicit request only):** Run synchronously — calling `mcp__codex__codex` directly on the main thread — only when the user explicitly asks for it (e.g. `/codex foreground …`, "run codex in the foreground", "wait for codex"). Absent an explicit foreground request, always dispatch in the background.
 
 After dispatch, reply to the user with one short line (e.g. `Codex query dispatched; will surface response when ready`) and continue with other work. When the harness fires the background-completion notification, surface and integrate the Codex output per the **Response Integration** section below.
 
