@@ -247,11 +247,12 @@ Either way, **keep the Markdown syntax** — `#`/`##` hierarchy, lists, and tabl
 - Keep templates separate when they're used independently
 - Always use `.txt` extension (not `.md`) for knowledge base uploads
 
-## Refining Gem Instructions in the Builder
+## Refining Gem Instructions in the Builder (magic wand)
 
-Gemini's gem builder offers a built-in instruction-refinement helper (historically the "magic wand" — verify the current name/behaviour in the live builder UI):
-- Start with concise instructions, then use the builder's refine/expand helper if useful
-- Review any auto-expansion critically — Gemini 3.x prefers concise instructions, so trim rather than pad
+Gemini's gem builder has a **magic wand** icon at the bottom of the Instructions box that lets Gemini re-write and expand your draft instructions (confirmed current 2026-06 — [Google Gems tips](https://blog.google/products-and-platforms/products/gemini/google-gems-tips/)):
+- Write a concise draft, then click the magic wand to have Gemini rewrite/expand it
+- Treat it as a first-draft generator, not a final editor — review before saving; it can add hedges or generic lines you don't want
+- Gemini 3.x prefers concise instructions, so trim rather than pad
 - Preserve domain-specific precision
 
 ## Reference Directory
