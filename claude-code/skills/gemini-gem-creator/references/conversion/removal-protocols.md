@@ -108,10 +108,10 @@ Reference MAS regulatory guidelines for compliance context.
 **Transform to self-contained instructions:**
 ```
 # Before (CC)
-For compliance analysis, use the compliance-specialist skill with /compliance command.
+For compliance analysis, use the compliance-fusang skill with /compliance command.
 
 # After (Gem)
-For compliance analysis, apply regulatory assessment framework covering [your regulatory bodies] requirements.
+For compliance analysis, apply regulatory assessment framework covering Labuan FSA, SFC, and MAS requirements.
 ```
 
 ---
@@ -177,10 +177,10 @@ Focus on raising quality standards while eliminating inefficiencies.
 **Example:**
 ```
 # Before
-Reference `[Company-Entity]` entity for company context and `[Regulatory-Body]` for compliance.
+Reference `Fusang-Exchange` entity for company context and `MAS-Regulations` for compliance.
 
 # After
-Reference [your company] operations and [regulatory] requirements.
+Reference Fusang Exchange operations and MAS regulatory requirements.
 ```
 
 ---
@@ -207,9 +207,9 @@ Reference [your company] operations and [regulatory] requirements.
 
 | Element | Preserve |
 |---------|----------|
-| Your company's business context | ✅ Keep |
-| Industry-specific context | ✅ Keep |
-| Regulatory frameworks (applicable to your jurisdiction) | ✅ Keep |
+| Fusang digital securities context | ✅ Keep |
+| Portcullis wealth management context | ✅ Keep |
+| Regulatory frameworks (MAS, SFC, Labuan FSA) | ✅ Keep |
 | Industry terminology | ✅ Keep |
 | Domain expertise | ✅ Keep |
 | Business processes | ✅ Keep (generalized) |
@@ -239,10 +239,10 @@ Apply [service] expertise for [domain] across [jurisdictions].
 **Regulatory Context:**
 ```
 # Before (CC)
-Use compliance-specialist skill with mcp__kg__search_nodes("[Regulator]") for regulatory lookup.
+Use compliance-fusang skill with mcp__kg__search_nodes("MAS") for regulatory lookup.
 
 # After (Gem)
-Reference [regulatory body] requirements for [jurisdiction] operations, including licensing, compliance, and reporting obligations.
+Reference MAS regulatory requirements for Singapore operations, including licensing, AML/KYC, and reporting obligations.
 ```
 
 ---
@@ -267,9 +267,9 @@ Before finalizing any converted gem:
 - [ ] Personal email/phone/addresses removed
 
 ### Business Context
-- [ ] Your company context preserved (if relevant)
-- [ ] Industry-specific context preserved (if relevant)
-- [ ] Regulatory frameworks preserved (applicable to your jurisdiction)
+- [ ] Fusang context preserved (if relevant)
+- [ ] Portcullis context preserved (if relevant)
+- [ ] Regulatory frameworks preserved (MAS, SFC, Labuan FSA)
 - [ ] Industry terminology intact
 - [ ] Domain expertise maintained
 

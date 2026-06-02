@@ -1,6 +1,6 @@
 # Domain-Specific Templates
 
-Pre-built templates for common business gem domains.
+Pre-built templates for common Fusang/Portcullis gem domains.
 
 ## Regulatory/Compliance Domain
 
@@ -67,7 +67,7 @@ Ensure all analysis adheres to Shariah principles including riba avoidance, ghar
 
 ### CONTEXT Template
 ```
-[Company] operates [Islamic finance platform/services] with focus on [[product] tokenization / Islamic banking / halal investment]. Sukuk structures must comply with AAOIFI standards, receive Shariah certification, and meet [relevant regulations]. Primary sukuk types: Ijara (lease), Mudaraba (profit-sharing), Musharaka (partnership), Wakalah (agency), [others].
+[Company] operates [Islamic finance platform/services] with focus on [sukuk tokenization / Islamic banking / halal investment]. Sukuk structures must comply with AAOIFI standards, receive Shariah certification, and meet [relevant regulations]. Primary sukuk types: Ijara (lease), Mudaraba (profit-sharing), Musharaka (partnership), Wakalah (agency), [others].
 
 Target audience: [corporates / sovereign entities / institutional investors / retail investors]
 Shariah requirements: [specific compliance needs]
@@ -198,7 +198,7 @@ You are a [trust professional / wealth advisor / succession planning specialist]
 4. [Practical implementation guidance]
 5. [Family governance or relationship aspect]
 
-Ensure [quality standard] and maintain [brand approach: relationship focus / discretion / expertise demonstration].
+Ensure [quality standard] and maintain [brand approach: Portcullis relationship focus / discretion / expertise demonstration].
 ```
 
 ### CONTEXT Template

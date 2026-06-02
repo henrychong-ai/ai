@@ -76,7 +76,7 @@ Build each component systematically using discovery information.
 
 ### CONTEXT Construction Sequence
 
-1. **Business Background**: Incorporate company context (your organization's specifics)
+1. **Business Background**: Incorporate company context (Fusang/Portcullis if applicable)
 2. **Regulatory Framework**: Include relevant regulations and standards
 3. **Audience Details**: Specify user characteristics and needs
 4. **Constraints**: Define limits and requirements
@@ -221,6 +221,6 @@ Present final gem with:
 1. Copy gem instructions to Gemini
 2. Attach recommended files (if any)
 3. Test with sample prompts
-4. Use magic wand to expand if needed
+4. Optionally refine in the gem builder (keep instructions concise — Gemini 3.x prefers it)
 5. Share with team via Google Workspace
 ```

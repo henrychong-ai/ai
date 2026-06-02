@@ -1,6 +1,6 @@
 ---
 name: gemini-gem-creator
-description: This skill creates and converts Gemini Custom Gems using the 4-component framework (Persona/Task/Context/Format). Create gems from requirements through interactive discovery, or convert Claude Code agents/skills to team-shareable gems. Optimizes existing gems against quality standards. Use for Google Workspace gem distribution, gemini-gem-converter, convert to gemini.
+description: Creates and converts Gemini Custom Gems using the 4-component framework (Persona/Task/Context/Format). Create gems from requirements through interactive discovery, or convert Claude Code agents/skills to team-shareable gems. Optimizes existing gems against quality standards. Use for Fusang/Portcullis Google Workspace gem distribution.
 model: opus
 allowed-tools: Read, Glob, Write
 ---
@@ -155,70 +155,79 @@ FORMAT:
 ### For Create Mode
 - Ask discovery questions one at a time
 - Push for specificity when answers are vague
-- Use domain templates for your specific business context
+- Use domain templates for Fusang/Portcullis contexts
 - Validate against 5-quality-test framework
 
 ### For Convert Mode
 - **NEVER modify or delete source CC file**
 - Remove ALL CC-specific syntax (YAML, tools, MCP, paths)
 - Remove ALL individual-specific content (personal names, custom framework triggers)
-- PRESERVE business context (your company, industry, regulatory frameworks)
+- PRESERVE business context (Fusang, Portcullis, regulatory frameworks)
 
-## Gemini Knowledge Base Limits (Official)
+## Model-Aware Gem Design (Gemini 3.x)
+
+A gem runs on whichever model the user selects in the Gemini app — **a gem cannot pin its own model**. Write gem instructions to be model-portable, and recommend a runtime model in the gem doc.
+
+**Current model selector (verify against [Gemini release notes](https://gemini.google/release-notes/)):**
+
+| Model / mode | Recommend for |
+|--------------|---------------|
+| **Gemini 3.5 Flash** (app default) | Fast, high-volume, agentic tasks |
+| **Gemini 3.1 Pro** (shown as "Pro") | Complex reasoning, deep analysis, hardest problems |
+| **Gemini 3.5 Pro** (rolling out ~2026-06) | Successor flagship — recheck availability |
+| **Deep Think** (mode) | Deepest multi-step reasoning |
+| **Deep Research** (mode) | Multi-source research gems (e.g. dossier-style) |
+
+Add a **Recommended Model** line to every gem, e.g. "Recommended Model: select *Pro* or *Deep Think* for deep analysis; *3.5 Flash* for quick drafts."
+
+**Gemini 3.x instruction style (differs from older models — [Google guide](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/start/gemini-3-prompting-guide)):**
+- Be concise and direct — Gemini 3 over-analyses verbose, legacy prompt-engineering scaffolding.
+- It is terse by default — to get longer or conversational output, say so explicitly in FORMAT.
+- Lead with the most critical role + constraints (PERSONA/TASK first); a static gem instruction acts as a system instruction, so front-load what anchors behaviour.
+- Structure with Markdown **or** XML-style tags — pick one, do not mix.
+- State desired verbosity explicitly ("concise" / "comprehensive") rather than relying on defaults.
+
+## Gemini Knowledge Base Limits (verified 2026-06 — recheck quarterly)
 
 **Hard Limits per Gem:**
 
 | Constraint | Limit | Source |
 |------------|-------|--------|
-| **Maximum files** | **10 files** | Google Workspace Blog |
-| **File size** | 100 MB per file | Google Workspace Updates |
-| **Excluded** | Video, audio files | Gemini Apps Help |
+| **Maximum files** | **10 files** | Gemini Apps Help (file types & limits) |
+| **File size** | 100 MB per file (video up to 2 GB; audio higher) | Gemini Apps Help |
 
-**Supported File Types:**
+**Supported File Types (Gemini accepts "most file types"):**
 
 | Category | Formats |
 |----------|---------|
-| **Documents** | TXT, DOC, DOCX, PDF, RTF, DOT, DOTX |
-| **Spreadsheets** | XLS, XLSX, CSV, TSV |
+| **Documents** | Markdown (.md), TXT, PDF, DOC, DOCX, RTF |
+| **Spreadsheets / Data** | XLS, XLSX, CSV, TSV, JSON |
+| **Code** | JS, TS, Python, and other common source files |
+| **Images** | JPG, PNG (visual context) |
 | **Google Workspace** | Google Docs, Google Sheets |
-| **NOT Supported** | Markdown (.md), JSON, YAML, XML |
 
-**CRITICAL: Markdown (.md) files CANNOT be uploaded to Gemini Gems knowledge base.**
+**Markdown (.md) is now natively supported** — upload `.md` directly, no conversion needed (this reverses earlier guidance). Plain `.txt` still works, so existing `.txt` knowledge files remain valid.
 
 **Planning Implications:**
-- With only 10 file slots, consolidate related content (e.g., combine SG/MY/HK clauses into single file)
-- 100 MB per file is generous - size is rarely the constraint, file count is
+- With only 10 file slots, consolidate related content (e.g., combine SG/MY/HK clauses into one file)
+- 100 MB per file is generous — file count (10) is the real constraint, not size
 - Google Docs from Drive auto-update; local uploads are static snapshots
-- Context window: ~32K tokens (free) / 1M tokens (Gemini Advanced)
+- Context window on current Gemini 3.x models: ~1M input tokens — ample for embedded gem context
 
 **Sources:**
-- [Google Workspace Updates Blog](https://workspaceupdates.googleblog.com/2024/11/upload-google-docs-and-other-file-types-to-gems.html)
-- [Google Workspace Blog](https://workspace.google.com/blog/product-announcements/new-gemini-gems-deeper-knowledge-and-business-context)
+- [Tips for creating custom Gems — Gemini Apps Help](https://support.google.com/gemini/answer/15235603)
+- [Supported file types & limits — Gemini Apps Help](https://support.google.com/gemini/answer/14903178)
 
-## Markdown to TXT Conversion
+## Markdown Files (.md now supported natively)
 
-**When preparing Markdown files for Gemini Gems knowledge base:**
+Upload `.md` files directly to a gem's knowledge base — Gemini ingests Markdown and uses its structure (`#` headers, lists, tables, bold) as semantic signal. **No `.md`→`.txt` conversion is required** (this reverses earlier guidance).
 
-1. **Keep the Markdown syntax** - Do NOT strip formatting (headers, lists, bold, etc.)
-2. **Only change the file extension** - Rename `.md` to `.txt`
-3. **Content stays identical** - The model understands Markdown syntax in plain text
-
-**Why keep Markdown syntax:**
-- LLMs are trained on massive amounts of Markdown and understand it natively
-- `#`, `##`, `###` convey document hierarchy to the model
-- Lists, bold, tables provide structural information
-- Stripping syntax removes valuable semantic information
-
-**Conversion command:**
+**Optional `.txt` fallback (legacy):** if a specific upload path ever rejects `.md`, copy to `.txt` without stripping syntax — the Markdown content stays identical and fully readable:
 ```bash
-# Simple rename (content unchanged)
-for f in *.md; do mv "$f" "${f%.md}.txt"; done
-
-# Or create copies
-for f in *.md; do cp "$f" "${f%.md}.txt"; done
+for f in *.md; do cp "$f" "${f%.md}.txt"; done   # keeps Markdown syntax inside
 ```
 
-**Result:** `.txt` files containing Markdown syntax are perfectly valid and give Gemini full structural understanding of your documents.
+Either way, **keep the Markdown syntax** — `#`/`##` hierarchy, lists, and tables give the model structural information that improves comprehension.
 
 ## File Attachment Strategy
 
@@ -238,12 +247,11 @@ for f in *.md; do cp "$f" "${f%.md}.txt"; done
 - Keep templates separate when they're used independently
 - Always use `.txt` extension (not `.md`) for knowledge base uploads
 
-## Gemini Magic Wand
+## Refining Gem Instructions in the Builder
 
-Gemini has a built-in instruction expansion feature:
-- Start with concise instructions
-- Use magic wand to expand if needed
-- Review expansions critically
+Gemini's gem builder offers a built-in instruction-refinement helper (historically the "magic wand" — verify the current name/behaviour in the live builder UI):
+- Start with concise instructions, then use the builder's refine/expand helper if useful
+- Review any auto-expansion critically — Gemini 3.x prefers concise instructions, so trim rather than pad
 - Preserve domain-specific precision
 
 ## Reference Directory

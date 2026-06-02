@@ -78,7 +78,7 @@ The 5-quality-test framework for validating Gemini gems before distribution.
 
 ### Test 4: Usability Test
 
-**Question:** Can you describe concrete scenarios where your team would use this?
+**Question:** Can you describe concrete scenarios where Fusang/Portcullis team would use this?
 
 **Pass Criteria:**
 - Clear use cases evident from TASK
@@ -160,9 +160,9 @@ The 5-quality-test framework for validating Gemini gems before distribution.
 - [ ] No session-specific context
 
 **Business Context Preserved:**
-- [ ] Your company's business context (if relevant)
-- [ ] Industry-specific context (if relevant)
-- [ ] Regulatory frameworks (applicable to your jurisdiction)
+- [ ] Fusang digital securities context (if relevant)
+- [ ] Portcullis wealth management context (if relevant)
+- [ ] Regulatory frameworks (MAS, SFC, Labuan FSA)
 - [ ] Industry terminology intact
 
 ---

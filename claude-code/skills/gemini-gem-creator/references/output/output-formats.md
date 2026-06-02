@@ -13,6 +13,7 @@ Standard formats for gem deliverables in both Create and Convert modes.
 *Created for: [Team/Purpose]*
 *Domain: [Category]*
 *Created: [Date]*
+*Recommended Model: [e.g. Pro / Deep Think for analysis; 3.5 Flash for speed]*
 
 ---
 
@@ -68,8 +69,9 @@ Standard formats for gem deliverables in both Create and Convert modes.
 3. Name the gem "[Suggested Name]"
 4. [Add any attachments if recommended]
 5. Test with sample prompts from Usage Scenarios
-6. Use Gemini's magic wand feature to expand sections if needed
-7. Share with team via Google Workspace
+6. Optionally refine in the gem builder — keep instructions concise (Gemini 3.x prefers concise over verbose)
+7. Note the **Recommended Model** in the gem doc; tell users which model to pick in the app selector
+8. Share with team via Google Workspace
 
 ---
 
@@ -105,6 +107,7 @@ FORMAT:
 *Source: [CC skill/agent path]*
 *Domain: [Category]*
 *Converted: [Date]*
+*Recommended Model: [e.g. Pro / Deep Think for analysis; 3.5 Flash for speed]*
 
 ---
 

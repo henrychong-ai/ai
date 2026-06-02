@@ -118,7 +118,7 @@ CC instruction delegates to other agents or triggers subagent workflows.
 
 **Example:**
 ```markdown
-For compliance review, spawn compliance-specialist agent.
+For compliance review, spawn compliance-fusang agent.
 For security assessment, use Task tool with security-auditor.
 For content creation, delegate to content-marketer agent.
 ```
@@ -131,7 +131,7 @@ CONTEXT:
 This gem combines multiple domain expertise areas:
 
 Compliance Expertise:
-- [Your regulatory body] regulations
+- Labuan FSA digital securities regulations
 - AML/KYC requirements and monitoring
 - Regulatory reporting obligations
 
