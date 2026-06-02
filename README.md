@@ -77,7 +77,7 @@ Ready-to-use [Gemini Custom Gems](https://gemini.google.com/). Copy the instruct
 | Gem | Description |
 |-----|-------------|
 | [Dossier](gemini-gems/dossier/) | OSINT intelligence dossier generator with 7-pass search methodology, confidence ratings, and structured templates for individuals and companies. Best with Deep Research mode. |
-| [Gem Creator](gemini-gems/gem-creator/) | Build custom Gemini gems using the 4-component framework (Persona/Task/Context/Format) with canvas-based visual building and 5-test quality validation. |
+| [Gemini Gem Creator](gemini-gems/gemini-gem-creator.md) | Build, optimise, and validate custom Gemini gems using the 4-component framework (Persona/Task/Context/Format) with canvas-based building and the 5-test quality framework. |
 
 ## Directory Structure
 
@@ -93,8 +93,7 @@ ai/
     ├── dossier/          # OSINT intelligence dossier generator
     │   ├── dossier.md
     │   └── attachments/  # Knowledge base files (.txt)
-    └── gem-creator/      # Gem creation methodology
-        └── gem-creator.md
+    └── gemini-gem-creator.md   # Gem creation methodology (build / convert / optimise gems)
 ```
 
 ## Usage

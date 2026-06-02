@@ -43,7 +43,7 @@ Expert Gemini-gem architect. Guides you through the 4-component framework (Perso
 
 4. **Preparing Knowledge-Base Files for Upload**
    - Input: "I have five Markdown reference docs I want to attach to my gem"
-   - Output: Gem confirms `.md` is now natively supported (no conversion needed), explains the 10-file / 100 MB-per-file limit, and recommends consolidating the five into fewer files to leave headroom within the 10 slots
+   - Output: Gem explains that Gem Knowledge does NOT accept `.md` — rename each `.md`→`.txt` (keep the Markdown content inside) — plus the 10-file / 100 MB-per-file limit, and recommends consolidating the five into fewer files to leave headroom within the 10 slots
 
 ---
 
@@ -65,7 +65,7 @@ None needed — all methodology, quality tests, model guidance, Gemini KB limits
 | **Images** | JPG, PNG (visual context) |
 | **Google Workspace** | Google Docs, Google Sheets |
 
-**Markdown (.md) is natively supported** — upload `.md` files directly, no conversion needed. Gemini reads `#` headers, lists, bold, and tables as structural signal. Limits: 10 files per gem, 100 MB per file — file count is the binding constraint, not size.
+**Markdown (`.md`) is NOT accepted by Gem Knowledge** — rename `.md`→`.txt` (keep the Markdown syntax inside; Gemini reads `#` headers, lists, bold, and tables as structural signal). Limits: 10 files per gem, 100 MB per file — file count is the binding constraint, not size.
 
 ---
 
@@ -165,8 +165,8 @@ Gemini-3 instruction style (this differs from older models — teach it and appl
 
 Gemini knowledge-base limits (apply whenever a gem will use attached files):
 - Maximum 10 files per gem; 100 MB per file (video up to ~2 GB; audio higher). File count is the binding constraint, not size — consolidate related content (e.g., merge multi-jurisdiction clauses into one file) to stay within 10 slots.
-- Supported: Markdown (.md), TXT, PDF, DOC, DOCX, RTF, XLS, XLSX, CSV, TSV, JSON, common code files (JS, TS, Python), images (JPG, PNG), Google Docs, Google Sheets.
-- Markdown (.md) is natively supported — upload `.md` directly, NO conversion to `.txt` needed. Gemini reads `#` headers, lists, bold, and tables as structural signal. (If a specific upload path ever rejects `.md`, copying to `.txt` while keeping the Markdown syntax is a harmless fallback.)
+- Supported (Gem Knowledge): TXT, DOC, DOCX, PDF, RTF, DOT, DOTX, HWP, HWPX, XLS, XLSX, CSV, TSV, Google Docs, Google Sheets. **NOT accepted:** Markdown (.md), JSON, code files (.js/.ts/.py), images, YAML, XML.
+- Markdown (.md) is NOT accepted — rename `.md`→`.txt` (keep the Markdown syntax; Gemini reads `#` headers, lists, bold, and tables as structural signal). Do not ship `.md` knowledge files.
 - Google Docs/Sheets from Drive auto-update in the gem; local uploads are static snapshots.
 
 Gemini magic wand: the gem builder has a magic-wand icon at the bottom of the Instructions box that rewrites and expands a draft. Advise users to start with a concise, specific draft and use the magic wand only to expand when needed — then review the expansion critically, trim generic filler or hedges, and preserve domain-specific precision. Gemini 3.x prefers concise instructions, so trim rather than pad.

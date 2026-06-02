@@ -196,17 +196,16 @@ Add a **Recommended Model** line to every gem, e.g. "Recommended Model: select *
 | **Maximum files** | **10 files** | Gemini Apps Help (file types & limits) |
 | **File size** | 100 MB per file (video up to 2 GB; audio higher) | Gemini Apps Help |
 
-**Supported File Types (Gemini accepts "most file types"):**
+**Supported File Types — Gem Knowledge (per [Google's official list](https://workspaceupdates.googleblog.com/2024/11/upload-google-docs-and-other-file-types-to-gems.html)):**
 
 | Category | Formats |
 |----------|---------|
-| **Documents** | Markdown (.md), TXT, PDF, DOC, DOCX, RTF |
-| **Spreadsheets / Data** | XLS, XLSX, CSV, TSV, JSON |
-| **Code** | JS, TS, Python, and other common source files |
-| **Images** | JPG, PNG (visual context) |
+| **Documents** | TXT, DOC, DOCX, PDF, RTF, DOT, DOTX, HWP, HWPX |
+| **Spreadsheets** | XLS, XLSX, CSV, TSV |
 | **Google Workspace** | Google Docs, Google Sheets |
+| **NOT accepted** | **Markdown (.md)**, JSON, code files (.js/.ts/.py), images, YAML, XML |
 
-**Markdown (.md) is now natively supported** — upload `.md` directly, no conversion needed (this reverses earlier guidance). Plain `.txt` still works, so existing `.txt` knowledge files remain valid.
+**CRITICAL: Markdown (`.md`) is NOT an accepted Gem-Knowledge format** — the upload picker rejects it (verified 2026-06-02 against Google's list + a real-world upload failure). Put the Markdown **content** inside a **`.txt`** file (TXT is supported; Gemini still parses the `#`/list/table syntax). Never ship `.md` knowledge files. *(Do not confuse this with general Gemini **chat** uploads or the **file-generation** feature — those are broader; the Gem Knowledge picker is the narrow list above.)*
 
 **Planning Implications:**
 - With only 10 file slots, consolidate related content (e.g., combine SG/MY/HK clauses into one file)
@@ -218,16 +217,15 @@ Add a **Recommended Model** line to every gem, e.g. "Recommended Model: select *
 - [Tips for creating custom Gems — Gemini Apps Help](https://support.google.com/gemini/answer/15235603)
 - [Supported file types & limits — Gemini Apps Help](https://support.google.com/gemini/answer/14903178)
 
-## Markdown Files (.md now supported natively)
+## Markdown → TXT for Gem Knowledge (REQUIRED)
 
-Upload `.md` files directly to a gem's knowledge base — Gemini ingests Markdown and uses its structure (`#` headers, lists, tables, bold) as semantic signal. **No `.md`→`.txt` conversion is required** (this reverses earlier guidance).
+Gem Knowledge does **not** accept `.md` files. When a source is Markdown, **rename `.md` → `.txt`** — keep the Markdown syntax inside; Gemini parses `#`/`##` headers, lists, and tables from the `.txt` content. Only the extension changes; content is identical.
 
-**Optional `.txt` fallback (legacy):** if a specific upload path ever rejects `.md`, copy to `.txt` without stripping syntax — the Markdown content stays identical and fully readable:
 ```bash
-for f in *.md; do cp "$f" "${f%.md}.txt"; done   # keeps Markdown syntax inside
+for f in *.md; do cp "$f" "${f%.md}.txt"; done   # extension only — keeps Markdown syntax inside
 ```
 
-Either way, **keep the Markdown syntax** — `#`/`##` hierarchy, lists, and tables give the model structural information that improves comprehension.
+**Why keep the syntax:** LLMs read Markdown natively, so `#` hierarchy, lists, bold, and tables convey structure to the model. Strip nothing — just change the extension to `.txt`.
 
 ## File Attachment Strategy
 
