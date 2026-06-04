@@ -1,6 +1,6 @@
 ---
 name: codex
-description: This skill should be used to route requests to OpenAI GPT-5.5 via Codex MCP for second opinions, hard problems, and code review. Runs in the background by default via the Agent tool (main thread stays free; harness notifies on completion); foreground only on explicit request. Triggers on /codex, "use codex", with reasoning levels (none/low/medium/high/xhigh, default xhigh) and service tier (fast/standard).
+description: "Routes requests to OpenAI GPT-5.5 via Codex MCP for second opinions, hard problems, and code review. Runs in background by default via Agent tool (main thread stays free; harness notifies on completion); foreground only on explicit request. Triggers on /codex, \"use codex\"; reasoning levels: none/low/medium/high/xhigh (default xhigh); service tiers: fast/standard."
 allowed-tools: Agent, mcp__codex__codex, mcp__codex__codex-reply
 ---
 
@@ -84,6 +84,8 @@ Spawn multiple background `Agent` calls in a single message — one per branch (
 | `prompt` | string | **Yes** | Follow-up prompt |
 | `threadId` | string | Yes (effectively) | Thread ID from previous response |
 | ~~`conversationId`~~ | — | — | **DEPRECATED** — use `threadId` |
+
+**Checking usage / rate limits:** the MCP can't report quota — see `references/codex-rate-limits.md`.
 
 ## MCP Syntax (Reference for the Background Agent)
 

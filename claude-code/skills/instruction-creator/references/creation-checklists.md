@@ -58,6 +58,7 @@ Detailed guidance for choosing where content belongs. Each entry shows what SHOU
 - [ ] Include specific trigger terms in description for activation
 - [ ] If using `agent` field, ensure `context: fork` is also set
 - [ ] No skill version numbers in SKILL.md (body or frontmatter `metadata.version`) — skills are versioned via git, not embedded strings. Tool/library versions referenced in content are fine.
+- [ ] **Have a non-empty body** (the instructions/router loaded on invocation). **NEVER regenerate a SKILL.md from frontmatter alone** — editing a frontmatter field (e.g. token-optimising `description`) must preserve the body. Verify the body-line-count survives any edit; `scripts/quick_validate.py` FAILS on an empty body. Full rule + safe bulk-edit protocol: `references/skill-edit-safety.md`.
 
 ### All Skills SHOULD:
 - [ ] Test with 3 scenarios: normal, edge cases, out-of-scope

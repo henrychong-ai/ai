@@ -35,7 +35,7 @@ cat > ~/.codex/config.toml << 'EOF'
 sandbox_mode    = "workspace-write"
 approval_policy = "never"
 model           = "gpt-5.5"
-model_reasoning_effort = "high"
+model_reasoning_effort = "xhigh"
 
 [features]
 web_search_request = true
@@ -52,7 +52,7 @@ EOF
 #### Claude Code
 
 ```bash
-claude mcp add --scope user codex codex mcp-server -c 'model="gpt-5.5"' -c 'model_reasoning_effort="high"'
+claude mcp add --scope user codex codex mcp-server -c 'model="gpt-5.5"' -c 'model_reasoning_effort="xhigh"'
 ```
 
 Or manually add to `~/.claude.json`:
@@ -80,6 +80,8 @@ Or manually add to `~/.claude.json`:
 }
 ```
 
+The `-c model_reasoning_effort` value here is only the **server-startup default** — a per-call `/codex --xhigh` (or any reasoning flag) overrides it at invocation time. Keep it at `xhigh` so the MCP-fallback path (e.g. autosequence calling the MCP directly when the `/codex` skill is unavailable) still defaults to xhigh.
+
 #### Claude Desktop
 
 Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
@@ -94,7 +96,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
         "-c",
         "model=\"gpt-5.5\"",
         "-c",
-        "model_reasoning_effort=\"high\""
+        "model_reasoning_effort=\"xhigh\""
       ]
     }
   }
