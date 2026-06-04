@@ -1,6 +1,6 @@
 ---
 name: images
-description: This skill should be used for image manipulation including combining, resizing, cropping, format conversion, compression, and batch processing. Covers ImageMagick v7 commands (magick), collages, montages, and optimization. Triggers: combine images, resize image, convert format, image collage, crop image, compress image, watermark, image processing.
+description: "This skill should be used for image manipulation including combining, resizing, cropping, format conversion, compression, and batch processing. Covers ImageMagick v7 commands (magick), collages, montages, and optimization. Triggers: combine images, resize image, convert format, image collage, crop image, compress image, watermark, image processing."
 ---
 
 # Images
