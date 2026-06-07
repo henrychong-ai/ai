@@ -3,7 +3,7 @@
 Load this reference whenever a skill has — or is about to acquire — binary files (PDFs, images, audio, video, scanned documents) or any non-text content that AI cannot load inline. Two concerns:
 
 1. **Convert** the substantive content of each binary into an AI-friendly text format that lives inside the skill (`.md`, `.csv`, `.jsonl`, etc.) so it loads at zero cost into Claude's context.
-2. **Archive** the original binary outside the skill in a companion directory (`~/.claude/skill-originals/<skill>/...`) for reverse-lookup if the canonical original is ever needed (legal, claims, signatures, exact-format reproduction).
+2. **Archive** the original binary outside the skill — in a destination appropriate to your setup (a local archive directory or synced vault for personal skills; a cloud object store for team-distributed skills, see "Source-File Archive Convention") — for reverse-lookup if the canonical original is ever needed (legal, claims, signatures, exact-format reproduction).
 
 The skill stays lightweight + searchable. The original binary stays preserved + recoverable.
 
@@ -84,15 +84,29 @@ Skip "claim forms" and other fillable templates from full text extraction — ex
 
 ## Source-File Archive Convention
 
-When a skill has binaries that have been converted to text, **move the originals** out of the skill into a companion archive directory.
+When a skill has binaries that have been converted to text, **move the originals** out of the skill into a companion archive — so the skill stays lightweight + searchable while the originals remain recoverable.
 
-### Universal default location
+### Choosing an archive destination (suggestion, not prescription)
 
-```
-~/.claude/skill-originals/<skill-name>/<original-subdir-structure>/<original-filename>.<ext>
-```
+Pick a destination appropriate to your setup and to how the skill is distributed:
 
-**Why `skill-originals/`?** Pithy, descriptive (these are the canonical pre-conversion originals), and avoids the "archive" ambiguity that could imply deprecated skills. Matches the `~/.claude/skill-*` and `~/.claude/claude-desktop-*` naming convention.
+| Skill type | Suggested archive destination | Why |
+|---|---|---|
+| **Personal / local-only skill** | A dedicated local archive directory (e.g. `~/.claude/skill-originals/<skill-name>/...`) or a synced knowledge vault you already use | Stays on your machine / personal sync; no upload step; trivial reverse-lookup |
+| **Team-distributed / shared skill** | A cloud object store (S3 / R2 / GCS / equivalent) under a per-skill prefix | Originals stay reachable by the whole team and never bloat the distributed skill bundle |
+
+Whatever you pick, use a **per-skill root** and **preserve the original subdirectory structure** beneath it (next subsection).
+
+A simple, dependency-free default for personal skills is a local directory such as `~/.claude/skill-originals/<skill-name>/<original-subdir-structure>/<original-filename>.<ext>` — pithy, descriptive (these are the canonical pre-conversion originals), and it avoids the "archive" ambiguity that could imply a deprecated skill.
+
+### Full-text vs summary (local skills)
+
+For a personal / local skill, consider keeping **both** an extracted text file *inside* the skill:
+
+- A **full-text `.md`** — complete extracted content, for exact recall.
+- A short **summary `.md`** — a fast overview Claude can load first to decide whether it needs the full text.
+
+This is optional and most useful for long source documents; for short ones a single `.md` is enough. The original binary is archived externally regardless (per the destination table above).
 
 ### Subdir structure: preserve, don't flatten
 
