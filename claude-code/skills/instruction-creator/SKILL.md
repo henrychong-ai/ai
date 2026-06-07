@@ -1,17 +1,17 @@
 ---
 name: instruction-creator
-description: Master architect for Claude instruction ecosystems (agents, skills, slash commands, MCP servers, project instructions). Provides skill templates, 5-step workflow, model and effort configuration, packaging scripts, and Opus 4.7 compatibility audits. Use for creating/updating agents/skills/commands, MCP setup guides, and team distribution sanitization.
+description: Architect for Claude instruction ecosystems (agents, skills, slash commands, MCP servers, project instructions) with Claude Code best practices — skill templates, 5-step workflow, model/effort config, packaging scripts, Opus 4.8 compatibility audits. Use for creating/updating agents/skills/commands, MCP setup guides, team distribution sanitisation.
 ---
 
 # Instruction Creator Skill
 
 This skill provides complete guidance for creating and reviewing Claude instruction files across the entire instruction ecosystem.
 
-**Updated:** 2026-05-19 (Claude Code v2.1.80+; Claude Opus 4.7 released 2026-04-16)
+**Updated:** 2026-05-30 — Opus 4.8 (released 2026-05-28; builds on 4.7's literal instruction-following). Supersedes the 4.7 pass (2026-05-19). Claude Code v2.1.80+.
 
-## ⚠️ Claude Opus 4.7 Instruction-Handling (MANDATORY)
+## ⚠️ Claude Opus 4.8 Instruction-Handling (MANDATORY)
 
-**Opus 4.7 takes instructions literally.** It will not silently generalise, infer unstated intent, or loosely interpret directive language the way 4.5/4.6 did. Apply these rules to all new and existing instructions.
+**Opus 4.8 takes instructions literally — and is sharper at it than 4.7.** It interprets prompts literally and explicitly (more so at lower effort), will not silently generalise an instruction from one item to another, and will not infer requests you did not make. The 8 Core Rules below originated with Opus 4.7 and apply **unchanged** to 4.8. Apply them to all new and existing instructions.
 
 ### Core Rules
 
@@ -26,18 +26,33 @@ This skill provides complete guidance for creating and reviewing Claude instruct
 | **7. Calibrate length to task** | Replace "< N lines" caps with "match length to task complexity" |
 | **8. Specify tone positively** | If you want warmth, say "respond in a friendly, encouraging tone" |
 
+### What's New on 4.8 (vs 4.7) — author/audit deltas
+
+No breaking API changes; 4.7 prompts carry over. These behavioural shifts change how you scaffold:
+
+| Delta | What changed | What to do in instructions |
+|---|---|---|
+| **Effort recalibrated** | `medium` buys somewhat **more** thinking, `high` somewhat **less**, `xhigh` **substantially more**; default `high` all surfaces | **Re-baseline** every `effort:` value at its current level before retuning. Coding/agentic → `xhigh`; intelligence-sensitive → min `high` |
+| **Native honesty / far less overconfidence** | ~4× less likely to pass flawed code unremarked; 0% uncritical reporting of flawed results; >10× less overconfident | **Delete** "double-check and honestly report failures" nudges. **Keep** real domain quality gates |
+| **Better tool triggering** | less likely to skip a required tool call (a 4.7 gap) | **Delete** "remember to call `<tool>`" reminders; raise effort if under-used |
+| **Dynamic Workflows** | Claude Code + 4.8 can fan out many parallel subagents (reverses 4.7's under-spawn default) | For decomposable large-scale work, state **when** to fan out and **how to bound it** (caps, dedup, serial apply) |
+| **Bimodal adaptive thinking** | reasons only when the turn needs it; fewer wasted thinking tokens | **Delete** "skip thinking on simple questions" — it's automatic |
+
 ### Effort Is a Harness Parameter, Not Prompt Content
 
-Instruction file prose cannot escalate effort. Do not write "assume high effort" or "think deeply" in CLAUDE.md / SKILL.md body content. Effort is set via:
-- `/effort low|medium|high|xhigh` (per-session)
-- `effort:` field in YAML frontmatter (per-skill/agent/command)
+Instruction file prose cannot escalate effort. Do not write "assume high effort" or "think deeply" in CLAUDE.md / SKILL.md body content. Effort is set via (priority order):
 - `CLAUDE_CODE_EFFORT_LEVEL` env var (highest priority)
+- `effort:` field in YAML frontmatter (per-skill/agent/command)
+- `/effort low|medium|high|xhigh` (per-session)
+- model default — `high` on Opus 4.8 across all surfaces
+
+4.8 recommendation: `xhigh` for coding/agentic, minimum `high` for intelligence-sensitive work. Per-level token allocation differs from 4.7 — re-baseline existing values on upgrade.
 
 ### Deep Dive
 
-For rule-by-rule expansion with before/after examples, the 6-step migration audit checklist (for reviewing pre-4.7 instructions), common failure modes observed in the field, and research sources: see **`references/claude-opus-4-7-compatibility.md`**.
+For rule-by-rule before/after examples, the **full 4.8 delta detail** (honesty stats, dynamic-workflow design, the "scaffolding to remove" table), the 7-step migration audit checklist, common failure modes, and research sources: see **`references/claude-opus-4-8-compatibility.md`**.
 
-Load the reference file whenever auditing an existing CLAUDE.md / skill / agent / command for 4.7 compatibility.
+Load the reference file whenever auditing an existing CLAUDE.md / skill / agent / command for 4.8 compatibility.
 
 ---
 
@@ -49,6 +64,7 @@ Load the reference file whenever auditing an existing CLAUDE.md / skill / agent 
 | **Rules** | `~/.claude/rules/` or `./.claude/rules/` | Focused config, patterns | Always (auto) |
 | **Agents** | `~/.claude/agents/*.md` | Autonomous domain specialists | On trigger/Task tool |
 | **Skills** | `~/.claude/skills/*/SKILL.md` | Bundled knowledge packages | On `/skill-name` or Skill tool |
+| **Run skills (repo-scoped)** | `<repo>/.claude/skills/run-*/` | Build/launch/**drive** one app | Auto-match by description, or `/run`; authored via `/run-skill-generator` |
 | **Commands** | `~/.claude/commands/*.md` | Natural language prompts | On `/command-name` |
 
 **Key Distinction:**
@@ -83,7 +99,7 @@ All CLAUDE.md content loads into every message context — every token costs con
 - Optimise for AI comprehension, not human readability (human-readable is a bonus, not a goal)
 - No redundant phrasing ("Please note that...", "It is important to...")
 - Compress: if 3 words convey the same as 10, use 3
-- **Apply Opus 4.7 literal-interpretation rules** (see top of this skill): positive framings over negative constraints, explicit scope, resolved precedence for conflicting directives, marked illustrative lists, scoped rhetorical language, task-complexity calibration for length.
+- **Apply Opus 4.8 literal-interpretation rules** (see top of this skill): positive framings over negative constraints, explicit scope, resolved precedence for conflicting directives, marked illustrative lists, scoped rhetorical language, task-complexity calibration for length.
 
 ### Rules Directory Patterns
 
@@ -289,7 +305,7 @@ skill-name/
 
 Skills carry content best loaded inline by Claude — `.md` for prose, `.csv` for tabular data, `.jsonl` for record streams, etc. Binary files (PDFs, images, audio, video, scanned documents) are not loadable as context — extract their substance to text, then archive the originals outside the skill in a companion directory.
 
-**Archive location:** `~/.claude/skill-originals/<skill-name>/...` (preserves original subdir structure).
+**Universal archive location:** `~/.claude/skill-originals/<skill-name>/...` (preserves original subdir structure).
 
 Load **`references/skill-content-formats-guide.md`** for the format-by-content-type table (.md / .csv / .tsv / .jsonl / .yaml / Mermaid / etc.), conversion toolbox (`pdftotext`, `tesseract`, `markitdown`, `pandoc`, `whisper`), the SKILL.md pointer pattern, the 11-step migration playbook for skills with existing binaries, and CD-S/CD-T/CD-P implications.
 
@@ -299,6 +315,14 @@ Load **`references/skill-content-formats-guide.md`** for the format-by-content-t
 |-------|--------|
 | `user-invocable: false` | Hide from /menu, still allows auto-discovery and Skill tool |
 | `disable-model-invocation: true` | Block programmatic invocation via Skill tool |
+
+### Repo-Scoped Run Skills → delegate to `/run-skill-generator`
+
+A **run skill** tells an agent how to build, launch, and **drive** one app from a clean machine. It lives in the **target repo** at `<unit>/.claude/skills/run-<unit>/`, not in `~/.claude/skills/`.
+
+- **Authoring:** do **not** hand-roll one with the generic 5-step process — invoke the built-in **`/run-skill-generator`**. It ships per-project-type examples (cli/server/tui/electron/web/library), a canonical template, and a *build-and-drive* definition-of-done (you must actually run + screenshot the app; every code block must be a command that worked this session). Refine an existing run skill rather than rewriting it.
+- **Usage / verification:** the built-in **`/run`** consumes it — it matches by `description` across `.claude/skills/*/SKILL.md` up the dir tree (not by name/path), and falls back to per-type patterns if none exists.
+- **Deltas vs personal/distributed skills:** (1) **committed to the repo**, shared via **git**, not the skill-zip pipeline; (2) **CD-S/CD-T/CD-P distribution markers and the 30 MB zip cap do NOT apply**; (3) **secrets hygiene still applies** — the committed driver/`SKILL.md` must point at `.env.example` / a secrets manager, never inline real credentials; (4) **the `description` is the trigger** — use the verbs an agent types ("run/start/build/screenshot"); keep `SKILL.md` short, the driver is the deliverable.
 
 ## Creating Slash Commands
 
@@ -508,7 +532,7 @@ For complex multi-file operations (e.g., creating an entire instruction ecosyste
 ## References
 
 Detailed guides in `references/` subdirectory:
-- **claude-opus-4-7-compatibility.md**: Expanded rule rationale with before/after examples, migration audit checklist for pre-4.7 instructions, common failure modes, research sources
+- **claude-opus-4-8-compatibility.md**: 4.8 deltas (effort recalibration, native honesty, tool triggering, dynamic workflows) + the literal-interpretation rule rationale with before/after examples, "scaffolding to remove" table, 7-step migration audit checklist, common failure modes, research sources
 - **yaml-frontmatter-complete-guide.md**: All valid fields and options (COMPREHENSIVE)
 - **agent-vs-skill-decision-guide.md**: Complete decision matrix for agents vs skills
 - **rules-and-content-placement-guide.md**: CLAUDE.md, rules, skills placement decisions
@@ -516,7 +540,7 @@ Detailed guides in `references/` subdirectory:
 - **cross-platform-conversion-guide.md**: Claude Code → Claude.ai conversion
 - **claude-desktop-packaging-guide.md**: Skill `.zip` packaging — output dir, 30 MB upload cap, size-reduction strategies, `package_skill.py` / `convert_to_claudeai.py` patterns
 - **cd-project-bundle-guide.md**: Claude Desktop Project Knowledge bundles (directory format) — recipe schema, generation procedure, cross-skill invocation pattern, scaffolding workflow for new Projects
-- **skill-content-formats-guide.md**: Format-by-content-type mapping (`.md` / `.csv` / `.jsonl` / `.yaml` / Mermaid / etc.), conversion toolbox (`pdftotext`, `tesseract`, `markitdown`, `pandoc`, `whisper`), source-file archive convention (`~/.claude/skill-originals/<skill>/`), 11-step migration playbook
+- **skill-content-formats-guide.md**: Format-by-content-type mapping (`.md` / `.csv` / `.jsonl` / `.yaml` / Mermaid / etc.), conversion toolbox (`pdftotext`, `tesseract`, `markitdown`, `pandoc`, `whisper`), source-file archive convention (`~/.claude/skill-originals/<skill>/` universal), 11-step migration playbook
 - **mcp-setup-guide-framework.md**: MCP server setup guide creation framework, scope decision matrix, credential security
 - **mcp-tool-documentation-guide.md**: Best practices for documenting MCP tool calls in skills — `input_examples` API field, parameter nesting, correct/incorrect examples
 - **creation-checklists.md**: File type selection matrix, MUST/SHOULD/MAY requirements, model selection, sanitisation

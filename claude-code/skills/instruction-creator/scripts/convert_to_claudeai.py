@@ -86,6 +86,8 @@ class SkillConverter:
         '*.env',
         '*.key',
         '*.pem',
+        # Browser-only dashboards (HTML/JS/JSON) — not renderable on Claude.ai
+        'dashboard/',
     ]
 
     # Maximum file sizes (bytes)
