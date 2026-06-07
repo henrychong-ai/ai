@@ -59,7 +59,7 @@ with zipfile.ZipFile('<zip-path>') as z:
 "
 ```
 
-Real-world bite (2026-05-20): `islamic-finance` rejected on upload — 6 PDFs had spaces, 1 had a smart-quote apostrophe, 1 had an ASCII apostrophe. Fix required kebab-casing all 7 + updating 5 SKILL.md path refs. Future enhancement: bake this check into `convert_to_claudeai.py` so it fails locally instead of at upload.
+Real-world bite: a reference-heavy skill (one bundling many PDFs) was rejected on upload — 6 PDFs had spaces, 1 had a smart-quote apostrophe, 1 had an ASCII apostrophe. Fix required kebab-casing all 7 + updating 5 SKILL.md path refs. Future enhancement: bake this check into `convert_to_claudeai.py` so it fails locally instead of at upload.
 
 ---
 
@@ -68,8 +68,8 @@ Real-world bite (2026-05-20): `islamic-finance` rejected on upload — 6 PDFs ha
 **All Claude Desktop .zip skill uploads must be strictly under 30 MB total.**
 
 Skills exceeding 30 MB will fail to upload. This applies to BOTH:
-- **CD-S** (Henry's individual Claude Max plan)
-- **CD-T** (Fusang Claude Teams plan)
+- **CD-S** (an individual/personal Claude plan)
+- **CD-T** (a Claude Team plan)
 
 ### Implications for Skill Packaging
 
@@ -85,7 +85,7 @@ If the skill folder exceeds 30 MB, reduce it before packaging via `package_skill
 | Strategy | When to Use |
 |---|---|
 | **Remove PDFs** | The skill content is mostly markdown — PDFs are reference-only and rarely loaded into context. Strip and link to source URLs instead. |
-| **Convert PDFs to .md extracts** | The PDF content is high-value for context loading — extract substantive sections to markdown (smaller; also parseable). See `compliance` skill's `references/statutes/` pattern. |
+| **Convert PDFs to .md extracts** | The PDF content is high-value for context loading — extract substantive sections to markdown (smaller; also parseable), e.g. pull the key statute/policy text into a `references/` subfolder. |
 | **Split into core + extras** | Create `<skill>-core.zip` (markdown only, <30MB) for general use + `<skill>-references.zip` (PDFs) for users who need source documents. |
 | **Strip media** | Remove image / video / audio assets if not essential to the skill's reasoning. |
 | **Compress images** | If images are essential, use `cwebp` / `pngquant` / `magick mogrify` to reduce file sizes before packaging. |
@@ -101,12 +101,12 @@ ls -lh /path/to/skill.zip
 # -rw-r--r--  1 user  staff   62M  ...  skill.zip   ❌ Will fail upload
 ```
 
-### Real-World Examples (2026-05-13)
+### Worked Examples
 
 | Skill | Initial Zip Size | Status | Required Action |
 |---|---|---|---|
-| `compliance.zip` | 62 MB | ❌ Over limit | Split: ship .md content + 9 statute extracts under one zip; relocate 41 regulator PDFs to a separate distribution |
-| `fusang.zip` | 52 MB | ❌ Over limit | Strip strategy/product/market/commercial PDFs from CD-S/CD-T copy; keep markdown body |
-| `portcullis.zip` | 35 KB | ✅ Well under | Ship as-is — markdown-only skill |
+| `reference-heavy-skill.zip` | 62 MB | ❌ Over limit | Split: ship .md content + key reference extracts under one zip; relocate the bulky source PDFs to a separate distribution |
+| `large-skill.zip` | 52 MB | ❌ Over limit | Strip the bulky reference PDFs from the CD-S/CD-T copy; keep the markdown body |
+| `small-skill.zip` | 35 KB | ✅ Well under | Ship as-is — markdown-only skill |
 
-**Convention**: When a skill folder grows past 30 MB total, fork a `<skill>-references-pdf/` directory inside the skill (still distributed via Fusang AI repo for git access), but exclude it from `package_skill.py` for Claude Desktop zipping. Document in the skill's TODO.md.
+**Convention**: When a skill folder grows past 30 MB total, fork a `<skill>-references-pdf/` directory inside the skill (still tracked in your git repo for version control), but exclude it from `package_skill.py` for Claude Desktop zipping. Document in the skill's TODO.md.

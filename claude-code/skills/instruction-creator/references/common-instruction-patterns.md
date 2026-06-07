@@ -166,7 +166,7 @@ When working with [domain]:
 - **"[Query pattern]"**: [Approach]
 ```
 
-**Examples:** travel, islamic-finance, compliance skills
+**Examples:** travel, finance, compliance skills
 
 ---
 
