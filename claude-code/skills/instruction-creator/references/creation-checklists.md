@@ -92,22 +92,32 @@ Detailed guidance for choosing where content belongs. Each entry shows what SHOU
 
 ---
 
-## Model Selection Analysis Framework
+## Model × Effort Selection Analysis Framework
+
+Model and effort are **one joint decision**, not two — effort labels are model-relative (Fable 5 at `medium` outperforms every other model at any effort level; even Fable `low` often exceeds prior models' `xhigh`). Pinning either remains the exception: omit both by default and inherit the session.
 
 ### 5-Point Analysis
 For each new agent/skill, evaluate:
 1. **Complexity Level**: Simple patterns vs multi-step reasoning
 2. **Decision-Making Needs**: Rule-based vs judgment-based
 3. **Context Requirements**: Small focused tasks vs large context analysis
-4. **Performance Needs**: Speed-critical vs quality-critical
-5. **Cost Considerations**: Usage frequency and budget constraints
+4. **Performance Needs**: Speed-critical vs quality-critical (Fable 5's first token can take ~a minute — capability and latency now trade off explicitly)
+5. **Cost Considerations**: Usage frequency and budget (Fable 5 is 2× Opus per token, partially offset by fewer tokens at lower effort — measure, don't assume)
 
 ### Model Capabilities
 | Model | Strengths | Use When |
 |-------|-----------|----------|
-| `opus` | Complex reasoning, strategic analysis, nuanced judgment, multi-step workflows | Compliance analysis, strategic planning, architectural decisions |
+| `fable` | Frontier reasoning, hardest long-horizon/agentic work, first-shot correctness on complex problems | Genuinely hard, latency-tolerant work where capability dominates; 2× Opus cost, slow first token |
+| `opus` | Complex reasoning, strategic analysis, nuanced judgment, multi-step workflows | Compliance analysis, strategic planning, architectural decisions; routine traffic that still needs depth |
 | `sonnet` | General-purpose, balanced performance, most technical tasks | Code generation, code review, general technical work |
 | `haiku` | Fast responses, simple patterns, rule-based operations, high-volume | File format detection, batch processing, quick lookups |
+
+### Joint Model × Effort Routing
+| Dominant constraint | Pick |
+|---|---|
+| Capability ceiling, latency-tolerant | `fable` at `high` (default) — and note `fable` at `medium`/`low` can beat `opus` at `xhigh`, sometimes at comparable cost |
+| Latency-sensitive / interactive | `opus` or smaller — Fable is slow at any effort |
+| Routine high-volume | `opus` / `sonnet` / `haiku` per the rows above — official routing: hard, long-horizon jobs → Fable; routine traffic → Opus-or-smaller |
 
 ### Model Priority Order (highest to lowest)
 1. **Task tool `model` parameter** - explicit override at invocation
@@ -124,10 +134,11 @@ For each new agent/skill, evaluate:
 | claude-code-guide | haiku | Quick lookups |
 
 ### Best Practices
-- Use aliases (`opus`, `sonnet`, `haiku`) not version numbers
+- Use aliases (`fable`, `opus`, `sonnet`, `haiku`) not version numbers
 - Aliases automatically use latest model version
 - Document model selection rationale in design notes
-- Note: If agent specifies `model: opus` but user lacks Opus access, behaviour may be inconsistent
+- When a pin is justified, record the effort decision with it (joint decision — see routing table above)
+- Note: If agent specifies `model: opus`/`model: fable` but the user lacks access to that tier, behaviour may be inconsistent
 
 ---
 

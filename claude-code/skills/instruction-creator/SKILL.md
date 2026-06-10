@@ -1,19 +1,27 @@
 ---
 name: instruction-creator
-description: Architect for Claude instruction ecosystems (agents, skills, slash commands, MCP servers, project instructions) with Claude Code best practices — skill templates, 5-step workflow, model/effort config, packaging scripts, Opus 4.8 compatibility audits. Use for creating/updating agents/skills/commands, MCP setup guides, team distribution sanitisation.
+description: Architect for Claude instruction ecosystems (agents, skills, slash commands, MCP servers, project instructions) with Claude Code best practices — skill templates, 5-step workflow, model/effort config, packaging scripts, model compatibility audits (Fable 5, Opus 4.8). Use for creating/updating agents/skills/commands, MCP setup guides, team distribution sanitisation.
 ---
 
 # Instruction Creator Skill
 
 This skill provides complete guidance for creating and reviewing Claude instruction files across the entire instruction ecosystem.
 
-**Updated:** 2026-05-30 — Opus 4.8 (released 2026-05-28; builds on 4.7's literal instruction-following). Supersedes the 4.7 pass (2026-05-19). Claude Code v2.1.80+.
+**Updated:** 2026-06-10 — Fable 5 (released 2026-06-09; **new tier above Opus**, not an Opus replacement) multi-model restructure. Per-model deltas now live in `references/claude-<model>-compatibility.md`; supersedes the single-model 4.8 pass (2026-05-30).
 
-## ⚠️ Claude Opus 4.8 Instruction-Handling (MANDATORY)
+## ⚠️ Model-Aware Instruction Authoring (MANDATORY)
 
-**Opus 4.8 takes instructions literally — and is sharper at it than 4.7.** It interprets prompts literally and explicitly (more so at lower effort), will not silently generalise an instruction from one item to another, and will not infer requests you did not make. The 8 Core Rules below originated with Opus 4.7 and apply **unchanged** to 4.8. Apply them to all new and existing instructions.
+Frontier Claude models follow instructions literally and strongly — and each release shifts *how* to author for them. The 8 Core Rules below are **durable**: they originated with Opus 4.7 and apply unchanged through Opus 4.8 and Fable 5. Per-model behavioural deltas live in the compatibility references — **load the matching file whenever auditing or authoring for a specific model**; for instructions consumed by mixed/unknown models, author to the Core Rules + Fable 5's brevity-first principle.
 
-### Core Rules
+### Current Models → Compatibility References
+
+| Model | Role | CC alias | Reference |
+|---|---|---|---|
+| **Fable 5** (`claude-fable-5`, rel. 2026-06-09) | Frontier tier above Opus — hard, long-horizon work; $10/$50 per MTok (2× Opus) | `fable` | `references/claude-fable-5-compatibility.md` |
+| **Opus 4.8** (`claude-opus-4-8`, rel. 2026-05-28) | Opus-tier workhorse — routine and latency-sensitive traffic | `opus` | `references/claude-opus-4-8-compatibility.md` |
+| Opus 4.7 and earlier | Superseded — migrate using the 4.8 file | — | 4.8 file Part 1 (Core Rules origin + rationale) |
+
+### Core Rules (durable across Opus 4.7/4.8 and Fable 5)
 
 | Rule | One-liner |
 |------|-----------|
@@ -26,17 +34,20 @@ This skill provides complete guidance for creating and reviewing Claude instruct
 | **7. Calibrate length to task** | Replace "< N lines" caps with "match length to task complexity" |
 | **8. Specify tone positively** | If you want warmth, say "respond in a friendly, encouraging tone" |
 
-### What's New on 4.8 (vs 4.7) — author/audit deltas
+### Fable 5 Headline Deltas (vs Opus 4.8) — author/audit deltas
 
-No breaking API changes; 4.7 prompts carry over. These behavioural shifts change how you scaffold:
+One API break (thinking cannot be disabled — explicit `disabled` 400s; omit the param). The behavioural shifts that change how you author:
 
 | Delta | What changed | What to do in instructions |
 |---|---|---|
-| **Effort recalibrated** | `medium` buys somewhat **more** thinking, `high` somewhat **less**, `xhigh` **substantially more**; default `high` all surfaces | **Re-baseline** every `effort:` value at its current level before retuning. Coding/agentic → `xhigh`; intelligence-sensitive → min `high` |
-| **Native honesty / far less overconfidence** | ~4× less likely to pass flawed code unremarked; 0% uncritical reporting of flawed results; >10× less overconfident | **Delete** "double-check and honestly report failures" nudges. **Keep** real domain quality gates |
-| **Better tool triggering** | less likely to skip a required tool call (a 4.7 gap) | **Delete** "remember to call `<tool>`" reminders; raise effort if under-used |
-| **Dynamic Workflows** | Claude Code + 4.8 can fan out many parallel subagents (reverses 4.7's under-spawn default) | For decomposable large-scale work, state **when** to fan out and **how to bound it** (caps, dedup, serial apply) |
-| **Bimodal adaptive thinking** | reasons only when the turn needs it; fewer wasted thinking tokens | **Delete** "skip thinking on simple questions" — it's automatic |
+| **Brevity-first / removal-first** | brief instructions steer most behaviours; legacy prescriptive skills are "often too prescriptive… can degrade output quality" | Collapse don't-lists into one coherent positive instruction; **test default behaviour before keeping any scaffold** |
+| **⚠️ Reasoning-extraction refusals** | "show your thinking / repeat your reasoning" instructions trigger `reasoning_extraction` refusals (fallback → Opus 4.8) | **Audit and remove** from every skill/agent/command — the one refusal authors cause themselves |
+| **More proactive / elaborative** | unrequested actions and scope creep without steering | Add one brief boundary instruction where scope discipline matters ("assessment vs fix", "simplest thing that works") |
+| **Pauses / checkpoints more often** | checks in early in long sessions; rare text-only early stops | Autonomous skills: explicit autonomy language + positive pause criteria (destructive ops, scope changes, user-only input) |
+| **Eager, dependable subagents** | dispatches readily; sustains parallel/long-running subagents | Keep fan-out bounds (caps, dedup, single-writer apply); drop "remember to delegate" reminders |
+| **Long runs, evidence-anchored** | minutes–hours at high effort; progress fabrication ~eliminated by an audit instruction | Long-run agents: add audit-claims-against-tool-results + final-message re-grounding; long waits → background tasks |
+
+4.8's deletions stay deleted on Fable 5 (honesty nudges, tool-call reminders, forced progress summaries, manual thinking control) — do not reintroduce.
 
 ### Effort Is a Harness Parameter, Not Prompt Content
 
@@ -44,15 +55,27 @@ Instruction file prose cannot escalate effort. Do not write "assume high effort"
 - `CLAUDE_CODE_EFFORT_LEVEL` env var (highest priority)
 - `effort:` field in YAML frontmatter (per-skill/agent/command)
 - `/effort low|medium|high|xhigh` (per-session)
-- model default — `high` on Opus 4.8 across all surfaces
+- model default — `high` on Fable 5 and Opus 4.8
 
-4.8 recommendation: `xhigh` for coding/agentic, minimum `high` for intelligence-sensitive work. Per-level token allocation differs from 4.7 — re-baseline existing values on upgrade.
+Fable 5 recommendation: start `high` (the default), reserve `xhigh` for the most capability-sensitive workloads — the 4.8-era "xhigh for coding/agentic" rule does **not** carry over. Re-baseline existing `effort:` pins on upgrade.
+
+### Model × Effort Is ONE Decision (cross-model calculus)
+
+Effort labels are **not comparable across models**: Fable 5 at `medium` outperforms every other model at any effort level, and even Fable `low` often exceeds prior models' `xhigh` (Anthropic, official). When pinning model+effort for a subagent/skill, decide jointly:
+
+| Dominant constraint | Better pick |
+|---|---|
+| Capability ceiling, latency-tolerant | **Fable 5 at modest effort** — `medium`/`low` can beat Opus 4.8 at `xhigh`, often at less than the 2× sticker cost (fewer tokens at lower effort; measure, don't assume) |
+| Latency-sensitive / interactive | **Opus 4.8 or smaller** — Fable's first token can take ~a minute regardless of effort |
+| Routine high-volume | **Opus 4.8 / Sonnet / Haiku** — official routing: hard, long-horizon jobs → Fable 5; routine traffic → Opus-or-smaller |
 
 ### Deep Dive
 
-For rule-by-rule before/after examples, the **full 4.8 delta detail** (honesty stats, dynamic-workflow design, the "scaffolding to remove" table), the 7-step migration audit checklist, common failure modes, and research sources: see **`references/claude-opus-4-8-compatibility.md`**.
+Per-model detail — full delta rationale, scaffolding to remove/add tables, migration audit checklists, failure modes, research sources:
+- **Fable 5:** `references/claude-fable-5-compatibility.md` (incl. effort calculus, safeguard/refusal mechanics, autonomy patterns)
+- **Opus 4.8:** `references/claude-opus-4-8-compatibility.md` (incl. the Core Rules rationale in Part 1)
 
-Load the reference file whenever auditing an existing CLAUDE.md / skill / agent / command for 4.8 compatibility.
+Load the matching reference whenever auditing an existing CLAUDE.md / skill / agent / command for a target model.
 
 ---
 
@@ -99,7 +122,7 @@ All CLAUDE.md content loads into every message context — every token costs con
 - Optimise for AI comprehension, not human readability (human-readable is a bonus, not a goal)
 - No redundant phrasing ("Please note that...", "It is important to...")
 - Compress: if 3 words convey the same as 10, use 3
-- **Apply Opus 4.8 literal-interpretation rules** (see top of this skill): positive framings over negative constraints, explicit scope, resolved precedence for conflicting directives, marked illustrative lists, scoped rhetorical language, task-complexity calibration for length.
+- **Apply the Core Rules** (see Model-Aware Instruction Authoring at the top of this skill): positive framings over negative constraints, explicit scope, resolved precedence for conflicting directives, marked illustrative lists, scoped rhetorical language, task-complexity calibration for length. On Fable 5, also brevity-first: one coherent instruction over enumerated don't-lists.
 
 ### Rules Directory Patterns
 
@@ -166,8 +189,9 @@ hooks:                              # Lifecycle hooks (see Hooks section)
 
 - **Default: OMIT the `model` field entirely** — the agent/skill/command then inherits the session's model. This is the correct choice for almost all instructions: it keeps them forward-compatible as models improve and respects the user's session-level model choice.
 - **Pin only when the instruction clearly and unambiguously calls for it** — typically a high-volume mechanical subagent where a smaller/cheaper tier is obviously sufficient (pattern scanning, format conversion, bulk retrieval). Make that judgement per-instruction at creation time; do not pin by habit.
-- **Never pin upward to a larger model "for quality"** — that decision belongs to the session, not the instruction file.
-- **Use aliases, not version-pinned IDs**, on the rare occasions a pin is justified (aliases track the latest model in the tier).
+- **Never pin upward to a larger model "for quality"** — that decision belongs to the session, not the instruction file. (Doubly so for `fable` at 2× Opus cost.)
+- **When a pin IS justified, decide model and effort together** (see Model × Effort above): for capability-bound, latency-tolerant subagent work, `fable` at `medium`/`low` effort can dominate `opus` at `xhigh`.
+- **Use aliases, not version-pinned IDs**, on the rare occasions a pin is justified (aliases track the latest model in the tier): `fable`, `opus`, `sonnet`, `haiku`.
 - **`inherit`**: explicit equivalent of omitting (agents only).
 - **Priority order**: Task tool override → Agent YAML → Inherit → System default
 
@@ -278,9 +302,10 @@ effort: low
 | `low` | ○ | Quick lookups, simple transforms, high-volume tasks |
 | `medium` | ◐ | Balanced analysis, most general tasks |
 | `high` | ● | Complex reasoning, strategic analysis, deep research |
+| `xhigh` | ◉ | Most capability-sensitive work (Fable 5, Opus 4.8/4.7 only) |
 | (omit) | — | Inherit session effort (default, most common) |
 
-**Default: OMIT the `effort` field** — inherit the session's effort. Specify it only when the instruction clearly and unambiguously calls for a different depth (e.g. a trivial high-volume lookup). Do not set higher effort to chase quality — that is the session's decision.
+**Default: OMIT the `effort` field** — inherit the session's effort. Specify it only when the instruction clearly and unambiguously calls for a different depth (e.g. a trivial high-volume lookup). Do not set higher effort to chase quality — that is the session's decision. Effort values are model-relative (Fable 5 `medium` outperforms other models at any effort — see Model × Effort above); re-baseline pinned values when the model line changes.
 
 **Priority:** `CLAUDE_CODE_EFFORT_LEVEL` env var > frontmatter > session `/effort` > model default
 
@@ -531,7 +556,8 @@ For complex multi-file operations (e.g., creating an entire instruction ecosyste
 ## References
 
 Detailed guides in `references/` subdirectory:
-- **claude-opus-4-8-compatibility.md**: 4.8 deltas (effort recalibration, native honesty, tool triggering, dynamic workflows) + the literal-interpretation rule rationale with before/after examples, "scaffolding to remove" table, 7-step migration audit checklist, common failure modes, research sources
+- **claude-fable-5-compatibility.md**: Fable 5 deltas (brevity-first/removal-first authoring, reasoning-extraction refusal trap, proactivity boundaries, autonomy/checkpoint patterns, subagent bounds, progress-audit scaffold) + cross-model effort calculus, safeguard/refusal mechanics, Fable 5 migration audit checklist (steps 8–13), failure modes, research sources
+- **claude-opus-4-8-compatibility.md**: Opus-tier guide — 4.8 deltas (effort recalibration, native honesty, tool triggering, dynamic workflows) + the literal-interpretation Core Rules rationale with before/after examples, "scaffolding to remove" table, 7-step migration audit checklist, common failure modes, research sources
 - **yaml-frontmatter-complete-guide.md**: All valid fields and options (COMPREHENSIVE)
 - **agent-vs-skill-decision-guide.md**: Complete decision matrix for agents vs skills
 - **rules-and-content-placement-guide.md**: CLAUDE.md, rules, skills placement decisions

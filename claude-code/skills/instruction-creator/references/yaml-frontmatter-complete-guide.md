@@ -28,7 +28,7 @@ As of Claude Code v2.1.3, **skills and slash commands have been merged** under a
 ---
 name: agent-name                    # Required: kebab-case identifier
 description: Brief description...   # Required: specialization + when to use
-model: sonnet                       # Optional: use aliases (opus/sonnet/haiku/inherit)
+model: sonnet                       # Optional: use aliases (fable/opus/sonnet/haiku/inherit)
 tools: Read, Grep, Glob, Bash       # Optional: tools agent can use (inherits all if omitted)
 disallowedTools: Write, Edit        # Optional: tools to explicitly deny
 permissionMode: default             # Optional: default|acceptEdits|dontAsk|bypassPermissions|plan
@@ -70,7 +70,7 @@ hooks:                              # Optional: lifecycle hooks scoped to agent
 #### `model` (Optional)
 - **Format:** Model alias or full ID
 - **Purpose:** Specifies Claude model for agent execution
-- **Values:** `opus`, `sonnet`, `haiku`, `inherit` (from parent)
+- **Values:** `fable`, `opus`, `sonnet`, `haiku`, `inherit` (from parent)
 - **Default:** `sonnet` if not specified
 - **Best Practice:** Use aliases for automatic version updates
 
@@ -83,7 +83,7 @@ hooks:                              # Optional: lifecycle hooks scoped to agent
 #### `effort` (Optional)
 - **Format:** String enum
 - **Purpose:** Override model effort level during agent execution
-- **Values:** `low` (○), `medium` (◐), `high` (●)
+- **Values:** `low` (○), `medium` (◐), `high` (●), `xhigh` (◉ — Fable 5 / Opus 4.8/4.7 only; effort values are model-relative, see SKILL.md Model × Effort)
 - **Default:** Inherits session effort level
 - **Behaviour:** Overrides session effort while agent is active; reverts when complete
 - **Note:** Cannot override `CLAUDE_CODE_EFFORT_LEVEL` env var
@@ -208,12 +208,12 @@ hooks:                              # Optional: lifecycle hooks scoped to skill
 #### `model` (Optional)
 - **Format:** Model alias or full ID
 - **Purpose:** Override model when skill is active
-- **Values:** `opus`, `sonnet`, `haiku`
+- **Values:** `fable`, `opus`, `sonnet`, `haiku`
 
 #### `effort` (Optional)
 - **Format:** String enum
 - **Purpose:** Override model effort level when skill is invoked
-- **Values:** `low` (○), `medium` (◐), `high` (●)
+- **Values:** `low` (○), `medium` (◐), `high` (●), `xhigh` (◉ — Fable 5 / Opus 4.8/4.7 only; effort values are model-relative, see SKILL.md Model × Effort)
 - **Default:** Inherits session effort level
 - **Behaviour:** Overrides session effort while skill is active; reverts when complete
 - **Note:** Cannot override `CLAUDE_CODE_EFFORT_LEVEL` env var
@@ -314,12 +314,12 @@ hooks:                                  # Optional: lifecycle hooks
 #### `model` (Optional)
 - **Format:** Model alias or full ID
 - **Purpose:** Override default model for command
-- **Values:** `opus`, `sonnet`, `haiku`
+- **Values:** `fable`, `opus`, `sonnet`, `haiku`
 
 #### `effort` (Optional)
 - **Format:** String enum
 - **Purpose:** Override model effort level when command is invoked
-- **Values:** `low` (○), `medium` (◐), `high` (●)
+- **Values:** `low` (○), `medium` (◐), `high` (●), `xhigh` (◉ — Fable 5 / Opus 4.8/4.7 only; effort values are model-relative, see SKILL.md Model × Effort)
 - **Default:** Inherits session effort level
 - **Behaviour:** Overrides session effort while command is active; reverts when complete
 
@@ -463,8 +463,8 @@ Is your skill/command doing complex work?
 |-------|----------|---------|-------------|
 | `name` | Yes | - | kebab-case identifier |
 | `description` | Yes | - | Specialization + "Use PROACTIVELY" |
-| `model` | No | `sonnet` | opus/sonnet/haiku/inherit |
-| `effort` | No | Inherit | low/medium/high effort override |
+| `model` | No | `sonnet` | fable/opus/sonnet/haiku/inherit |
+| `effort` | No | Inherit | low/medium/high/xhigh effort override |
 | `tools` | No | All | Tools agent can use |
 | `disallowedTools` | No | None | Tools to deny |
 | `permissionMode` | No | `default` | Permission behavior |
@@ -479,7 +479,7 @@ Is your skill/command doing complex work?
 | `description` | Yes | - | Third-person usage description |
 | `allowed-tools` | No | None | Tools without permission |
 | `model` | No | Inherit | Model override |
-| `effort` | No | Inherit | low/medium/high effort override |
+| `effort` | No | Inherit | low/medium/high/xhigh effort override |
 | `context` | No | None | `fork` for isolation |
 | `agent` | No | `general-purpose` | Agent type (requires context: fork) |
 | `user-invocable` | No | `true` | Show in /menu |
@@ -494,7 +494,7 @@ Is your skill/command doing complex work?
 | `allowed-tools` | No | All | Tool restrictions |
 | `argument-hint` | No | - | Expected parameters |
 | `model` | No | Inherit | Model override |
-| `effort` | No | Inherit | low/medium/high effort override |
+| `effort` | No | Inherit | low/medium/high/xhigh effort override |
 | `context` | No | None | `fork` for isolation |
 | `agent` | No | `general-purpose` | Agent type (requires context: fork) |
 | `disable-model-invocation` | No | `false` | Block programmatic invocation |
