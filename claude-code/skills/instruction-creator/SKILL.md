@@ -148,7 +148,7 @@ description: Brief description...   # Required: include "Use PROACTIVELY" for au
 **Optional fields:**
 ```yaml
 ---
-model: sonnet                       # opus/sonnet/haiku/inherit (default: sonnet)
+# model: <alias>                    # OMIT by default — inherits session model; pin only when clearly warranted (see Model Configuration)
 tools: Read, Grep, Glob, Bash       # Tools agent can use (inherits all if omitted)
 disallowedTools: Write, Edit        # Tools to explicitly deny
 permissionMode: default             # default|acceptEdits|dontAsk|bypassPermissions|plan
@@ -164,13 +164,12 @@ hooks:                              # Lifecycle hooks (see Hooks section)
 
 ### Model Configuration
 
-- **Use aliases**: `opus`, `sonnet`, `haiku` (automatically use latest version)
-- **`inherit`**: Inherit model from parent conversation
+- **Default: OMIT the `model` field entirely** — the agent/skill/command then inherits the session's model. This is the correct choice for almost all instructions: it keeps them forward-compatible as models improve and respects the user's session-level model choice.
+- **Pin only when the instruction clearly and unambiguously calls for it** — typically a high-volume mechanical subagent where a smaller/cheaper tier is obviously sufficient (pattern scanning, format conversion, bulk retrieval). Make that judgement per-instruction at creation time; do not pin by habit.
+- **Never pin upward to a larger model "for quality"** — that decision belongs to the session, not the instruction file.
+- **Use aliases, not version-pinned IDs**, on the rare occasions a pin is justified (aliases track the latest model in the tier).
+- **`inherit`**: explicit equivalent of omitting (agents only).
 - **Priority order**: Task tool override → Agent YAML → Inherit → System default
-- **Model capabilities**:
-  - `opus`: Complex reasoning, strategic analysis, multi-step workflows
-  - `sonnet`: General-purpose, balanced performance, technical tasks
-  - `haiku`: Fast responses, simple patterns, high-volume tasks
 
 ### Agent Template Structure
 
@@ -178,7 +177,6 @@ hooks:                              # Lifecycle hooks (see Hooks section)
 ---
 name: agent-name
 description: [Specialization]. [Capabilities]. Use PROACTIVELY for [triggers].
-model: sonnet
 ---
 
 # **AGENT NAME: SPECIALIZED PURPOSE**
@@ -223,7 +221,6 @@ description: This skill should...   # Required: third-person voice, max 1024 cha
 ```yaml
 ---
 allowed-tools: Read, Grep, Glob     # Tools without permission prompts
-model: sonnet                       # Model override
 context: fork                       # Run in isolated sub-agent context
 agent: Explore                      # Agent type when context: fork is set
 user-invocable: true                # Show in /menu (default: true)
@@ -282,6 +279,8 @@ effort: low
 | `medium` | ◐ | Balanced analysis, most general tasks |
 | `high` | ● | Complex reasoning, strategic analysis, deep research |
 | (omit) | — | Inherit session effort (default, most common) |
+
+**Default: OMIT the `effort` field** — inherit the session's effort. Specify it only when the instruction clearly and unambiguously calls for a different depth (e.g. a trivial high-volume lookup). Do not set higher effort to chase quality — that is the session's decision.
 
 **Priority:** `CLAUDE_CODE_EFFORT_LEVEL` env var > frontmatter > session `/effort` > model default
 
@@ -448,9 +447,9 @@ Agent / Skill / Command frontmatter blocks are documented inline under each "Cre
 ## Review Checklist
 
 ### For Agents
-- [ ] YAML: name, description (model optional but recommended)
+- [ ] YAML: name, description (omit model/effort unless clearly warranted)
 - [ ] Description includes "Use PROACTIVELY" if appropriate
-- [ ] Model uses aliases (opus/sonnet/haiku)
+- [ ] model/effort omitted by default; any pin is justified and uses an alias
 - [ ] TodoWrite capability for complex operations
 - [ ] MCP token limit strategies defined
 
