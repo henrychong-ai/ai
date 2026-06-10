@@ -1,7 +1,6 @@
 ---
 name: instruction-creator
 description: Master architect for Claude instruction ecosystems including agents, skills, slash commands, MCP servers, and project instructions. Creates optimal instruction hierarchies with business-first optimization. Provides skill creation templates, 5-step workflow guidance, model configuration guidance (aliases, inheritance, override), and validation frameworks. Use PROACTIVELY for creating/updating agents, creating/updating skills, creating/updating slash commands, MCP setup guide creation, complex multi-file instruction creation, system-wide optimization, team distribution preparation, and instruction ecosystem review.
-model: opus
 ---
 
 # **INSTRUCTION-CREATOR: Master Architect**
