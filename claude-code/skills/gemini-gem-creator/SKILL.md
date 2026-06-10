@@ -1,7 +1,6 @@
 ---
 name: gemini-gem-creator
 description: Creates and converts Gemini Custom Gems using the 4-component framework (Persona/Task/Context/Format). Create gems from requirements through interactive discovery, or convert Claude Code agents/skills to team-shareable gems. Optimizes existing gems against quality standards. Use for Fusang/Portcullis Google Workspace gem distribution.
-model: opus
 allowed-tools: Read, Glob, Write
 ---
 
