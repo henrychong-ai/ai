@@ -80,6 +80,8 @@ hooks:                              # Optional: lifecycle hooks scoped to agent
 3. `inherit` from parent conversation
 4. System default (sonnet)
 
+**Cache note:** agents execute as subagents with their own conversation and own cache (5m TTL) — a `model`/`effort` pin here never disturbs the main conversation's prompt cache. This makes agents the natural home for pinned model/effort work, unlike skill/command pins (see those sections). Detail: `cache-and-token-efficiency.md`.
+
 #### `effort` (Optional)
 - **Format:** String enum
 - **Purpose:** Override model effort level during agent execution
@@ -209,6 +211,8 @@ hooks:                              # Optional: lifecycle hooks scoped to skill
 - **Format:** Model alias or full ID
 - **Purpose:** Override model when skill is active
 - **Values:** `fable`, `opus`, `sonnet`, `haiku`
+- **Scope:** applies to the MAIN conversation for the rest of the current turn; the session model resumes on the next user prompt
+- **⚠️ Cache:** the CC prompt cache is keyed by (model, effort) — a main-thread pin forces a full uncached re-read of the conversation at activation plus a partial re-read at revert (double cache-bust). **Always pair a skill model pin with `context: fork` (+ `agent:`) so it runs as a subagent.** Detail: `cache-and-token-efficiency.md`
 
 #### `effort` (Optional)
 - **Format:** String enum
@@ -217,6 +221,7 @@ hooks:                              # Optional: lifecycle hooks scoped to skill
 - **Default:** Inherits session effort level
 - **Behaviour:** Overrides session effort while skill is active; reverts when complete
 - **Note:** Cannot override `CLAUDE_CODE_EFFORT_LEVEL` env var
+- **⚠️ Cache:** same (model, effort) cache-key rule as `model` — a main-thread effort pin double cache-busts the session, with the entry re-read billed at the active model's rate. Pin only with `context: fork`; a pin equal to the already-active level keeps the cache. Detail: `cache-and-token-efficiency.md`
 
 #### `context` (Optional)
 - **Format:** String
@@ -315,6 +320,7 @@ hooks:                                  # Optional: lifecycle hooks
 - **Format:** Model alias or full ID
 - **Purpose:** Override default model for command
 - **Values:** `fable`, `opus`, `sonnet`, `haiku`
+- **⚠️ Cache:** commands share the skill rule — a main-thread pin double cache-busts the session ((model, effort) cache key). Always pair a pin with `context: fork`. Detail: `cache-and-token-efficiency.md`
 
 #### `effort` (Optional)
 - **Format:** String enum
@@ -322,6 +328,7 @@ hooks:                                  # Optional: lifecycle hooks
 - **Values:** `low` (○), `medium` (◐), `high` (●), `xhigh` (◉ — Fable 5 / Opus 4.8/4.7 only; effort values are model-relative, see SKILL.md Model × Effort)
 - **Default:** Inherits session effort level
 - **Behaviour:** Overrides session effort while command is active; reverts when complete
+- **⚠️ Cache:** same rule as the command `model` field — main-thread pins double cache-bust; pin only with `context: fork`. Detail: `cache-and-token-efficiency.md`
 
 #### `context` (Optional)
 - **Format:** String

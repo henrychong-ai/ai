@@ -1,13 +1,13 @@
 ---
 name: instruction-creator
-description: Architect for Claude instruction ecosystems (agents, skills, slash commands, MCP servers, project instructions) with Claude Code best practices — skill templates, 5-step workflow, model/effort config, packaging scripts, model compatibility audits (Fable 5, Opus 4.8). Use for creating/updating agents/skills/commands, MCP setup guides, team distribution sanitisation.
+description: Architect for Claude instruction ecosystems (agents, skills, slash commands, MCP servers, project instructions) with Claude Code best practices — skill templates, 5-step workflow, cache-safe model/effort config, packaging scripts, model compatibility audits (Fable 5, Opus 4.8). Use for creating/updating agents/skills/commands, MCP setup guides, team distribution sanitisation.
 ---
 
 # Instruction Creator Skill
 
 This skill provides complete guidance for creating and reviewing Claude instruction files across the entire instruction ecosystem.
 
-**Updated:** 2026-06-10 — Fable 5 (released 2026-06-09; **new tier above Opus**, not an Opus replacement) multi-model restructure. Per-model deltas now live in `references/claude-<model>-compatibility.md`; supersedes the single-model 4.8 pass (2026-05-30).
+**Updated:** 2026-06-10 — Fable 5 (released 2026-06-09; **new tier above Opus**, not an Opus replacement) multi-model restructure; per-model deltas now live in `references/claude-<model>-compatibility.md` (supersedes the single-model 4.8 pass, 2026-05-30). Same day: cache-safety & token-efficiency rules — the CC prompt cache is keyed by (model, effort), so model/effort pins belong in subagent contexts only (`references/cache-and-token-efficiency.md`).
 
 ## ⚠️ Model-Aware Instruction Authoring (MANDATORY)
 
@@ -68,6 +68,8 @@ Effort labels are **not comparable across models**: Fable 5 at `medium` outperfo
 | Capability ceiling, latency-tolerant | **Fable 5 at modest effort** — `medium`/`low` can beat Opus 4.8 at `xhigh`, often at less than the 2× sticker cost (fewer tokens at lower effort; measure, don't assume) |
 | Latency-sensitive / interactive | **Opus 4.8 or smaller** — Fable's first token can take ~a minute regardless of effort |
 | Routine high-volume | **Opus 4.8 / Sonnet / Haiku** — official routing: hard, long-horizon jobs → Fable 5; routine traffic → Opus-or-smaller |
+
+**Cache safety is the third axis.** The CC prompt cache is keyed by **(model, effort)** jointly — a main-thread pin of *either* forces a full uncached re-read of the conversation at activation and a partial re-read at revert, regardless of which direction you pin. Execute pinned instructions as subagents (see Model Configuration below); full mechanics + cost math: `references/cache-and-token-efficiency.md`.
 
 ### Deep Dive
 
@@ -191,6 +193,7 @@ hooks:                              # Lifecycle hooks (see Hooks section)
 - **Pin only when the instruction clearly and unambiguously calls for it** — typically a high-volume mechanical subagent where a smaller/cheaper tier is obviously sufficient (pattern scanning, format conversion, bulk retrieval). Make that judgement per-instruction at creation time; do not pin by habit.
 - **Never pin upward to a larger model "for quality"** — that decision belongs to the session, not the instruction file. (Doubly so for `fable` at 2× Opus cost.)
 - **When a pin IS justified, decide model and effort together** (see Model × Effort above): for capability-bound, latency-tolerant subagent work, `fable` at `medium`/`low` effort can dominate `opus` at `xhigh`.
+- **Pins are cache-safe only in subagent contexts.** The CC prompt cache is keyed by (model, effort) — a main-thread skill/command pin double cache-busts the session (full uncached re-read at activation, partial re-read at revert). Agents are safe by construction (own subagent conversation, own cache). **A skill/command with a hardcoded `model:`/`effort:` must always run as a subagent — set `context: fork` (+ `agent:`) alongside the pin.** Mechanics + cost math: `references/cache-and-token-efficiency.md`.
 - **Use aliases, not version-pinned IDs**, on the rare occasions a pin is justified (aliases track the latest model in the tier): `fable`, `opus`, `sonnet`, `haiku`.
 - **`inherit`**: explicit equivalent of omitting (agents only).
 - **Priority order**: Task tool override → Agent YAML → Inherit → System default
@@ -306,6 +309,8 @@ effort: low
 | (omit) | — | Inherit session effort (default, most common) |
 
 **Default: OMIT the `effort` field** — inherit the session's effort. Specify it only when the instruction clearly and unambiguously calls for a different depth (e.g. a trivial high-volume lookup). Do not set higher effort to chase quality — that is the session's decision. Effort values are model-relative (Fable 5 `medium` outperforms other models at any effort — see Model × Effort above); re-baseline pinned values when the model line changes.
+
+**Cache rule:** effort pins share the model pin's cache behaviour — the CC cache is keyed by (model, effort), so a main-thread effort pin double cache-busts the session, with the entry re-read billed at the *active* model's rate. Pin only on agents or `context: fork` skills; a pin resolving to the already-active level keeps the cache. Detail: `references/cache-and-token-efficiency.md`.
 
 **Priority:** `CLAUDE_CODE_EFFORT_LEVEL` env var > frontmatter > session `/effort` > model default
 
@@ -558,6 +563,7 @@ For complex multi-file operations (e.g., creating an entire instruction ecosyste
 Detailed guides in `references/` subdirectory:
 - **claude-fable-5-compatibility.md**: Fable 5 deltas (brevity-first/removal-first authoring, reasoning-extraction refusal trap, proactivity boundaries, autonomy/checkpoint patterns, subagent bounds, progress-audit scaffold) + cross-model effort calculus, safeguard/refusal mechanics, Fable 5 migration audit checklist (steps 8–13), failure modes, research sources
 - **claude-opus-4-8-compatibility.md**: Opus-tier guide — 4.8 deltas (effort recalibration, native honesty, tool triggering, dynamic workflows) + the literal-interpretation Core Rules rationale with before/after examples, "scaffolding to remove" table, 7-step migration audit checklist, common failure modes, research sources
+- **cache-and-token-efficiency.md**: How instruction design interacts with CC's prompt cache — the (model, effort) cache key, the main-thread pin double cache-bust with cost math, the subagent-only rule for pinned skills, safe-pattern table, and other cache-relevant authoring decisions (skill body size, MCP deferral, CLAUDE.md mid-session edits)
 - **yaml-frontmatter-complete-guide.md**: All valid fields and options (COMPREHENSIVE)
 - **agent-vs-skill-decision-guide.md**: Complete decision matrix for agents vs skills
 - **rules-and-content-placement-guide.md**: CLAUDE.md, rules, skills placement decisions

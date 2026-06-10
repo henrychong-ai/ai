@@ -118,6 +118,7 @@ For each new agent/skill, evaluate:
 | Capability ceiling, latency-tolerant | `fable` at `high` (default) — and note `fable` at `medium`/`low` can beat `opus` at `xhigh`, sometimes at comparable cost |
 | Latency-sensitive / interactive | `opus` or smaller — Fable is slow at any effort |
 | Routine high-volume | `opus` / `sonnet` / `haiku` per the rows above — official routing: hard, long-horizon jobs → Fable; routine traffic → Opus-or-smaller |
+| **Cache safety (mid-session)** | Pins are cache-safe only in subagent contexts — the CC cache is keyed by (model, effort), so a main-thread skill/command pin double cache-busts the session. Agents: safe by construction. Pinned skills/commands: MUST set `context: fork`. Detail: `cache-and-token-efficiency.md` |
 
 ### Model Priority Order (highest to lowest)
 1. **Task tool `model` parameter** - explicit override at invocation
