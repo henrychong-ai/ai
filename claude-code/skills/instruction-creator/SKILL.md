@@ -7,7 +7,7 @@ description: Architect for Claude instruction ecosystems (agents, skills, slash 
 
 This skill provides complete guidance for creating and reviewing Claude instruction files across the entire instruction ecosystem.
 
-**Updated:** 2026-06-10 — Fable 5 (released 2026-06-09; **new tier above Opus**, not an Opus replacement) multi-model restructure; per-model deltas now live in `references/claude-<model>-compatibility.md` (supersedes the single-model 4.8 pass, 2026-05-30). Same day: cache-safety & token-efficiency rules — the CC prompt cache is keyed by (model, effort), so model/effort pins belong in subagent contexts only (`references/cache-and-token-efficiency.md`).
+**Updated:** 2026-06-16 — CC→Codex conversion guide added (`references/cc-to-codex-conversion-guide.md` + `templates/cc-to-codex-assessment-template.md`): mechanic map, T1/T2/T3 tiers, Tier-A/B distribution decision, data + harness-tool gates. 2026-06-10 — Fable 5 (released 2026-06-09; **new tier above Opus**, not an Opus replacement) multi-model restructure; per-model deltas now live in `references/claude-<model>-compatibility.md` (supersedes the single-model 4.8 pass, 2026-05-30). Same day: cache-safety & token-efficiency rules — the CC prompt cache is keyed by (model, effort), so model/effort pins belong in subagent contexts only (`references/cache-and-token-efficiency.md`).
 
 ## ⚠️ Model-Aware Instruction Authoring (MANDATORY)
 
@@ -569,6 +569,7 @@ Detailed guides in `references/` subdirectory:
 - **rules-and-content-placement-guide.md**: CLAUDE.md, rules, skills placement decisions
 - **common-instruction-patterns.md**: Proven structures and templates
 - **cross-platform-conversion-guide.md**: Claude Code → Claude.ai conversion
+- **cc-to-codex-conversion-guide.md**: Claude Code → Codex skill conversion — mechanic map (AskUserQuestion / Skill tool / context: fork / cloud routines / effort / ToolSearch / mcp__ → Codex equivalents), T1/T2/T3 effort tiers, Tier-A pipeline vs Tier-B hand-authored decision, sensitive-data + harness-tool gates, Phase-1 assessment template (`templates/cc-to-codex-assessment-template.md`)
 - **claude-desktop-packaging-guide.md**: Skill `.zip` packaging — output dir, 30 MB upload cap, size-reduction strategies, `package_skill.py` / `convert_to_claudeai.py` patterns
 - **cd-project-bundle-guide.md**: Claude Desktop Project Knowledge bundles (directory format) — recipe schema, generation procedure, cross-skill invocation pattern, scaffolding workflow for new Projects
 - **skill-content-formats-guide.md**: Format-by-content-type mapping (`.md` / `.csv` / `.jsonl` / `.yaml` / Mermaid / etc.), conversion toolbox (`pdftotext`, `tesseract`, `markitdown`, `pandoc`, `whisper`), source-file archive convention (destination chosen by setup — local archive dir / synced vault for personal, cloud object store for team-distributed), 11-step migration playbook
