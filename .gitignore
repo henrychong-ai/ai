@@ -48,3 +48,13 @@ Thumbs.db
 *.mov
 *.wmv
 
+# Editor / backup-before-edit cruft (snapshots, .bak, .orig, swap files)
+*.pre-*
+!.pre-commit-config.yaml
+*.bak
+*.backup
+*.orig
+*.rej
+*.swp
+*~
+
