@@ -47,8 +47,9 @@ After dispatch, reply to the user with one short line (e.g. `Codex query dispatc
 Agent({
   description: "Codex: [3-5 word topic]",
   subagent_type: "general-purpose",
+  model: "sonnet",           // thin pass-through relay — pin to Sonnet; never inherit the (possibly Opus) session model. Reliable verbatim relay without the Opus cost; do NOT use a fork (fork pins the parent model + can't downgrade)
   run_in_background: true,
-  prompt: "Call mcp__codex__codex once with the parameters below. Return Codex's full response verbatim — no summarisation, no commentary.\n\nprompt: [prepared prompt]\ncwd: [working dir]\nsandbox: \"read-only\"        // default (non-mutating); escalate to workspace-write ONLY for write/run tasks; never danger-full-access\napproval-policy: \"never\"    // MANDATORY in background — no interactive approver exists in a subagent, so any approval gate = silent hang\nconfig: { model: gpt-5.5, model_reasoning_effort: [xhigh | user-specified], service_tier: [fast | standard] }"
+  prompt: "You are a mechanical relay — do NOT analyse, plan, reason about, or add commentary to the task. Call mcp__codex__codex exactly once with the parameters below, then return Codex's full response verbatim — no summarisation, no truncation, no commentary.\n\nprompt: [prepared prompt]\ncwd: [working dir]\nsandbox: \"read-only\"        // default (non-mutating); escalate to workspace-write ONLY for write/run tasks; never danger-full-access\napproval-policy: \"never\"    // MANDATORY in background — no interactive approver exists in a subagent, so any approval gate = silent hang\nconfig: { model: gpt-5.5, model_reasoning_effort: [xhigh | user-specified], service_tier: [fast | standard] }"
 })
 ```
 
