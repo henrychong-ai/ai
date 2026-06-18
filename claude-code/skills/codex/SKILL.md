@@ -48,7 +48,7 @@ Agent({
   description: "Codex: [3-5 word topic]",
   subagent_type: "general-purpose",
   run_in_background: true,
-  prompt: "Call mcp__codex__codex once with the prompt and config below. Return Codex's full response verbatim — no summarisation, no commentary.\n\nPrompt:\n[prepared prompt]\n\nConfig:\n  model: gpt-5.5\n  model_reasoning_effort: [xhigh | user-specified]\n  service_tier: [fast | standard]"
+  prompt: "Call mcp__codex__codex once with the parameters below. Return Codex's full response verbatim — no summarisation, no commentary.\n\nprompt: [prepared prompt]\ncwd: [working dir]\nsandbox: \"read-only\"        // default (non-mutating); escalate to workspace-write ONLY for write/run tasks; never danger-full-access\napproval-policy: \"never\"    // MANDATORY in background — no interactive approver exists in a subagent, so any approval gate = silent hang\nconfig: { model: gpt-5.5, model_reasoning_effort: [xhigh | user-specified], service_tier: [fast | standard] }"
 })
 ```
 
@@ -93,7 +93,14 @@ The patterns below describe how the spawned background agent calls `mcp__codex__
 
 ### MANDATORY: Always Pass Config Block
 
-Every call MUST include `config` with `model`, `model_reasoning_effort`, and `service_tier`. Never rely on config.toml defaults.
+Every call MUST include `config` with `model`, `model_reasoning_effort`, and `service_tier`, AND explicitly set the top-level `sandbox` and `approval-policy` params. Never rely on config.toml defaults.
+
+**Non-blocking approval is MANDATORY for background dispatch.** A background Agent/subagent has **no interactive approver**, so any approval-gated codex action blocks the MCP call indefinitely — the silent, no-error "hang" (the call never returns, no completion notification). Codex reasons fine, then freezes the moment it tries to act. Always pass:
+- `approval-policy: "never"` — codex never pauses for an approval that cannot be granted in a background context.
+- `sandbox: "read-only"` (**default**) — safe to never-approve because nothing can mutate. Correct for the common case (second opinion / review / reasoning, which only reads).
+- Escalate to `sandbox: "workspace-write"` ONLY when codex must write or run; keep `approval-policy: "never"` (or `on-failure`) so it still never blocks — bounded to the workspace. **Never pair `approval-policy: "never"` with `danger-full-access`** — non-blocking approval is safe only because the sandbox bounds what can happen, so never combine it with an unbounded sandbox.
+
+(Detection/recovery for a residual hang — e.g. transport stall or rate-limit — remains: `stat` the background agent's `.output` for a tiny + stale signature, never Read the JSONL; then stop and re-dispatch.)
 
 **Defaults:** `gpt-5.5` + `xhigh` + `fast`. Do not downgrade without explicit user request.
 
@@ -106,6 +113,9 @@ Every call MUST include `config` with `model`, `model_reasoning_effort`, and `se
 ```
 mcp__codex__codex({
   prompt: "[prepared prompt]",
+  cwd: "[working dir]",                    // pass explicitly so codex isn't operating in an unexpected dir
+  sandbox: "read-only",                   // default; workspace-write only for write/run tasks; never danger-full-access + never
+  "approval-policy": "never",             // MANDATORY in background — no approver exists, so any gate = silent hang
   config: {
     "model": "gpt-5.5",                   // always gpt-5.5
     "model_reasoning_effort": "xhigh",     // default; or user-specified: none/low/medium/high
