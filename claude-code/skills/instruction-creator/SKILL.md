@@ -234,6 +234,14 @@ Skills are specialized knowledge packages with bundled resources using progressi
 4. **Instructions**: Clear hierarchy with examples and error handling
 5. **Package/Test**: Use validation scripts
 
+### Always Scaffold a TODO.md (every new skill)
+
+Every new skill gets a `TODO.md` at its root — the single honest record of open items: deferred work, unset placeholders, unverified data, and phased/future work. Create it for **every** skill (even if the only entry is "none open yet") and keep it current as the skill evolves.
+
+- **Why:** open items otherwise scatter across plan files, inline `[SET]`/`[TODO]` markers, and stub scripts, and get lost — one per-skill `TODO.md` is the single place to look.
+- **Data-bearing / architecture-first skills:** log **every** placeholder and unverified datum here — never assert unverified data as fact. Group by phase (populate / wire / future) with checkboxes.
+- **Mechanism:** `scripts/init_skill.py` scaffolds a `TODO.md` stub automatically, so a fresh skill starts with one.
+
 ### Skill YAML Frontmatter
 
 **Required fields:**
@@ -323,6 +331,7 @@ skill-name/
 ├── SKILL.md (required)
 │   ├── YAML frontmatter (name, description - required)
 │   └── Markdown instructions
+├── TODO.md (ALWAYS) - open items, deferred work, placeholders, unverified data
 └── Bundled Resources (optional)
     ├── references/ - Documentation loaded as needed (DEFAULT)
     ├── scripts/    - Executable code
@@ -490,6 +499,7 @@ Agent / Skill / Command frontmatter blocks are documented inline under each "Cre
 - [ ] If using `agent` field, ensure `context: fork` is set
 - [ ] Bundled resources properly organized
 - [ ] MCP tool calls: schema reference table, correct/incorrect examples, parameter nesting documented (see `mcp-tool-documentation-guide.md`)
+- [ ] `TODO.md` present at skill root (open items / deferred work / placeholders / unverified data logged; "none open yet" if truly empty)
 
 ### For Commands
 - [ ] Natural language instructions clear

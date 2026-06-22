@@ -183,6 +183,22 @@ Note: This is a text placeholder. Actual assets can be any file type.
 """
 
 
+TODO_TEMPLATE = """# {skill_title} — TODO & Open Items
+
+The honest record of everything not-yet-done, unverified, or deferred for this skill.
+Keep it current as the skill evolves. If nothing is open, say so explicitly.
+
+## Open items
+- [ ] (none open yet — replace as work is deferred)
+
+## Deferred / future
+- [ ] ...
+
+## Unverified data / placeholders
+- [ ] (data-bearing skills: log EVERY placeholder + unverified datum here; never assert as fact)
+"""
+
+
 def title_case_skill_name(skill_name):
     """Convert hyphenated skill name to Title Case for display."""
     return ' '.join(word.capitalize() for word in skill_name.split('-'))
@@ -228,6 +244,15 @@ def init_skill(skill_name, path):
         print("✅ Created SKILL.md")
     except Exception as e:
         print(f"❌ Error creating SKILL.md: {e}")
+        return None
+
+    # Create TODO.md (ALWAYS — every skill gets an open-items record)
+    todo_md_path = skill_dir / 'TODO.md'
+    try:
+        todo_md_path.write_text(TODO_TEMPLATE.format(skill_title=skill_title))
+        print("✅ Created TODO.md")
+    except Exception as e:
+        print(f"❌ Error creating TODO.md: {e}")
         return None
 
     # Create only references/ directory by default (YAGNI principle)
