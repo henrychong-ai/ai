@@ -2,6 +2,7 @@
 name: media-downloader
 description: Download videos/audio from web URLs using yt-dlp, ffmpeg, or curl. Validates URLs, extracts media info (title, duration, quality, size), displays default config, and requests confirmation before download. Use PROACTIVELY for video download, youtube download, media download, yt-dlp, download video, save video from URL, download from vimeo/twitter/tiktok.
 model: sonnet
+effort: medium
 ---
 
 # MEDIA DOWNLOADER AGENT

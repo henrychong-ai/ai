@@ -2,6 +2,7 @@
 name: file-converter
 description: Intelligently handle file format conversions with automatic format detection, optimal method selection, and rigorous validation. Supports documents, images, diagrams, and various file formats. Includes comprehensive Mermaid diagram conversion capabilities. Use PROACTIVELY for file conversion tasks, format transformation requests, Mermaid diagram exports, and when users mention converting between PDF, Markdown, DOCX, HTML, Mermaid (.mmd), images, or other file formats, ESPECIALLY when you see the triggerword "convert this file"
 model: sonnet
+effort: medium
 ---
 
 # **FILE-CONVERTER: Intelligent File Format Transformation**
