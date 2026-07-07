@@ -253,17 +253,41 @@ class SkillConverter:
         return cleaned
 
     def clean_content(self, content: str) -> str:
-        """Clean body content of CC-specific patterns."""
-        cleaned = content
+        """Clean body content of CC-specific patterns.
 
-        # Apply removal patterns
-        for pattern, replacement in self.CC_PATTERNS:
-            matches = re.findall(pattern, cleaned, re.DOTALL)
-            if matches:
-                self.changes.append(f"Replaced {len(matches)} instances of pattern: {pattern[:30]}...")
-                cleaned = re.sub(pattern, replacement, cleaned, flags=re.DOTALL)
+        Fenced code blocks (``` ... ```) are preserved verbatim — they hold
+        examples and templates, and scrubbing a documented literal such as
+        `allowed-tools: Bash(git:*)` silently corrupts the skill's own docs
+        (the 2026-06-13 instruction-creator zip bug). Only prose / inline tool
+        references outside code fences are scrubbed, and every scrub is reported
+        so a scrub can never corrupt content unseen.
+        """
+        # Split into fenced-code segments and prose; re.split keeps the fences
+        # as their own list items (they start with ```), prose sits between.
+        segments = re.split(r'(```.*?```)', content, flags=re.DOTALL)
+        scrubs: list[tuple[str, str]] = []
 
-        # Check for warning patterns
+        for i, seg in enumerate(segments):
+            if seg.startswith('```'):
+                continue  # preserve code fences verbatim
+            for pattern, replacement in self.CC_PATTERNS:
+                def _record(m, _r=replacement):
+                    scrubs.append((m.group(0), _r))
+                    return _r
+                seg = re.sub(pattern, _record, seg, flags=re.DOTALL)
+            segments[i] = seg
+        cleaned = ''.join(segments)
+
+        # Report every scrub ALWAYS (not just --verbose) — silent scrubs corrupt docs.
+        if scrubs:
+            self.changes.append(
+                f"Scrubbed {len(scrubs)} CC tool reference(s) from prose (code fences preserved)"
+            )
+            print(f"  Scrubbed {len(scrubs)} prose tool reference(s) (code fences preserved):")
+            for orig, repl in scrubs:
+                print(f"    {orig!r} -> {repl}")
+
+        # Check for warning patterns (run on full content, fences included)
         for pattern, description in self.WARNING_PATTERNS:
             matches = re.findall(pattern, cleaned, re.DOTALL)
             if matches:

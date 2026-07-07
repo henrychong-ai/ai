@@ -15,6 +15,20 @@ import zipfile
 from pathlib import Path
 from quick_validate import validate_skill
 
+# Build artifacts / OS cruft never shipped in a skill zip. Mirrors the
+# exclusions in convert_to_claudeai.py so a verbatim package is still clean
+# (a stray __pycache__/*.pyc from running a script must not bloat the zip).
+EXCLUDE_NAMES = {".DS_Store"}
+EXCLUDE_SUFFIXES = {".pyc", ".pyo"}
+EXCLUDE_DIRS = {"__pycache__", ".git", ".ipynb_checkpoints"}
+
+
+def _excluded(path: Path) -> bool:
+    """True if path is build junk that should never be packaged."""
+    if path.name in EXCLUDE_NAMES or path.suffix in EXCLUDE_SUFFIXES:
+        return True
+    return any(part in EXCLUDE_DIRS for part in path.parts)
+
 
 def package_skill(skill_path, output_dir=None):
     """
@@ -68,7 +82,7 @@ def package_skill(skill_path, output_dir=None):
         with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
             # Walk through the skill directory
             for file_path in skill_path.rglob('*'):
-                if file_path.is_file():
+                if file_path.is_file() and not _excluded(file_path):
                     # Calculate the relative path within the zip
                     arcname = file_path.relative_to(skill_path.parent)
                     zipf.write(file_path, arcname)

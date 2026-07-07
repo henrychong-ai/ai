@@ -536,6 +536,8 @@ Skill `.zip` uploads to Claude.ai Settings → Capabilities → Skills go to `~/
 
 Load **`references/claude-desktop-packaging-guide.md`** for the full skill-zip convention: directory structure, filename patterns, `package_skill.py` / `convert_to_claudeai.py` invocation, size-reduction strategies, pre-upload verification, and real-world examples.
 
+**Tool choice:** `package_skill.py` ships a verbatim wrapper-zip — use it for already-clean sources. `convert_to_claudeai.py` sanitises (strips `allowed-tools`, scrubs prose tool refs, re-serialises frontmatter; preserves fenced code examples) — use it when a skill needs distribution sanitising. The packaging guide's "which to use" subsection has the decision rule.
+
 ### Claude Desktop Project Custom Instructions (v3 single-file)
 
 Under the v3 linked-skill pattern (2026-05-19), a skill that backs a Claude Desktop Project emits a **single paste-ready `.md` file** at `~/.claude/skills-claude-desktop/<skill>-project-instructions.md` — side-by-side with the matching `<skill>.zip`. Knowledge files are no longer duplicated into a separate bundle directory; they travel inside the skill `.zip` via Claude.ai's auto-synced skill mount at `/mnt/skills/user/<skill>/` and reach every consumer surface (Desktop, web, iOS, Android).
