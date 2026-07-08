@@ -341,10 +341,10 @@ ERROR: [vimeo] 123456789: The web client only works when logged-in.
 
 ```bash
 # FAILS - Main URL requires login even with privacy hash
-yt-dlp 'https://vimeo.com/1133236796/8ccf177161'
+yt-dlp 'https://vimeo.com/123456789/abc123hash'
 
 # WORKS - Player URL with hash parameter bypasses login requirement
-yt-dlp 'https://player.vimeo.com/video/1133236796?h=8ccf177161'
+yt-dlp 'https://player.vimeo.com/video/123456789?h=abc123hash'
 ```
 
 **URL Transformation Pattern**:
@@ -363,10 +363,10 @@ Player URL: https://player.vimeo.com/video/{VIDEO_ID}?h={PRIVACY_HASH}
 **Example**:
 ```bash
 # Original URL from user:
-# https://vimeo.com/1133236796/8ccf177161?share=copy&fl=sv&fe=ci
+# https://vimeo.com/123456789/abc123hash?share=copy&fl=sv&fe=ci
 
 # Transform to player URL:
-yt-dlp --concurrent-fragments 32 -o "~/Downloads/%(title)s.%(ext)s" 'https://player.vimeo.com/video/1133236796?h=8ccf177161'
+yt-dlp --concurrent-fragments 32 -o "~/Downloads/%(title)s.%(ext)s" 'https://player.vimeo.com/video/123456789?h=abc123hash'
 ```
 
 **Why This Works**: The player.vimeo.com endpoint serves embedded content and honors privacy hashes directly, while the main vimeo.com URL enforces session-based authentication even for unlisted videos with valid hashes
