@@ -1,6 +1,6 @@
 ---
 name: codex
-description: "Routes requests to OpenAI GPT-5.6 (Sol/Terra/Luna) via Codex MCP for second opinions, hard problems, and code review. Runs in background by default via Agent tool (main thread stays free; harness notifies on completion); foreground only on explicit request. Triggers on /codex, \"use codex\"; model-aware: sol (default) / terra / luna; reasoning levels: none/low/medium/high/xhigh (default xhigh)/max; service tiers: fast/standard."
+description: "Routes requests to OpenAI GPT-5.6 (Sol/Terra/Luna) via Codex MCP for second opinions, hard problems, and code review. Runs in background by default via Agent tool (main thread stays free; harness notifies on completion); foreground only on explicit request. Triggers on /codex, \"use codex\"; model-aware: sol (default) / terra / luna; reasoning levels: none/low/medium/high/xhigh (default xhigh)/max/ultra; service tiers: fast/standard."
 allowed-tools: Agent, mcp__codex__codex, mcp__codex__codex-reply
 ---
 
@@ -28,10 +28,10 @@ Grammar: `/codex [model] [reasoning] [tier] [foreground]` — arguments in any o
 | Arg | Model ID | Use for (illustrative — not required outputs) |
 |-----|----------|-----------------------------------------------|
 | `sol` *(default)* | `gpt-5.6-sol` | Flagship deep reasoning — hardest problems, cross-model second opinions, code review |
-| `terra` | `gpt-5.6-terra` | Balanced everyday work (≈GPT-5.5 quality, ~2× cheaper) |
+| `terra` | `gpt-5.6-terra` | Balanced everyday work (≈GPT-5.5 quality, ~half Sol's cost) |
 | `luna` | `gpt-5.6-luna` | Fastest/cheapest — high-volume or simple checks |
 
-**Reasoning:** `none` → `low` → `medium` → `high` → `xhigh` (default) → `max` (new; deepest, plan-gated + costly — opt-in only)
+**Reasoning:** `none` → `low` → `medium` → `high` → `xhigh` (default) → `max` → `ultra` — both opt-in. `max` = deepest single-agent reasoning (settings-enabled, costly). `ultra` = `max` + Codex cooperative subagents (automatic task delegation; subagents inherit the parent model + effort → highest cost). ⚠️ `ultra` is reliably available only via the Codex Desktop app / native CLI; over this skill's MCP/websocket path it is best-effort and may downgrade to `max` (cc-switch #5209).
 **Tiers:** `fast` (default) • `standard`/`normal` (opt-in) — see the service-tier note under *MANDATORY: Always Pass Config Block*.
 
 Arguments appear in any order. Extract model tier + reasoning level + service tier from user input; any dimension the user omits takes its default (sol / xhigh / fast). Codex "ultra" auto-delegation mode is deliberately not exposed — it spawns sub-agents, conflicting with the leaf-relay background dispatch.
@@ -63,7 +63,7 @@ Agent({
   subagent_type: "general-purpose",
   model: "sonnet",           // thin pass-through relay — pin to Sonnet; never inherit the (possibly Opus) session model. Reliable verbatim relay without the Opus cost; do NOT use a fork (fork pins the parent model + can't downgrade)
   run_in_background: true,
-  prompt: "You are a mechanical relay — do NOT analyse, plan, reason about, or add commentary to the task. Call mcp__codex__codex exactly once with the parameters below, then return Codex's full response verbatim — no summarisation, no truncation, no commentary.\n\nprompt: [prepared prompt]\ncwd: [working dir]\nsandbox: \"read-only\"        // default (non-mutating); escalate to workspace-write ONLY for write/run tasks; never danger-full-access\napproval-policy: \"never\"    // MANDATORY in background — no interactive approver exists in a subagent, so any approval gate = silent hang\nconfig: { model: [gpt-5.6-sol (default) | gpt-5.6-terra | gpt-5.6-luna], model_reasoning_effort: [xhigh (default) | none/low/medium/high/max], service_tier: [fast (default) | standard] }"
+  prompt: "You are a mechanical relay — do NOT analyse, plan, reason about, or add commentary to the task. Call mcp__codex__codex exactly once with the parameters below, then return Codex's full response verbatim — no summarisation, no truncation, no commentary.\n\nprompt: [prepared prompt]\ncwd: [working dir]\nsandbox: \"read-only\"        // default (non-mutating); escalate to workspace-write ONLY for write/run tasks; never danger-full-access\napproval-policy: \"never\"    // MANDATORY in background — no interactive approver exists in a subagent, so any approval gate = silent hang\nconfig: { model: [gpt-5.6-sol (default) | gpt-5.6-terra | gpt-5.6-luna], model_reasoning_effort: [xhigh (default) | none/low/medium/high/max/ultra], service_tier: [fast (default) | standard] }"
 })
 ```
 
@@ -119,7 +119,7 @@ Every call MUST include `config` with `model`, `model_reasoning_effort`, and `se
 
 **Defaults:** `gpt-5.6-sol` + `xhigh` + `fast`. Do not downgrade reasoning or switch model tier without explicit user request.
 
-**Service tier — `fast` is the CONFIG value; Codex maps it internally to the `priority` request tier.** Write `service_tier: "fast"` (the config-layer name), never `"priority"` as a config value; use `"standard"`/`"default"` for normal speed. ⚠️ Over the MCP/websocket path this skill uses, `service_tier: "fast"` is frequently downgraded to `default` silently (openai/codex #14204), and GPT-5.6 fast-tier is model-advertised (`features.fast_mode`, on by default) — so `fast` is passed best-effort: if unhonoured you get standard speed, no error.
+**Service tier — `fast` is the CONFIG value; Codex maps it internally to the `priority` request tier.** Write `service_tier: "fast"` (the config-layer name), never `"priority"` as a config value; use `"standard"`/`"default"` for normal speed. ⚠️ Over the MCP/websocket path this skill uses, `service_tier: "fast"` has been reported ineffective in some cases (openai/codex #14204 — closed; OpenAI states Fast is server-routed, so an observed `default` is inconclusive). `features.fast_mode` is a client-side feature gate (on by default), not a model capability flag. Treat `fast` as best-effort: worst case is standard speed, no error.
 
 > **Parameter Placement:**
 > - `model_reasoning_effort` and `service_tier` are **NOT** top-level params — **only work inside `config`**
@@ -135,7 +135,7 @@ mcp__codex__codex({
   "approval-policy": "never",             // MANDATORY in background — no approver exists, so any gate = silent hang
   config: {
     "model": "gpt-5.6-sol",               // default tier; gpt-5.6-terra | gpt-5.6-luna when the user names terra/luna
-    "model_reasoning_effort": "xhigh",     // default; or user-specified: none/low/medium/high/max
+    "model_reasoning_effort": "xhigh",     // default; or user-specified: none/low/medium/high/max/ultra
     "service_tier": "fast"                 // config value "fast" → Codex maps to the "priority" request tier; "standard"/"default" opt-in
   }
 })

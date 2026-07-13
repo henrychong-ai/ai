@@ -35,7 +35,7 @@ cat > ~/.codex/config.toml << 'EOF'
 sandbox_mode    = "workspace-write"
 approval_policy = "never"
 model           = "gpt-5.6-sol"          # gpt-5.6-sol (flagship, default) | gpt-5.6-terra | gpt-5.6-luna
-model_reasoning_effort = "xhigh"          # none | low | medium | high | xhigh | max
+model_reasoning_effort = "xhigh"          # none | low | medium | high | xhigh | max | ultra
 
 [features]
 web_search_request = true
