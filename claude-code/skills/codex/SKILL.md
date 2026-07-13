@@ -1,26 +1,40 @@
 ---
 name: codex
-description: "Routes requests to OpenAI GPT-5.5 via Codex MCP for second opinions, hard problems, and code review. Runs in background by default via Agent tool (main thread stays free; harness notifies on completion); foreground only on explicit request. Triggers on /codex, \"use codex\"; reasoning levels: none/low/medium/high/xhigh (default xhigh); service tiers: fast/standard."
+description: "Routes requests to OpenAI GPT-5.6 (Sol/Terra/Luna) via Codex MCP for second opinions, hard problems, and code review. Runs in background by default via Agent tool (main thread stays free; harness notifies on completion); foreground only on explicit request. Triggers on /codex, \"use codex\"; model-aware: sol (default) / terra / luna; reasoning levels: none/low/medium/high/xhigh (default xhigh)/max; service tiers: fast/standard."
 allowed-tools: Agent, mcp__codex__codex, mcp__codex__codex-reply
 ---
 
-# Codex Skill — OpenAI GPT-5.5
+# Codex Skill — OpenAI GPT-5.6 (Sol / Terra / Luna)
 
-Second opinions, hard problems, code review via GPT-5.5. **Dispatch runs in the background via the Agent tool** — the main thread stays free while Codex thinks; the harness notifies on completion and Claude integrates the response then.
+Second opinions, hard problems, code review via GPT-5.6. **Dispatch runs in the background via the Agent tool** — the main thread stays free while Codex thinks; the harness notifies on completion and Claude integrates the response then.
+
+**Model-aware (since 2026-07-13):** `/codex` accepts a model tier — **`sol`** (`gpt-5.6-sol`, flagship, **default**), **`terra`** (`gpt-5.6-terra`, balanced), **`luna`** (`gpt-5.6-luna`, fastest/cheapest) — alongside reasoning level and service tier, in any order (e.g. `/codex luna xhigh`, `/codex sol xhigh fast`, `/codex terra high standard`).
 
 ## Quick Reference
 
-| Trigger | Reasoning | Service Tier |
-|---------|-----------|--------------|
-| `/codex` | xhigh | fast (default) |
-| `/codex [level]` | specified | fast |
-| `/codex standard` | xhigh | standard |
-| `/codex [level] standard` | specified | standard |
+Grammar: `/codex [model] [reasoning] [tier] [foreground]` — arguments in any order; all optional.
 
-**Reasoning:** `none` → `low` → `medium` → `high` → `xhigh` (default)
-**Tiers:** `fast` (default, 1.5x speed) • `standard`/`normal` (opt-in)
+| Trigger | Model | Reasoning | Service Tier |
+|---------|-------|-----------|--------------|
+| `/codex` | sol | xhigh | fast (default) |
+| `/codex [model]` | specified | xhigh | fast |
+| `/codex [level]` | sol | specified | fast |
+| `/codex luna xhigh` | luna | xhigh | fast |
+| `/codex sol xhigh fast` | sol | xhigh | fast |
+| `/codex terra high standard` | terra | high | standard |
 
-Arguments appear in any order. Extract reasoning level + service tier from user input.
+**Models** (GPT-5.6 family — tier names are durable; the generation number advances on its own cadence):
+
+| Arg | Model ID | Use for (illustrative — not required outputs) |
+|-----|----------|-----------------------------------------------|
+| `sol` *(default)* | `gpt-5.6-sol` | Flagship deep reasoning — hardest problems, cross-model second opinions, code review |
+| `terra` | `gpt-5.6-terra` | Balanced everyday work (≈GPT-5.5 quality, ~2× cheaper) |
+| `luna` | `gpt-5.6-luna` | Fastest/cheapest — high-volume or simple checks |
+
+**Reasoning:** `none` → `low` → `medium` → `high` → `xhigh` (default) → `max` (new; deepest, plan-gated + costly — opt-in only)
+**Tiers:** `fast` (default) • `standard`/`normal` (opt-in) — see the service-tier note under *MANDATORY: Always Pass Config Block*.
+
+Arguments appear in any order. Extract model tier + reasoning level + service tier from user input; any dimension the user omits takes its default (sol / xhigh / fast). Codex "ultra" auto-delegation mode is deliberately not exposed — it spawns sub-agents, conflicting with the leaf-relay background dispatch.
 
 ## Context Preparation
 
@@ -49,7 +63,7 @@ Agent({
   subagent_type: "general-purpose",
   model: "sonnet",           // thin pass-through relay — pin to Sonnet; never inherit the (possibly Opus) session model. Reliable verbatim relay without the Opus cost; do NOT use a fork (fork pins the parent model + can't downgrade)
   run_in_background: true,
-  prompt: "You are a mechanical relay — do NOT analyse, plan, reason about, or add commentary to the task. Call mcp__codex__codex exactly once with the parameters below, then return Codex's full response verbatim — no summarisation, no truncation, no commentary.\n\nprompt: [prepared prompt]\ncwd: [working dir]\nsandbox: \"read-only\"        // default (non-mutating); escalate to workspace-write ONLY for write/run tasks; never danger-full-access\napproval-policy: \"never\"    // MANDATORY in background — no interactive approver exists in a subagent, so any approval gate = silent hang\nconfig: { model: gpt-5.5, model_reasoning_effort: [xhigh | user-specified], service_tier: [fast | standard] }"
+  prompt: "You are a mechanical relay — do NOT analyse, plan, reason about, or add commentary to the task. Call mcp__codex__codex exactly once with the parameters below, then return Codex's full response verbatim — no summarisation, no truncation, no commentary.\n\nprompt: [prepared prompt]\ncwd: [working dir]\nsandbox: \"read-only\"        // default (non-mutating); escalate to workspace-write ONLY for write/run tasks; never danger-full-access\napproval-policy: \"never\"    // MANDATORY in background — no interactive approver exists in a subagent, so any approval gate = silent hang\nconfig: { model: [gpt-5.6-sol (default) | gpt-5.6-terra | gpt-5.6-luna], model_reasoning_effort: [xhigh (default) | none/low/medium/high/max], service_tier: [fast (default) | standard] }"
 })
 ```
 
@@ -103,7 +117,9 @@ Every call MUST include `config` with `model`, `model_reasoning_effort`, and `se
 
 (Detection/recovery for a residual hang — e.g. transport stall or rate-limit — remains: `stat` the background agent's `.output` for a tiny + stale signature, never Read the JSONL; then stop and re-dispatch.)
 
-**Defaults:** `gpt-5.5` + `xhigh` + `fast`. Do not downgrade without explicit user request.
+**Defaults:** `gpt-5.6-sol` + `xhigh` + `fast`. Do not downgrade reasoning or switch model tier without explicit user request.
+
+**Service tier — `fast` is the CONFIG value; Codex maps it internally to the `priority` request tier.** Write `service_tier: "fast"` (the config-layer name), never `"priority"` as a config value; use `"standard"`/`"default"` for normal speed. ⚠️ Over the MCP/websocket path this skill uses, `service_tier: "fast"` is frequently downgraded to `default` silently (openai/codex #14204), and GPT-5.6 fast-tier is model-advertised (`features.fast_mode`, on by default) — so `fast` is passed best-effort: if unhonoured you get standard speed, no error.
 
 > **Parameter Placement:**
 > - `model_reasoning_effort` and `service_tier` are **NOT** top-level params — **only work inside `config`**
@@ -118,9 +134,9 @@ mcp__codex__codex({
   sandbox: "read-only",                   // default; workspace-write only for write/run tasks; never danger-full-access + never
   "approval-policy": "never",             // MANDATORY in background — no approver exists, so any gate = silent hang
   config: {
-    "model": "gpt-5.5",                   // always gpt-5.5
-    "model_reasoning_effort": "xhigh",     // default; or user-specified: none/low/medium/high
-    "service_tier": "fast"                 // default; "standard" only when user requests
+    "model": "gpt-5.6-sol",               // default tier; gpt-5.6-terra | gpt-5.6-luna when the user names terra/luna
+    "model_reasoning_effort": "xhigh",     // default; or user-specified: none/low/medium/high/max
+    "service_tier": "fast"                 // config value "fast" → Codex maps to the "priority" request tier; "standard"/"default" opt-in
   }
 })
 ```
@@ -137,11 +153,11 @@ mcp__codex__codex-reply({
 ```
 mcp__codex__codex({
   prompt: "Analyze approach A...",
-  config: { "model": "gpt-5.5", "model_reasoning_effort": "xhigh", "service_tier": "fast" }
+  config: { "model": "gpt-5.6-sol", "model_reasoning_effort": "xhigh", "service_tier": "fast" }
 })
 mcp__codex__codex({
   prompt: "Analyze approach B...",
-  config: { "model": "gpt-5.5", "model_reasoning_effort": "xhigh", "service_tier": "fast" }
+  config: { "model": "gpt-5.6-sol", "model_reasoning_effort": "xhigh", "service_tier": "fast" }
 })
 ```
 
@@ -160,7 +176,7 @@ mcp__codex__codex({
 ```
 mcp__codex__codex({
   prompt: "...",
-  model: "gpt-5.5"                   // ❌ Only sets model, loses reasoning + tier
+  model: "gpt-5.6-sol"              // ❌ Only sets model, loses reasoning + tier
 })
 ```
 
