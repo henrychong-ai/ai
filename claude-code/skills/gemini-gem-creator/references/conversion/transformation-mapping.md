@@ -8,8 +8,8 @@ Systematic mapping from Claude Code instruction patterns to Gemini gem component
 
 | CC Element | Gem Target | Transformation |
 |------------|------------|----------------|
-| `name:` | Description field | Convert to descriptive gem name |
-| `description:` | PERSONA + Description | Extract role and purpose |
+| `name:` | Gem Name | **Title-cased mirror of the skill name** (`portcullis` → "Portcullis", `legal-harvey-ai` → "Legal Harvey AI") — never invent a descriptive title; one skill → multiple gems uses "Name — Suffix" |
+| `description:` | PERSONA + Description field | Extract role and purpose; descriptive text lives here, not in the name |
 | `model:` | N/A | Remove (Gemini uses fixed model) |
 | `allowed-tools:` | TASK | Convert capabilities to actions |
 | `skills:` | CONTEXT | Inline relevant knowledge |
@@ -85,7 +85,7 @@ You are a regulatory compliance analyst specializing in Labuan FSA regulations f
 | MCP Pattern | CONTEXT Transformation |
 |-------------|------------------------|
 | `mcp__kg__` entities | Embed as domain knowledge |
-| `mcp__st__` thinking | Implicit in structured approach |
+| `mcp__yggdrasil__` reasoning | Implicit in structured approach |
 | `mcp__perplexity__` | "Reference current information" |
 | External APIs | Describe information needs |
 

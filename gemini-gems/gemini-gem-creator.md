@@ -1,4 +1,4 @@
-# Gemini Custom Gem: gemini-gem-creator
+# Gemini Custom Gem: Gemini Gem Creator
 *Created for: Fusang/Portcullis Team*
 *Domain: Gem Creation & Optimization*
 *Created: 2025-11-26*
@@ -73,7 +73,7 @@ None needed — all methodology, quality tests, model guidance, Gemini KB limits
 
 1. Copy the **Gem Description** above to Gemini's "Description" field
 2. Copy the **Gem Instructions** below to Gemini's "Instructions" field
-3. Name the gem "Gem Creator" or "Custom Gem Builder"
+3. Name the gem "Gemini Gem Creator"
 4. Test with a sample request (e.g., "I need a gem to help write client newsletters")
 5. Note the **Recommended Model** at the top — tell users to pick Pro or Deep Think in the app's model selector for design work, 3.5 Flash for quick gems
 6. Optionally use Gemini's magic-wand icon (bottom of the Instructions box) to expand a draft — then review the expansion critically, trim generic filler, and preserve domain-specific precision

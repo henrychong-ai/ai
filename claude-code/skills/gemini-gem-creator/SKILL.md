@@ -1,6 +1,6 @@
 ---
 name: gemini-gem-creator
-description: Creates and converts Gemini Custom Gems using the 4-component framework (Persona/Task/Context/Format). Create gems from requirements through interactive discovery, or convert Claude Code agents/skills to team-shareable gems. Optimizes existing gems against quality standards. Use for Fusang/Portcullis Google Workspace gem distribution.
+description: Creates and converts Gemini Custom Gems using the 4-component framework (Persona/Task/Context/Format) — create from requirements via interactive discovery, convert Claude Code agents/skills to team-shareable gems, or optimise existing gems. Use for Fusang/Portcullis Google Workspace gem distribution.
 allowed-tools: Read, Glob, Write
 ---
 
@@ -159,6 +159,7 @@ FORMAT:
 
 ### For Convert Mode
 - **NEVER modify or delete source CC file**
+- **Gem Name = title-cased mirror of the source skill/agent `name:`** — `portcullis` → "Portcullis", `legal-harvey-ai` → "Legal Harvey AI", `trust-officer` → "Trust Officer". Never invent a descriptive title (no "Wealth Advisor", "Strategy Assistant" embellishments); descriptive text belongs ONLY in the Description field. When one skill splits into multiple gems, suffix the mirror: "Compliance — Baxian"
 - Remove ALL CC-specific syntax (YAML, tools, MCP, paths)
 - Remove ALL individual-specific content (personal names, custom framework triggers)
 - PRESERVE business context (Fusang, Portcullis, regulatory frameworks)

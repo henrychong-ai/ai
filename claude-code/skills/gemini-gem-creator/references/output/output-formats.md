@@ -103,7 +103,7 @@ FORMAT:
 ### CC → Gem Conversion Package
 
 ```markdown
-# Gemini Gem Conversion: [Original Name] → [Gem Name]
+# Gemini Gem Conversion: [Original Name] → [Gem Name = title-cased mirror of the source skill/agent name]
 *Source: [CC skill/agent path]*
 *Domain: [Category]*
 *Converted: [Date]*
@@ -182,7 +182,7 @@ FORMAT:
 
 1. Copy the **Gem Description** to Gemini's "Description" field
 2. Copy the **Gem Instructions** to Gemini's "Instructions" field
-3. Name the gem "[Suggested Name]"
+3. Name the gem "[title-cased mirror of the source skill/agent name]"
 4. Test with sample prompts
 5. Share with team via Google Workspace
 
