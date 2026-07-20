@@ -1,6 +1,8 @@
 # Claude Code → Codex Skill Conversion Guide
 
-Convert a Claude Code (CC) skill into a Codex skill: the mechanic map, the T1/T2/T3 effort tiers, the Tier-A/Tier-B distribution decision, and the two orthogonal gates (sensitive-data, harness-tool availability).
+Convert a Claude Code (CC) skill into a Codex skill: the mechanic map, the T1/T2/T3 effort tiers, the Tier-A/Tier-B distribution decision, and the two orthogonal gates (sensitive-data, harness-tool availability). Also covers CC agents → **Codex custom agents** (TOML) — see the "Codex subagents & custom agents" section.
+
+> **Updated 2026-07-20:** Codex subagents + custom agents are GA (default-on across desktop app / CLI / IDE since ~March 2026) — verified against the official docs (learn.chatgpt.com/docs/agent-configuration/subagents). The former "single agent, no fork" premise is retired; the mechanic map and tiers below reflect the new MAP targets.
 
 > **Companion guide:** `cross-platform-conversion-guide.md` covers CC → **Claude.ai** (Desktop/iOS/Android/web — a sandboxed, tool-less ecosystem). This guide covers CC → **Codex** (a *different filesystem+shell harness* with its own mechanics). Different target, different rules — don't cross them.
 >
@@ -19,10 +21,11 @@ Convert a Claude Code (CC) skill into a Codex skill: the mechanic map, the T1/T2
 │                              │        │                              │
 │ • Skill tool / /name invoke  │  ───►  │ • SKILL.md read as a skill   │
 │ • AskUserQuestion gates      │        │ • on-request approval prompt │
-│ • subagents / context: fork  │        │ • single agent (no fork)     │
-│ • Workflow / Agent fan-out   │        │ • Automations for scheduled  │
+│ • subagents / context: fork  │        │ • subagents + custom agents  │
+│ • Workflow / Agent fan-out   │        │   (TOML in ~/.codex/agents/) │
 │ • mcp__* tool tokens         │        │ • MCP via config.toml        │
 │ • /effort, ToolSearch        │        │ • reasoning_effort (harness) │
+│ • scheduled cloud routines   │        │ • Automations for scheduled  │
 └──────────────────────────────┘        └──────────────────────────────┘
          CC-mechanic surface                  Codex-mechanic surface
                          └──── CONVERSION GAP ────┘
@@ -30,7 +33,7 @@ Convert a Claude Code (CC) skill into a Codex skill: the mechanic map, the T1/T2
 
 **What's the same:** Codex 0.139+ reads the **same `SKILL.md` markdown+frontmatter format**. Knowledge, process, reference data, templates, and deterministic scripts port directly.
 
-**What's different:** every CC *harness mechanic* (the Skill tool, AskUserQuestion, subagents, `context: fork`, `mcp__*` tokens, `/effort`, ToolSearch, plan mode, scheduled cloud routines) has no literal Codex equivalent — it must be **mapped, generalised, or re-architected**. The mechanic map below is the core of the conversion.
+**What's different:** every CC *harness mechanic* (the Skill tool, AskUserQuestion, `context: fork`, `mcp__*` tokens, `/effort`, ToolSearch, plan mode, scheduled cloud routines) resolves differently in Codex — some now have direct equivalents (subagents/custom agents map cleanly), the rest must be **mapped, generalised, or re-architected**. The mechanic map below is the core of the conversion.
 
 **Canonical skill dir:** `~/.codex/skills/` (global skills); repo-scoped skills go in `<project>/.agents/skills/`.
 
@@ -42,7 +45,7 @@ Convert a Claude Code (CC) skill into a Codex skill: the mechanic map, the T1/T2
 |:---:|---|---|---|---|
 | **T1** | **Reformat** | Clean framework; only CC-mechanic *phrasing* to strip. Knowledge/process/reference skills. | **Tier-A pipeline** if zero behavioural CC tokens survive a strip+transform; else Tier-B. | cloud/infra knowledge, domain manuals, methodology skills |
 | **T2** | **Convert** | Has CC-*interactive* mechanics (AskUserQuestion decision flows, interactive document generation) → rewrite as a parameterised, non-interactive process. | **Tier-B** (hand-authored) | legal/document-generation skills, incident-report skills |
-| **T3** | **Re-architect** | A **load-bearing CC-only mechanism** (scheduled cloud routines, multi-agent `Workflow`, subagent fan-out) is the skill's spine → rebuild on a Codex equivalent (usually a **Codex Automation**). | **Tier-B** (hand-authored) | a scheduled-scan skill (cloud routine → Codex Automation) |
+| **T3** | **Re-architect** | A **load-bearing CC-only mechanism** (scheduled cloud routines; scripted deterministic `Workflow` orchestration) is the skill's spine → rebuild on a Codex equivalent (usually a **Codex Automation**). *Plain subagent fan-out no longer forces T3 — it MAPs to Codex subagents/custom agents (see mechanic map + custom-agents section).* | **Tier-B** (hand-authored) | a scheduled-scan skill (cloud routine → Codex Automation) |
 
 **Decision question:** *"What in this skill only works because of a Claude Code harness feature?"* — nothing structural → T1; an interactive prompt loop → T2; a whole orchestration/scheduling mechanism → T3.
 
@@ -79,8 +82,9 @@ The spine of the conversion. Every behavioural CC mechanic resolves to one of: *
 |---|---|---|
 | `AskUserQuestion` (4-option gate) | MAP | In-line approval prompt + **WAIT** (`approval_policy = on-request`). The structured 4-option UI → a plain numbered question in prose. **Headless** (`codex exec`/Automation): no one to ask → write a report of intended actions; never act destructively. |
 | Skill tool / `/name` invocation | MAP | Codex reads `~/.codex/skills/<name>/SKILL.md` (same format). "Load `/other`" → "read the `<other>` skill". |
-| `context: fork` + `agent:` (isolated subagent) | GENERALISE / RE-ARCHITECT | No Codex subagent fork. Run the work **inline**; if it's heavy/parallel and load-bearing → a Codex **Automation** or separate `codex exec` (T3). |
-| `Agent`/`Task` tool, `Workflow` (dynamic multi-agent fan-out) | RE-ARCHITECT | Codex is single-agent → **sequential steps**, or an **Automation** per work item. Load-bearing parallelism = T3. |
+| `context: fork` + `agent:` (isolated subagent) | MAP | **Delegate to a Codex subagent** — a built-in (`explorer` for read-heavy, `worker` for execution) or a custom agent in `~/.codex/agents/`. Phrase as "delegate X to a subagent"; `/agent` inspects running threads. |
+| `Agent`/`Task` tool (subagent fan-out) | MAP | **Codex subagents** (GA, default-on): parallel delegated specialists, `agents.max_threads` default 6, `agents.max_depth` default 1 (no recursive spawning). Explicit ("spawn agents / delegate in parallel") or proactive at the `ultra` intelligence level. |
+| `Workflow` tool (scripted deterministic orchestration) | RE-ARCHITECT | No scripted-orchestration runtime — prompt-driven subagent delegation for parallel work, **sequential steps** for deterministic control flow, or an **Automation** per work item (T3 when load-bearing). |
 | Scheduled cloud routines / scheduled CC tasks | RE-ARCHITECT | **Codex app Automations** (canonical scheduled runtime; in-app run tracking). `codex exec` via cron/launchd for headless/CI only. |
 | `/effort` flag + `effort:` frontmatter | MAP (drop key) | Codex `reasoning_effort` (config.toml `model_reasoning_effort` / per-session) — **harness-level, not a per-skill field**. The frontmatter key is stripped (Codex ignores it). |
 | `ToolSearch` / deferred MCP tools | GENERALISE | Codex loads MCP tools via config.toml `enabled_tools` (no runtime tool search). Drop the `ToolSearch` call; assume the tool is configured, or flag the dependency. |
@@ -101,6 +105,40 @@ The pipeline strips CC-only frontmatter keys (Codex ignores unknown keys, but th
 **Kept:** `name`, `description` (the universal pair).
 
 A provenance banner is injected after the closing `---` on pipeline-deployed copies (`<!-- DEPLOYED COPY — generated ... Do NOT edit here -->`) so generated copies are never hand-edited.
+
+---
+
+## Codex subagents & custom agents (CC agents → Codex agents)
+
+*Verified 2026-07-20 against official docs (learn.chatgpt.com/docs/agent-configuration/subagents). GA since ~March 2026, default-on across the ChatGPT desktop app, Codex CLI, and IDE extension.*
+
+**Built-ins:** `default` (fallback), `worker` (execution-focused), `explorer` (read-heavy exploration). A custom agent with a matching name overrides the built-in.
+
+**Custom agent definition:** one TOML file per agent in `~/.codex/agents/` (personal) or `.codex/agents/` (project-scoped).
+
+| Field | Req | Notes |
+|---|---|---|
+| `name` | ✓ | identifier |
+| `description` | ✓ | usage guidance (when to delegate to it) |
+| `developer_instructions` | ✓ | the agent's behavioural rules — the body of a CC agent `.md` goes here |
+| `model` | – | per-agent model |
+| `model_reasoning_effort` | – | `none`/`minimal` … `ultra` |
+| `sandbox_mode`, `mcp_servers`, skills config, `nickname_candidates` | – | per-agent sandbox, MCP allowlist, skill mounts |
+
+**Limits/config:** `agents.max_threads` (default 6 concurrent), `agents.max_depth` (default 1 — no recursive spawning), `agents.job_max_runtime_seconds` (per-worker timeout). **Invocation:** explicit ("spawn agents", "delegate in parallel"), or proactive auto-delegation at the `ultra` intelligence level; `/agent` inspects and switches threads. Subagent workflows consume more tokens than single-agent runs — delegate noisy intermediate work (exploration, logs, test output), keep the main thread on decisions and final output.
+
+**CC agent `.md` → Codex agent TOML map:**
+
+| CC agent frontmatter/body | Codex TOML |
+|---|---|
+| `name:` | `name` |
+| `description:` (incl. "Use PROACTIVELY…") | `description` (Codex reads it as delegation guidance) |
+| body (identity, protocols, recipes) | `developer_instructions` (apply the Step 3 mechanic map + addressee transform to the body first) |
+| `model:` / `effort:` | `model` / `model_reasoning_effort` (translate alias → target model ID; effort scale differs — re-baseline, don't transliterate) |
+| `tools:` allowlist / `disallowedTools:` | no direct equivalent — constrain via `sandbox_mode` + `mcp_servers` + `developer_instructions`; `max_depth = 1` already enforces leaf-only |
+| `permissionMode:` / hooks | no equivalent — fold gates into `developer_instructions` (approval prompts per the AskUserQuestion row) |
+
+The two gates (🔒 sensitive-data, 🔌 harness-tool availability) apply to agent conversions exactly as to skills.
 
 ---
 
@@ -152,7 +190,7 @@ For skills that are CC-shaped (approval/orchestration mechanics the guard reject
 
 | Check | How |
 |---|---|
-| **No surviving CC mechanics** | grep guard: `grep -rnE 'mcp__\|AskUserQuestion\|Agent tool\|context: fork\|subagent\|SlashCommand\|EnterPlanMode'` (pipeline runs this automatically; run manually for Tier-B). |
+| **No surviving CC mechanics** | grep guard: `grep -rnE 'mcp__\|AskUserQuestion\|Agent tool\|context: fork\|subagent\|SlashCommand\|EnterPlanMode'` (pipeline runs this automatically; run manually for Tier-B). *Note (2026-07-20): a `subagent` hit is no longer automatically a CC leak — Codex has native subagents. Tier-A: any hit still routes to Tier-B for human judgment. Tier-B: a hit is fine iff it references Codex subagent delegation, not CC's Agent/Task mechanics.* |
 | **Sensitive-data re-scan (🔒 BLOCKING)** | For data-bearing skills: confirm no PII/regulated data in any file. |
 | **Harness-dep note present (🔌)** | Each MCP/plugin/local-app dependency is stated. |
 | **Self-paths corrected** | `~/.codex/...` not legacy CC paths. |
@@ -183,4 +221,4 @@ For a multi-skill reformat, run a **read-only assessment first**: read each skil
 ---
 
 *Home: `/instruction-creator` references. Machinery: your Codex distribution tooling (deploy pipeline + allowlist). Codex harness reference: the Codex CLI/config docs.*
-*Last updated: 2026-06-16.*
+*Last updated: 2026-07-20.*
