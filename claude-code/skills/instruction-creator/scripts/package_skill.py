@@ -14,13 +14,23 @@ import sys
 import zipfile
 from pathlib import Path
 from quick_validate import validate_skill
+from packaging_checks import run_checks, check_zip_size, report
 
 # Build artifacts / OS cruft never shipped in a skill zip. Mirrors the
 # exclusions in convert_to_claudeai.py so a verbatim package is still clean
 # (a stray __pycache__/*.pyc from running a script must not bloat the zip).
-EXCLUDE_NAMES = {".DS_Store"}
+EXCLUDE_NAMES = {
+    ".DS_Store",
+    # Maintainer files — dev logs/roadmaps/orientation; not for skill consumers
+    # (aligned with convert_to_claudeai.py, 2026-07-08)
+    "TODO.md",
+    "CHANGELOG.md",
+    "README.md",
+    "cd-project-recipe.md",
+    ".gitignore",
+}
 EXCLUDE_SUFFIXES = {".pyc", ".pyo"}
-EXCLUDE_DIRS = {"__pycache__", ".git", ".ipynb_checkpoints"}
+EXCLUDE_DIRS = {"__pycache__", ".git", ".ipynb_checkpoints", "todo"}
 
 
 def _excluded(path: Path) -> bool:
@@ -30,13 +40,15 @@ def _excluded(path: Path) -> bool:
     return any(part in EXCLUDE_DIRS for part in path.parts)
 
 
-def package_skill(skill_path, output_dir=None):
+def package_skill(skill_path, output_dir=None, team=False):
     """
     Package a skill folder into a zip file.
 
     Args:
         skill_path: Path to the skill folder
         output_dir: Optional output directory for the zip file (defaults to current directory)
+        team: Enable the team-distribution secret/personal-content scan
+              (use for every zip published to the org Skills folder)
 
     Returns:
         Path to the created zip file, or None if error
@@ -77,16 +89,32 @@ def package_skill(skill_path, output_dir=None):
 
     zip_filename = output_path / f"{skill_name}.zip"
 
+    # Build the final include list, then run packaging checks BEFORE zipping
+    # (charset / redundant-binary always; secret scan in --team mode)
+    included = [
+        (p, str(p.relative_to(skill_path.parent)))
+        for p in sorted(skill_path.rglob('*'))
+        if p.is_file() and not _excluded(p)
+    ]
+    print("🔍 Running packaging checks" + (" (team mode)" if team else "") + "...")
+    errors, warnings = run_checks(included, team=team)
+    report(errors, warnings)
+    if errors:
+        print(f"❌ Packaging checks failed ({len(errors)} error(s)) — zip not created.")
+        return None
+
     # Create the zip file
     try:
         with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            # Walk through the skill directory
-            for file_path in skill_path.rglob('*'):
-                if file_path.is_file() and not _excluded(file_path):
-                    # Calculate the relative path within the zip
-                    arcname = file_path.relative_to(skill_path.parent)
-                    zipf.write(file_path, arcname)
-                    print(f"  Added: {arcname}")
+            for file_path, arcname in included:
+                zipf.write(file_path, arcname)
+                print(f"  Added: {arcname}")
+
+        size_err = check_zip_size(zip_filename)
+        if size_err:
+            print(f"❌ {size_err}")
+            zip_filename.unlink()
+            return None
 
         print(f"\n✅ Successfully packaged skill to: {zip_filename}")
         return zip_filename
@@ -97,22 +125,26 @@ def package_skill(skill_path, output_dir=None):
 
 
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: python utils/package_skill.py <path/to/skill-folder> [output-directory]")
+    args = [a for a in sys.argv[1:] if a != "--team"]
+    team = "--team" in sys.argv[1:]
+    if not args:
+        print("Usage: python utils/package_skill.py <path/to/skill-folder> [output-directory] [--team]")
         print("\nExample:")
         print("  python utils/package_skill.py skills/public/my-skill")
-        print("  python utils/package_skill.py skills/public/my-skill ./dist")
+        print("  python utils/package_skill.py skills/public/my-skill ./dist --team")
+        print("\n--team enables the team-distribution secret/personal-content scan")
+        print("(use for every zip published to the org Skills folder)")
         sys.exit(1)
 
-    skill_path = sys.argv[1]
-    output_dir = sys.argv[2] if len(sys.argv) > 2 else None
+    skill_path = args[0]
+    output_dir = args[1] if len(args) > 1 else None
 
     print(f"📦 Packaging skill: {skill_path}")
     if output_dir:
         print(f"   Output directory: {output_dir}")
     print()
 
-    result = package_skill(skill_path, output_dir)
+    result = package_skill(skill_path, output_dir, team=team)
 
     if result:
         sys.exit(0)

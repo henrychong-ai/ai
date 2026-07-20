@@ -28,6 +28,9 @@ import zipfile
 from pathlib import Path
 from typing import Optional
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from packaging_checks import run_checks, check_zip_size, report as checks_report
+
 # YAML handling - try ruamel.yaml first (preserves formatting), fall back to PyYAML
 try:
     from ruamel.yaml import YAML
@@ -88,6 +91,15 @@ class SkillConverter:
         '*.pem',
         # Browser-only dashboards (HTML/JS/JSON) — not renderable on Claude.ai
         'dashboard/',
+        # Maintainer files — dev session logs, roadmaps, and repo orientation;
+        # they carry maintainer-personal context and don't serve skill consumers
+        # (added 2026-07-08 after a distribution-hygiene review)
+        'TODO.md',
+        'CHANGELOG.md',
+        'README.md',
+        'todo/',
+        '.gitignore',
+        'cd-project-recipe.md',
     ]
 
     # Maximum file sizes (bytes)
@@ -103,6 +115,7 @@ class SkillConverter:
         dry_run: bool = False,
         keep_tools: bool = False,
         inline_refs: bool = False,
+        team: bool = False,
     ):
         self.skill_path = Path(skill_path).resolve()
         self.output_dir = Path(output_dir).resolve()
@@ -110,6 +123,7 @@ class SkillConverter:
         self.dry_run = dry_run
         self.keep_tools = keep_tools
         self.inline_refs = inline_refs
+        self.team = team
 
         self.skill_name = self.skill_path.name
         self.warnings: list[str] = []
@@ -155,8 +169,32 @@ class SkillConverter:
             # Bundle references
             self.bundle_references(converted_dir)
 
+            # Packaging checks on the FINAL staged tree (post-exclusions):
+            # charset + redundant-binary always; secret scan in --team mode
+            if not self.dry_run:
+                staged = [
+                    (p, str(p.relative_to(temp_dir)))
+                    for p in sorted(converted_dir.rglob("*"))
+                    if p.is_file()
+                ]
+                print("  Running packaging checks" + (" (team mode)" if self.team else "") + "...")
+                errors, check_warnings = run_checks(staged, team=self.team)
+                checks_report(errors, check_warnings)
+                self.warnings.extend(check_warnings)
+                if errors:
+                    print(f"Packaging checks failed ({len(errors)} error(s)) — zip not created.")
+                    return None
+
             # Create zip
             zip_path = self.create_zip(temp_dir)
+
+            # 30 MB Claude Desktop upload cap
+            if not self.dry_run and zip_path is not None:
+                size_err = check_zip_size(zip_path)
+                if size_err:
+                    print(f"Error: {size_err}")
+                    zip_path.unlink()
+                    return None
 
             # Report
             self.report()
@@ -450,6 +488,13 @@ Skills uploaded to any Claude.ai platform will sync to all others automatically.
         help="Inline all reference content into SKILL.md (not yet implemented)",
     )
 
+    parser.add_argument(
+        "--team",
+        action="store_true",
+        help="Enable the team-distribution secret/personal-content scan "
+             "(use for every zip published to the org Skills folder)",
+    )
+
     args = parser.parse_args()
 
     # Ensure output directory exists
@@ -463,6 +508,7 @@ Skills uploaded to any Claude.ai platform will sync to all others automatically.
         dry_run=args.dry_run,
         keep_tools=args.keep_tools,
         inline_refs=args.inline_refs,
+        team=args.team,
     )
 
     result = converter.convert()

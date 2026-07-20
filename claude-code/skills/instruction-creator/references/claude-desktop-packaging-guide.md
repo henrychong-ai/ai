@@ -36,6 +36,28 @@ For Project Custom Instructions emission (the `.md` paste file for a linked skil
 
 ---
 
+## Built-In Packaging Enforcement (Layer 2 — since 2026-07-20)
+
+Both packaging scripts import `scripts/packaging_checks.py` and **fail the build locally** instead of failing at Claude Desktop upload time:
+
+| Check | When | Outcome |
+|---|---|---|
+| **Filename charset** — any zip path with chars outside `[A-Za-z0-9._-/]` | Always | ERROR (build aborts) |
+| **Redundant binary** — a bundled PDF whose same-stem `.md` companion is also bundled | Always | ERROR — extract to text, archive the original outside the skill |
+| **Large binary** — bundled binary > 1 MB | Always | WARNING |
+| **30 MB zip cap** | Always (post-zip) | ERROR (zip deleted) |
+| **Secret / personal-content scan** — real `op://` refs (vault names with spaces; placeholders and single-word teaching examples pass), real `/Users/<name>/` or `/home/<name>/` home paths (placeholder usernames pass), private-key blocks, AWS key ids | **`--team` only** | ERROR per hit |
+| **Maintainer-local deny patterns** — optional extra regexes read from `~/.claude/packaging-deny-patterns.txt` (one per line, `#` comments) | **`--team` only** | ERROR per hit |
+
+**Pass `--team` on every build destined for shared/organisation distribution** (both scripts accept it). Personal-use builds omit it.
+
+```bash
+uv run --with pyyaml python …/convert_to_claudeai.py <skill> <output-dir>/ --team
+python3 …/package_skill.py <skill> <output-dir>/ --team
+```
+
+---
+
 ## Filename Character Validation (MANDATORY)
 
 Claude Desktop's upload validator rejects any zip path containing characters outside `[A-Za-z0-9._-/]` with the error **"Zip file contains path with invalid characters"**. Forbidden: spaces, apostrophes (smart `'` U+2019 AND ASCII `'`), em/en-dashes, parentheses, all other punctuation and non-ASCII bytes.
