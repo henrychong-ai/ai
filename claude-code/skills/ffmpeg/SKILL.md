@@ -1,6 +1,6 @@
 ---
 name: ffmpeg
-description: This skill should be used for video and audio processing including format conversion, compression, trimming, merging, and hardware-accelerated encoding. Covers ffmpeg commands for MP4/MKV/AVI/MOV conversion, H.264/H.265/HEVC encoding, audio extraction, VideoToolbox hardware acceleration on Apple Silicon M3, subtitle handling, batch processing, and post-download video manipulation workflows.
+description: ffmpeg video/audio processing with Apple Silicon hardware acceleration — format conversion, compression, trimming, merging, H.264/H.265/HEVC encoding, audio extraction, subtitle handling.
 ---
 
 # ffmpeg Video/Audio Processing Skill
@@ -201,7 +201,7 @@ For comprehensive information, see `references/` directory:
 
 ```bash
 # 1. Download with media-downloader agent
-# (uses yt-dlp, saves to ~/Downloads/)
+# (uses yt-dlp, saves to a local directory)
 
 # 2. Process with ffmpeg
 # Compress large download:
