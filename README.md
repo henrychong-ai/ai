@@ -31,7 +31,6 @@ Autonomous domain specialists that handle complex, multi-step tasks. Copy to `~/
 | Agent | Description |
 |-------|-------------|
 | [file-converter](claude-code/agents/file-converter.md) | Intelligent file format conversion with auto-detection and validation |
-| [instruction-creator](claude-code/agents/instruction-creator.md) | Create and review Claude Code instruction files (agents, skills, commands) |
 | [media-downloader](claude-code/agents/media-downloader.md) | Download videos/audio from web URLs using yt-dlp |
 
 ### Skills
