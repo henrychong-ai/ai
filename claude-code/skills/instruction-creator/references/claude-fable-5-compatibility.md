@@ -69,6 +69,8 @@ Fable 5 is "significantly more dependable at dispatching and sustaining parallel
 
 **Action:** keep the 4.8 rule — for decomposable large-scale work, state **when** to fan out and **how to bound it** (caps, dedup, single-writer apply). Add the keep-working-while-they-run cue for skills with parallelisable work. The risk profile has shifted from under-spawning (4.7) through fan-out capability (4.8) to **eager fan-out** (Fable 5) — bounds matter more, reminders to delegate matter less.
 
+**Fork subagents (added 2026-08-14):** conversation forks (`subagent_type: "fork"` / `/subtask`) always run on the parent model at session effort — under a Fable 5 main loop every fork bills Fable, and Fable's eager dispatch makes accidental fork volume likely. Authoring guidance: reserve forks for genuinely context-entangled delegation (official heuristic: "a named subagent would need too much background to be useful") or parallel approaches from one starting point; route volume work through named model-pinned subagents, which forks can never be (model overrides are ignored on forks). To bar forks mechanically, use the permission deny rule `Agent(fork)` — the `CLAUDE_CODE_FORK_SUBAGENT=0` env var does not propagate to subagents. Note the mode coupling: fork mode (interactive default since v2.1.232) also makes ALL spawned subagents background-by-default and removes the Agent tool's `run_in_background` parameter. Full mechanics: SKILL.md § "Forking — Two Distinct Mechanisms" + `cache-and-token-efficiency.md`.
+
 ## 2.5 Progress fabrication ~eliminated — by one audit instruction
 
 On long runs, an explicit audit instruction nearly eliminates fabricated status reports:

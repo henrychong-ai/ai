@@ -1,13 +1,13 @@
 ---
 name: instruction-creator
-description: Architect for Claude instruction ecosystems (agents, skills, slash commands, MCP servers, project instructions) with Claude Code best practices — skill templates, 5-step workflow, cache-safe model/effort config, packaging scripts, model compatibility audits (Fable 5, Opus 5, Opus 4.8). Use for creating/updating agents/skills/commands, MCP setup guides, team distribution sanitisation.
+description: "Architect for Claude instruction ecosystems (agents, skills, slash commands, MCP servers, project instructions) with Claude Code best practices — skill templates, 5-step workflow, cache-safe model/effort config, fork subagents (conversation forks vs context: fork), packaging scripts, model compatibility audits (Fable 5, Opus 5, Opus 4.8). Use for creating/updating agents/skills/commands, MCP setup guides, team distribution sanitisation."
 ---
 
 # Instruction Creator Skill
 
 This skill provides complete guidance for creating and reviewing Claude instruction files across the entire instruction ecosystem.
 
-**Updated:** 2026-08-03 — Opus 5 compatibility reference added (`references/claude-opus-5-compatibility.md`): removal-first reaches the Opus tier (verification scaffolds, self-correction nudges, review severity pre-filters now hurt), effort↮length decoupling, thinking-on-by-default mechanics, behavioural A/B prompt-debt audit. 2026-06-16 — CC→Codex conversion guide added (`references/cc-to-codex-conversion-guide.md` + `templates/cc-to-codex-assessment-template.md`): mechanic map, T1/T2/T3 tiers, Tier-A/B distribution decision, data + harness-tool gates. 2026-06-10 — Fable 5 (released 2026-06-09; **new tier above Opus**, not an Opus replacement) multi-model restructure; per-model deltas now live in `references/claude-<model>-compatibility.md` (supersedes the single-model 4.8 pass, 2026-05-30). Same day: cache-safety & token-efficiency rules — the CC prompt cache is keyed by (model, effort), so model/effort pins belong in subagent contexts only (`references/cache-and-token-efficiency.md`).
+**Updated:** 2026-08-14 — Fork subagents: "Forking — Two Distinct Mechanisms" disambiguation (conversation forks `subagent_type: "fork"`/`/subtask` vs `context: fork` frontmatter), fork delegation calculus (forks cannot be model/effort-pinned), `background:` frontmatter field, cache-reference correction (`context: fork` skills receive NO conversation history), Fable 5 fork-economics delta, CC→Codex fork mapping. 2026-08-03 — Opus 5 compatibility reference added (`references/claude-opus-5-compatibility.md`): removal-first reaches the Opus tier (verification scaffolds, self-correction nudges, review severity pre-filters now hurt), effort↮length decoupling, thinking-on-by-default mechanics, behavioural A/B prompt-debt audit. 2026-06-16 — CC→Codex conversion guide added (`references/cc-to-codex-conversion-guide.md` + `templates/cc-to-codex-assessment-template.md`): mechanic map, T1/T2/T3 tiers, Tier-A/B distribution decision, data + harness-tool gates. 2026-06-10 — Fable 5 (released 2026-06-09; **new tier above Opus**, not an Opus replacement) multi-model restructure; per-model deltas now live in `references/claude-<model>-compatibility.md` (supersedes the single-model 4.8 pass, 2026-05-30). Same day: cache-safety & token-efficiency rules — the CC prompt cache is keyed by (model, effort), so model/effort pins belong in subagent contexts only (`references/cache-and-token-efficiency.md`).
 
 ## ⚠️ Model-Aware Instruction Authoring (MANDATORY)
 
@@ -214,9 +214,10 @@ hooks:                              # Lifecycle hooks (see Hooks section)
 - **Never pin upward to a larger model "for quality"** — that decision belongs to the session, not the instruction file. (Doubly so for `fable` at 2× Opus cost.)
 - **When a pin IS justified, decide model and effort together** (see Model × Effort above): for capability-bound, latency-tolerant subagent work, `fable` at `medium`/`low` effort can dominate `opus` at `xhigh`.
 - **Pins are cache-safe only in subagent contexts.** The CC prompt cache is keyed by (model, effort) — a main-thread skill/command pin double cache-busts the session (full uncached re-read at activation, partial re-read at revert). Agents are safe by construction (own subagent conversation, own cache). **A skill/command with a hardcoded `model:`/`effort:` must always run as a subagent — set `context: fork` (+ `agent:`) alongside the pin.** Mechanics + cost math: `references/cache-and-token-efficiency.md`.
+- **Conversation forks cannot be pinned.** `subagent_type: "fork"` ignores `model` overrides and has no frontmatter — a fork always bills the session model at session effort. When a pin matters, delegate to a named agent instead of forking (see Forking — Two Distinct Mechanisms).
 - **Use aliases, not version-pinned IDs**, on the rare occasions a pin is justified (aliases track the latest model in the tier): `fable`, `opus`, `sonnet`, `haiku`.
 - **`inherit`**: explicit equivalent of omitting (agents only).
-- **Priority order**: Task tool override → Agent YAML → Inherit → System default
+- **Priority order** (named subagents): Task tool override → Agent YAML → Inherit → System default. Conversation forks bypass this entirely — always the session model.
 
 ### Agent Template Structure
 
@@ -290,7 +291,19 @@ hooks:                              # Lifecycle hooks
 ---
 ```
 
-### Context Fork Feature
+### Forking — Two Distinct Mechanisms (Disambiguation)
+
+Claude Code has two unrelated features that both use the word "fork". Authors (and many blog posts) conflate them — keep them separate:
+
+| | `context: fork` (frontmatter) | Conversation fork (`subagent_type: "fork"` / `/subtask`) |
+|---|---|---|
+| **What runs** | The skill/command body as the prompt for a **fresh** subagent | A subagent inheriting the **entire conversation** (system prompt, tools, history) |
+| **Conversation history** | **None** — official docs: "It won't have access to your conversation history" | Full history at fork moment |
+| **Model / effort** | Pinnable via `model:`/`effort:` frontmatter | **Always the session model at session effort — a `model` override is ignored** |
+| **Prompt cache** | Own cold cache — the cache-safe home for pins | Shares the parent's cache prefix |
+| **Authored where** | SKILL.md / command frontmatter | Nowhere — runtime-only (Agent tool call or user-typed `/subtask`); an on-disk agent definition cannot be a fork |
+
+#### `context: fork` — run a skill in an isolated subagent
 
 Use `context: fork` to run skills in an **isolated sub-agent context**:
 
@@ -298,8 +311,9 @@ Use `context: fork` to run skills in an **isolated sub-agent context**:
 ---
 name: code-analyzer
 description: Analyze code patterns and generate reports
-context: fork          # Isolated execution
+context: fork          # Isolated execution — fresh context, NO conversation history
 agent: Explore         # Use fast read-only agent
+background: false      # Optional (default true, v2.1.218+); false blocks the invoking turn
 ---
 ```
 
@@ -308,6 +322,12 @@ agent: Explore         # Use fast read-only agent
 - Multi-step operations that would clutter context
 - Complex workflows where only the summary matters
 
+**Landmines (official docs):**
+- The skill body becomes the subagent's entire prompt. A guidelines-only skill ("use these API conventions") forked this way returns nothing useful — `context: fork` fits only skills that state a **task**.
+- **Backgrounded forked skills run with the narrower background-subagent tool set** (the conversation-fork tool exemption does not cover them). If a step needs a tool outside that set, set `background: false`.
+- A backgrounded forked skill's edits land outside session checkpoints — `/rewind` cannot undo them; revert via git.
+- Model-invoked skills may not honour `context: fork` (github.com/anthropics/claude-code issue #17283) — when isolation is load-bearing, pair it with `disable-model-invocation: true` so only user invocation (which honours the fork) can trigger the skill.
+
 **Agent options for `context: fork`:**
 | Agent | Model | Tools | Use Case |
 |-------|-------|-------|----------|
@@ -315,6 +335,21 @@ agent: Explore         # Use fast read-only agent
 | `Plan` | Sonnet | Read-only | Research before planning |
 | `general-purpose` | Sonnet | All | Complex tasks with edits |
 | Custom agent | Per config | Per config | Domain-specific work |
+
+#### Conversation forks (`subagent_type: "fork"`, `/subtask`)
+
+A conversation fork inherits the whole conversation and the parent's prompt cache, runs in the background, and returns only its final result. Official heuristic: fork *"when a named subagent would need too much background to be useful, or when you want to try several approaches in parallel from the same starting point."*
+
+Facts that matter when authoring instructions (verified against official docs + a live fork test, 2026-08-14):
+
+- **Model/effort pins are impossible.** A `model` override on a fork is ignored; the fork bills the session model at session effort. The only lever for a cheaper or pinned model is a named subagent — and the trade-offs never combine: cache-sharing requires the parent model, a cheap model requires a cold start.
+- **Cost shape:** the fork's first request reads the parent's cache (~0.1× input rate) — officially "cheaper than spawning a fresh subagent for tasks that need the same context" — but the floor cost scales with conversation length at parent-model rates (live measurement: ~151k tokens for a trivial 120-word fork reply in a long session). Reserve forks for context-entangled work; never fork small tasks.
+- **Tools:** forks skip the subagent tool-narrowing filters and receive the main conversation's exact tool pool (interactive-only tools such as AskUserQuestion are still stripped from every subagent).
+- **Bounds:** a fork cannot spawn another fork; at the subagent depth limit its inherited Agent tool errors instead of spawning. To bar forks, use the permission deny rule `Agent(fork)` — the `CLAUDE_CODE_FORK_SUBAGENT=0` env var does not propagate to subagents (github.com/anthropics/claude-code issue #68619).
+- **Mode coupling:** fork mode (default-on in interactive sessions since v2.1.232; off in `-p`/SDK unless `CLAUDE_CODE_FORK_SUBAGENT=1`) also makes **all** Claude-spawned subagents run in the background and removes the Agent tool's `run_in_background` parameter.
+- **Related surfaces:** user-typed `/subtask` starts a fork (v2.1.212+); `/branch` copies the transcript into a new session you drive yourself (explore-and-steer, vs a fork you delegate); the Agent SDK equivalent is `forkSession: true` / `fork_session=True`.
+
+Cache/cost detail for both mechanisms: `references/cache-and-token-efficiency.md`. Fork-vs-named-subagent decision guidance: the Agent vs Skill Decision Matrix below.
 
 ### Effort Level Override
 
@@ -488,6 +523,17 @@ hooks:
 - Complex multi-step operations
 - Want isolated context for cleaner main conversation
 
+**Use a Conversation Fork (`subagent_type: "fork"`) When:**
+- The task needs the session's accumulated context and re-briefing would be long or lossy
+- Trying several approaches in parallel from the same starting point
+- The work needs the full main-session tool pool
+- The session model is right for the work anyway (forks cannot be model-pinned)
+
+**Use a Fresh Named Subagent Instead When:**
+- A cheaper or effort-pinned model is wanted — the only lever; forks ignore overrides
+- A short brief suffices, or tool restriction is a safety property
+- The session history is very long (fork read cost scales with it)
+
 ### Summary Table
 
 | Feature | Agent | Skill | Command |
@@ -596,7 +642,7 @@ Detailed guides in `references/` subdirectory:
 - **claude-fable-5-compatibility.md**: Fable 5 deltas (brevity-first/removal-first authoring, reasoning-extraction refusal trap, proactivity boundaries, autonomy/checkpoint patterns, subagent bounds, progress-audit scaffold) + cross-model effort calculus, safeguard/refusal mechanics, Fable 5 migration audit checklist (steps 8–13), failure modes, research sources
 - **claude-opus-5-compatibility.md**: Opus-tier guide (CURRENT) — Opus 5 deltas (three removal targets: verification scaffolds, self-correction nudges, review severity pre-filters; effort↮length decoupling; scope/delegation bounds; thinking-disabled artifact mitigations; effort re-baseline incl. `max` tier) + 9-step migration audit checklist with behavioural A/B prompt-debt method, failure modes, field reports, sources
 - **claude-opus-4-8-compatibility.md**: Opus-tier guide (superseded by Opus 5) — 4.8 deltas (effort recalibration, native honesty, tool triggering, dynamic workflows) + the literal-interpretation Core Rules rationale with before/after examples, "scaffolding to remove" table, 7-step migration audit checklist, common failure modes, research sources
-- **cache-and-token-efficiency.md**: How instruction design interacts with CC's prompt cache — the (model, effort) cache key, the main-thread pin double cache-bust with cost math, the subagent-only rule for pinned skills, safe-pattern table, and other cache-relevant authoring decisions (skill body size, MCP deferral, CLAUDE.md mid-session edits)
+- **cache-and-token-efficiency.md**: How instruction design interacts with CC's prompt cache — the (model, effort) cache key, the main-thread pin double cache-bust with cost math, the subagent-only rule for pinned skills, safe-pattern table, conversation-fork vs named-subagent cache economics, and other cache-relevant authoring decisions (skill body size, MCP deferral, CLAUDE.md mid-session edits)
 - **yaml-frontmatter-complete-guide.md**: All valid fields and options (COMPREHENSIVE)
 - **agent-vs-skill-decision-guide.md**: Complete decision matrix for agents vs skills
 - **rules-and-content-placement-guide.md**: CLAUDE.md, rules, skills placement decisions

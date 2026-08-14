@@ -227,6 +227,8 @@ hooks:                              # Optional: lifecycle hooks scoped to skill
 - **Format:** String
 - **Purpose:** Set to `fork` to run skill in isolated sub-agent context
 - **Value:** `fork` (only valid value)
+- **⚠️ Naming trap:** despite the word "fork", this is NOT a conversation fork. The skill body seeds a **fresh** subagent — official docs: "It won't have access to your conversation history." The Agent tool's `subagent_type: "fork"` (a runtime-only conversation fork inheriting full history, session model forced) is a different mechanism with no frontmatter representation. See SKILL.md § "Forking — Two Distinct Mechanisms".
+- **⚠️ Model-invocation caveat:** skills invoked programmatically via the Skill tool may not honour `context: fork` (github.com/anthropics/claude-code issue #17283) — when isolation is load-bearing, pair with `disable-model-invocation: true`.
 - **Benefits:**
   - Keeps verbose output in separate context
   - Enables complex workflows without cluttering main conversation
@@ -242,6 +244,15 @@ hooks:                              # Optional: lifecycle hooks scoped to skill
   - `general-purpose` - Full capability (Sonnet)
   - Custom agent name from `~/.claude/agents/`
 - **Default:** `general-purpose` if not specified
+
+#### `background` (Optional)
+- **Format:** Boolean
+- **Purpose:** Whether a `context: fork` skill runs in the background (non-blocking) or blocks the invoking turn
+- **Values:** `true` (default) or `false`
+- **Requirement:** Only meaningful with `context: fork`; requires CC v2.1.218+ (earlier versions always block)
+- **⚠️ Gotchas (official docs):**
+  - Backgrounded forked skills run with the **narrower background-subagent tool set** (the conversation-fork exemption does not apply) — set `background: false` if a step needs a tool outside it
+  - A backgrounded forked skill's edits land outside session checkpoints: `/rewind` cannot undo them; revert via git
 
 #### `user-invocable` (Optional)
 - **Format:** Boolean
@@ -334,6 +345,7 @@ hooks:                                  # Optional: lifecycle hooks
 - **Format:** String
 - **Purpose:** Set to `fork` to run command in isolated sub-agent context
 - **Value:** `fork`
+- **⚠️ Naming trap + model-invocation caveat:** same as the skill `context` field above — a fresh subagent with no conversation history, not a conversation fork
 
 #### `agent` (Optional)
 - **Format:** Agent type identifier
@@ -341,6 +353,9 @@ hooks:                                  # Optional: lifecycle hooks
 - **Requirement:** Only works when `context: fork` is also set
 - **Values:** `Explore`, `Plan`, `general-purpose`, or custom agent name
 - **Default:** `general-purpose`
+
+#### `background` (Optional)
+- **Format:** Boolean — same mechanism and gotchas as the skill `background` field above; only meaningful with `context: fork` (v2.1.218+, default `true`)
 
 #### `disable-model-invocation` (Optional)
 - **Format:** Boolean
@@ -460,6 +475,8 @@ Is your skill/command doing complex work?
 - Operations that benefit from isolated context window
 - Complex workflows where only the summary matters
 
+**`context: fork` vs a conversation fork:** `context: fork` starts a FRESH subagent seeded with the skill body — no conversation history. The Agent tool's `subagent_type: "fork"` / user-typed `/subtask` is the opposite: full history, session model forced (pins ignored), shared prompt cache — and it cannot be authored in frontmatter at all. Choose `context: fork` for self-contained pinned/isolated work; a conversation fork for context-entangled delegation. Full comparison: SKILL.md § "Forking — Two Distinct Mechanisms".
+
 ---
 
 ## Quick Reference Tables
@@ -487,8 +504,9 @@ Is your skill/command doing complex work?
 | `allowed-tools` | No | None | Tools without permission |
 | `model` | No | Inherit | Model override |
 | `effort` | No | Inherit | low/medium/high/xhigh effort override |
-| `context` | No | None | `fork` for isolation |
+| `context` | No | None | `fork` for isolation (fresh subagent — NOT a conversation fork) |
 | `agent` | No | `general-purpose` | Agent type (requires context: fork) |
+| `background` | No | `true` | `false` blocks the invoking turn (requires context: fork, v2.1.218+) |
 | `user-invocable` | No | `true` | Show in /menu |
 | `disable-model-invocation` | No | `false` | Block programmatic invocation |
 | `hooks` | No | None | Lifecycle hooks |
@@ -502,8 +520,9 @@ Is your skill/command doing complex work?
 | `argument-hint` | No | - | Expected parameters |
 | `model` | No | Inherit | Model override |
 | `effort` | No | Inherit | low/medium/high/xhigh effort override |
-| `context` | No | None | `fork` for isolation |
+| `context` | No | None | `fork` for isolation (fresh subagent — NOT a conversation fork) |
 | `agent` | No | `general-purpose` | Agent type (requires context: fork) |
+| `background` | No | `true` | `false` blocks the invoking turn (requires context: fork, v2.1.218+) |
 | `disable-model-invocation` | No | `false` | Block programmatic invocation |
 | `hooks` | No | None | Lifecycle hooks |
 

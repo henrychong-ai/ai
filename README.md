@@ -46,7 +46,7 @@ Bundled knowledge packages with reference materials. Copy entire folder to `~/.c
 | [gemini-gem-creator](claude-code/skills/gemini-gem-creator/) | Create and convert Gemini Custom Gems |
 | [go](claude-code/skills/go/) | Go development specialist for backends, APIs, CLI tools |
 | [images](claude-code/skills/images/) | Image processing and manipulation |
-| [instruction-creator](claude-code/skills/instruction-creator/) | Create Claude instruction files (agents, skills, commands, MCP servers) and package skills for Claude Desktop upload (CD-S/CD-P, sanitization, cross-platform conversion) |
+| [instruction-creator](claude-code/skills/instruction-creator/) | Create Claude instruction files (agents, skills, commands, MCP servers) and package skills for Claude Desktop upload (CD-S/CD-P, sanitization, fork subagents, cross-platform conversion) |
 | [lint](claude-code/skills/lint/) | Linting and formatting setup for TypeScript/JavaScript projects |
 | [pdf](claude-code/skills/pdf/) | PDF manipulation toolkit (extract, create, merge, split, forms) |
 | [typescript](claude-code/skills/typescript/) | TypeScript development specialist with Cloudflare Workers, React, Node.js patterns |

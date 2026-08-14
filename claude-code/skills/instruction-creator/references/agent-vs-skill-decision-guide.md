@@ -131,6 +131,14 @@ Need instruction capability?
 
 ---
 
+## Conversation Forks — a Third Delegation Shape
+
+Beyond named agents and `context: fork` skills, the Agent tool can spawn a **conversation fork** (`subagent_type: "fork"`; user-typed `/subtask`): a background subagent inheriting the entire conversation, always on the session model (pins ignored), sharing the parent's prompt cache. Official heuristic: fork "when a named subagent would need too much background to be useful, or when you want to try several approaches in parallel from the same starting point."
+
+Forks are runtime-only — there is nothing to author on disk — so their place in this guide is as a decision alternative: before creating a new agent for context-heavy one-off delegation, consider whether a fork already covers it. Create a named agent when the work recurs, needs a cheaper/pinned model, or needs tool restriction as a safety property. Full mechanics: SKILL.md § "Forking — Two Distinct Mechanisms" + `cache-and-token-efficiency.md`.
+
+---
+
 ## Common Scenarios
 
 ### Scenario 1: File Format Operations (PDF, XLSX, DOCX)
@@ -282,5 +290,5 @@ When creating skills for cross-platform sharing:
 
 ---
 
-**Last Updated:** 2025-11-26
+**Last Updated:** 2026-08-14 (conversation forks section added)
 **Use Case:** Decision guidance for instruction file type selection

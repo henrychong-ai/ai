@@ -1,6 +1,6 @@
 # Cache Safety & Token Efficiency (Claude Code)
 
-*How instruction-file design decisions interact with Claude Code's prompt cache. Verified 2026-06-10 against the official CC docs (code.claude.com: prompt-caching, model-config, skills frontmatter reference), the platform API caching docs, and the CC v2.1.170 binary.*
+*How instruction-file design decisions interact with Claude Code's prompt cache. Verified 2026-06-10 against the official CC docs (code.claude.com: prompt-caching, model-config, skills frontmatter reference), the platform API caching docs, and the CC v2.1.170 binary. Fork rows re-verified 2026-08-14 against the current sub-agents / skills / prompt-caching docs plus a live fork test.*
 
 ## The cache model in one paragraph
 
@@ -30,12 +30,22 @@ Nuances:
 |---|---|---|
 | **No pin (inherit)** | none — skill invocation appends a user message; nothing earlier changes | DEFAULT for every main-thread skill/command |
 | **Pin on an AGENT** (`agents/*.md`) | none on the main thread — agents always execute as subagents with their own conversation and own cache (5m TTL) | the natural home for model/effort pins |
-| **Pinned skill forced into a subagent** (`context: fork` + `agent:`) | parent cache untouched; the fork inherits the full history, so a pinned fork pays ONE cold re-read inside the fork — no exit re-read, no parent pollution | a pinned skill that needs conversation context |
+| **Pinned skill forced into a subagent** (`context: fork` + `agent:`) | parent cache untouched; the skill body seeds a FRESH subagent with NO conversation history (official: "It won't have access to your conversation history"), so the pin runs against a short cold prefix — no exit re-read, no parent pollution | the standard home for a pinned skill |
 | **Pinned skill/command on the main thread** | double cache-bust per invocation (table above) | the anti-pattern — avoid |
 
 **Rule: a skill or command with a hardcoded `model:` or `effort:` must always run as a subagent.** Either author it as an agent, or set `context: fork` (+ `agent:`) in the same frontmatter so the pin can never touch the main conversation's cache. A main-thread pin is never "free": it taxes the entire session to discount one skill.
 
 (`CLAUDE_CODE_SUBAGENT_MODEL` is the operator-side equivalent — it overrides all subagent models without touching the main thread.)
+
+**Correction (2026-08-14):** an earlier revision of the table above claimed a `context: fork` skill inherits the full conversation history. Wrong — that behaviour belongs to conversation forks (next section); `context: fork` subagents start fresh, which is precisely why they are the cache-safe home for pins. A pinned forked skill that needs conversation facts must receive them explicitly in its invocation arguments.
+
+## Conversation forks (`subagent_type: "fork"` / `/subtask`) and the cache
+
+A conversation fork inherits the parent's system prompt, tools, and history **byte-identically**, so its first request reads the parent's cache at the 0.1× rate — officially "cheaper than spawning a fresh subagent for tasks that need the same context". A named subagent starts cold on its own cache (5-minute TTL) and never reads the parent's.
+
+- **Floor cost ≈ parent context size at parent-model (cache-read) rates.** Measured live 2026-08-14: a trivial fork in a long session consumed ~151k tokens to return 120 words with zero tool calls. Cheap *relative to* rebuilding equivalent context cold; never cheap in absolute terms — don't fork small tasks.
+- **Forks cannot be model- or effort-pinned** — `model` overrides are ignored, and forks are runtime-only (no frontmatter). The cache-sharing and cheap-model levers are mutually exclusive: cache reuse requires a byte-identical prefix on the same model; a cheaper model requires a named subagent's cold start.
+- **Decision rule:** fork when context-transfer cost is the problem being solved (re-briefing would be long or lossy, or several approaches should launch from the same starting point); named pinned subagent when volume or model cost is the constraint.
 
 ## Other authoring decisions with cache consequences
 
@@ -50,6 +60,8 @@ All verified against the CC prompt-caching doc:
 ## Sources
 
 - code.claude.com/docs/en/prompt-caching — the (model, effort) cache keys, full invalidation/keep lists, TTL policy (1h subscription main thread / 5m subagents), subagent-vs-fork cache behaviour
+- code.claude.com/docs/en/sub-agents — conversation-fork definition ("inherits the entire conversation so far"), fork-vs-named comparison table, "cheaper than spawning a fresh subagent for tasks that need the same context", fork-mode defaults + `Agent(fork)` deny rule
+- code.claude.com/docs/en/skills — `context: fork` runs the skill body in a fresh subagent with no conversation history; `background:` field (v2.1.218+)
 - code.claude.com/docs/en/skills — frontmatter reference: `model:` override is turn-scoped on the main thread, reverts next prompt
 - code.claude.com/docs/en/model-config — `/model` picker warning ("the next response re-reads the full history without cached context"); `/effort` confirmation dialog; automatic Fable→Opus fallback is a model switch
 - platform.claude.com/docs/en/build-with-claude/prompt-caching — prefix matching, model-bound cache, 1.25×/2× write and 0.1× read multipliers
