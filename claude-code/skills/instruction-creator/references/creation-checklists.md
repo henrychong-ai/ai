@@ -94,20 +94,20 @@ Detailed guidance for choosing where content belongs. Each entry shows what SHOU
 
 ## Model × Effort Selection Analysis Framework
 
-Model and effort are **one joint decision**, not two — effort labels are model-relative (Fable 5 at `medium` outperforms every other model at any effort level; even Fable `low` often exceeds prior models' `xhigh`). Pinning either remains the exception: omit both by default and inherit the session.
+Model and effort are **one joint decision**, not two — effort labels are model-relative (Fable 5.1 at `medium` scores about level with Fable 5 at `xhigh` on FrontierCode at roughly half the cost per task; Anthropic reported Fable 5 at `medium` outperforming every other model at any effort level). Pinning either remains the exception: omit both by default and inherit the session.
 
 ### 5-Point Analysis
 For each new agent/skill, evaluate:
 1. **Complexity Level**: Simple patterns vs multi-step reasoning
 2. **Decision-Making Needs**: Rule-based vs judgment-based
 3. **Context Requirements**: Small focused tasks vs large context analysis
-4. **Performance Needs**: Speed-critical vs quality-critical (Fable 5's first token can take ~a minute — capability and latency now trade off explicitly)
-5. **Cost Considerations**: Usage frequency and budget (Fable 5 is 2× Opus per token, partially offset by fewer tokens at lower effort — measure, don't assume)
+4. **Performance Needs**: Speed-critical vs quality-critical (Fable's first token can still take ~a minute on 5.1 — capability and latency trade off explicitly)
+5. **Cost Considerations**: Usage frequency and budget (Fable is 2× Opus per token, but cache reads on Fable 5.1 are half Opus 5's, and 5.1 is cheaper per task than Opus 5 at low to high effort on coding, so measure cost per task, not per token)
 
 ### Model Capabilities
 | Model | Strengths | Use When |
 |-------|-----------|----------|
-| `fable` | Frontier reasoning, hardest long-horizon/agentic work, first-shot correctness on complex problems | Genuinely hard, latency-tolerant work where capability dominates; 2× Opus cost, slow first token |
+| `fable` | Frontier reasoning, hardest long-horizon/agentic work, first-shot correctness on complex problems | Genuinely hard, latency-tolerant work where capability dominates; 2× Opus per token but cheaper per task than Opus 5 at low to high effort on coding; cache reads $0.25/MTok on 5.1; slow first token |
 | `opus` | Complex reasoning, strategic analysis, nuanced judgment, multi-step workflows | Compliance analysis, strategic planning, architectural decisions; routine traffic that still needs depth |
 | `sonnet` | General-purpose, balanced performance, most technical tasks | Code generation, code review, general technical work |
 | `haiku` | Fast responses, simple patterns, rule-based operations, high-volume | File format detection, batch processing, quick lookups |
@@ -115,9 +115,9 @@ For each new agent/skill, evaluate:
 ### Joint Model × Effort Routing
 | Dominant constraint | Pick |
 |---|---|
-| Capability ceiling, latency-tolerant | `fable` at `high` (default) — and note `fable` at `medium`/`low` can beat `opus` at `xhigh`, sometimes at comparable cost |
-| Latency-sensitive / interactive | `opus` or smaller — Fable is slow at any effort |
-| Routine high-volume | `opus` / `sonnet` / `haiku` per the rows above — official routing: hard, long-horizon jobs → Fable; routine traffic → Opus-or-smaller |
+| Capability ceiling, latency-tolerant | Fable 5.1 at `high` (default) — and note `fable` at `medium`/`low` can beat `opus` at `xhigh`, often at lower cost per task |
+| Latency-sensitive / interactive | `opus` or smaller — Fable 5.1 is still slow to first token at any effort |
+| Routine high-volume | `opus` / `sonnet` / `haiku` per the rows above — official routing: hard, long-horizon jobs → Fable 5.1; routine traffic → Opus-or-smaller. Include Fable 5.1 at `low`/`medium` in the cost-per-task comparison: it often scores higher than Opus and Sonnet at competitive cost per task |
 | **Cache safety (mid-session)** | Pins are cache-safe only in subagent contexts — the CC cache is keyed by (model, effort), so a main-thread skill/command pin double cache-busts the session. Agents: safe by construction. Pinned skills/commands: MUST set `context: fork`. Detail: `cache-and-token-efficiency.md` |
 
 ### Model Priority Order (highest to lowest)

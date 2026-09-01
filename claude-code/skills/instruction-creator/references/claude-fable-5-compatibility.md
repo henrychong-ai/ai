@@ -4,6 +4,7 @@
 
 **Fable 5 released:** 2026-06-09 (12 days after Opus 4.8)
 **Last updated:** 2026-06-10
+**Superseded for current authoring by `claude-fable-5-1-compatibility.md` (2026-09-01); Parts 1 to 3 remain the base that the 5.1 file extends.**
 **Pricing:** $10 / $50 per MTok — 2× Opus 4.8. **Model ID:** `claude-fable-5` (Claude Code runs the 1M-context variant, shown as `claude-fable-5[1m]`). **Claude Code alias:** `fable`.
 
 Fable 5 is a **new tier above Opus**, not an Opus replacement: Haiku (speed) → Sonnet (balance) → Opus (hard problems) → **Fable (frontier, long-horizon)**. It is the first public Mythos-class model — `claude-mythos-5` carries the same weights but is restricted to vetted partners; Fable 5 is the public version with safeguard classifiers that route ~5% of triggering requests to an Opus 4.8 fallback. 1M context, 128K max output, January 2026 cutoff.
@@ -147,7 +148,7 @@ Fable 5 ships with always-on safety classifiers (the price of public Mythos-clas
 | `bio` | dangerous lab methods / molecular mechanisms | beneficial life-science work can false-positive (medical-analysis skills largely unaffected; wet-lab method detail is the trigger zone) |
 | `reasoning_extraction` | prompts asking the model to reproduce internal reasoning in response text | see Part 2.1 — this is the one skill authors *cause* themselves; remove show-your-thinking instructions |
 
-Refusals surface as `stop_reason: "refusal"` with a category. **Fallback:** API authors can configure automatic retry on Opus 4.8 (server-side `fallbacks` parameter, beta, or client-side middleware — see `/claude-api` and the refusals-and-fallback docs). In Claude Code the harness handles this; the authoring job is simply not to write trap instructions (2.1) and to know security-domain skills may occasionally route to 4.8.
+Refusals surface as `stop_reason: "refusal"` with a category. **Fallback:** API authors can configure automatic retry on a permitted target (server-side `fallbacks` parameter, beta, or client-side middleware — see `/claude-api` and the refusals-and-fallback docs); on the 5.x line the targets are Opus 4.8 for cyber and Opus 5 for bio. In Claude Code the harness handles this; the authoring job is simply not to write trap instructions (2.1) and to know security-domain skills may occasionally route to 4.8.
 
 ---
 
@@ -231,7 +232,7 @@ Extends the Opus 4.8 checklist (run that first for anything not yet 4.8-clean �
 - Refusals and fallback (classifier + fallback mechanics): https://platform.claude.com/docs/en/build-with-claude/refusals-and-fallback
 - Claude Code model configuration: https://code.claude.com/docs/en/model-config
 - Simon Willison first impressions (2026-06-09, "a beast"; proactivity + guardrail observations): https://simonwillison.net/2026/Jun/9/claude-fable-5/
-- System card: 319 pp, published 2026-06-09 — **no public PDF located as of 2026-06-10**; findings here (evaluation awareness §2.9, alignment-similar-to-4.8, medium-effort benchmark claim) are via the announcement, docs citations, and secondary coverage. If the PDF surfaces, fold a deeper pass into this file.
+- System card: 319 pp, published 2026-06-09 — **no public PDF located as of 2026-06-10** (unlike the Fable 5.1 card, whose PDF is public: see `claude-fable-5-1-compatibility.md`); findings here (evaluation awareness §2.9, alignment-similar-to-4.8, medium-effort benchmark claim) are via the announcement, docs citations, and secondary coverage. If the PDF surfaces, fold a deeper pass into this file.
 
 **Lineage:**
 - Opus 4.8 deltas and the 8 Core Rules' rationale: `claude-opus-4-8-compatibility.md` (this directory)

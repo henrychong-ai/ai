@@ -4,7 +4,7 @@
 
 **Opus 5 released:** July 2026 (CC `opus` alias resolves to it as of 2026-07-25)
 **Last updated:** 2026-08-03
-**Pricing:** $5 / $25 per MTok — unchanged from Opus 4.8; half of Fable 5. **Model ID:** `claude-opus-5`. **Claude Code alias:** `opus`.
+**Pricing:** $5 / $25 per MTok — unchanged from Opus 4.8; half of Fable 5 (cache reads: Opus 5 $0.50/MTok versus Fable 5.1 $0.25, half the Opus rate; Fable 5 was $1). **Model ID:** `claude-opus-5`. **Claude Code alias:** `opus`.
 
 Opus 5 is a **step-change Opus-tier release** (Anthropic's words), not an incremental one: the largest gains are deep reasoning, agentic/long-horizon coding, test-time compute scaling, and efficiency at lower effort. Tier map unchanged: Haiku (speed) → Sonnet (balance) → **Opus (hard problems, workhorse)** → Fable (frontier, long-horizon). 1M context (default AND maximum — no smaller variant), 128K max output.
 

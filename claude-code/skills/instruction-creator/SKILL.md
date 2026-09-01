@@ -7,21 +7,22 @@ description: "Architect for Claude instruction ecosystems (agents, skills, slash
 
 This skill provides complete guidance for creating and reviewing Claude instruction files across the entire instruction ecosystem.
 
-**Updated:** 2026-08-14 — Fork subagents: "Forking — Two Distinct Mechanisms" disambiguation (conversation forks `subagent_type: "fork"`/`/subtask` vs `context: fork` frontmatter), fork delegation calculus (forks cannot be model/effort-pinned), `background:` frontmatter field, cache-reference correction (`context: fork` skills receive NO conversation history), Fable 5 fork-economics delta, CC→Codex fork mapping. 2026-08-03 — Opus 5 compatibility reference added (`references/claude-opus-5-compatibility.md`): removal-first reaches the Opus tier (verification scaffolds, self-correction nudges, review severity pre-filters now hurt), effort↮length decoupling, thinking-on-by-default mechanics, behavioural A/B prompt-debt audit. 2026-06-16 — CC→Codex conversion guide added (`references/cc-to-codex-conversion-guide.md` + `templates/cc-to-codex-assessment-template.md`): mechanic map, T1/T2/T3 tiers, Tier-A/B distribution decision, data + harness-tool gates. 2026-06-10 — Fable 5 (released 2026-06-09; **new tier above Opus**, not an Opus replacement) multi-model restructure; per-model deltas now live in `references/claude-<model>-compatibility.md` (supersedes the single-model 4.8 pass, 2026-05-30). Same day: cache-safety & token-efficiency rules — the CC prompt cache is keyed by (model, effort), so model/effort pins belong in subagent contexts only (`references/cache-and-token-efficiency.md`).
+**Updated:** 2026-09-01 — Fable 5.1 (rel. 2026-09-01) delta pass: `references/claude-fable-5-1-compatibility.md` added (9 behavioural deltas, harness-injected vs author-owned rule, effort/cost calculus, safeguards/fallback, system-card authoring findings); models table, effort ladder (`max` added), cache math, and checklists refreshed. 2026-08-14 — Fork subagents: "Forking — Two Distinct Mechanisms" disambiguation (conversation forks `subagent_type: "fork"`/`/subtask` vs `context: fork` frontmatter), fork delegation calculus (forks cannot be model/effort-pinned), `background:` frontmatter field, cache-reference correction (`context: fork` skills receive NO conversation history), Fable 5 fork-economics delta, CC→Codex fork mapping. 2026-08-03 — Opus 5 compatibility reference added (`references/claude-opus-5-compatibility.md`): removal-first reaches the Opus tier (verification scaffolds, self-correction nudges, review severity pre-filters now hurt), effort↮length decoupling, thinking-on-by-default mechanics, behavioural A/B prompt-debt audit. 2026-06-16 — CC→Codex conversion guide added (`references/cc-to-codex-conversion-guide.md` + `templates/cc-to-codex-assessment-template.md`): mechanic map, T1/T2/T3 tiers, Tier-A/B distribution decision, data + harness-tool gates. 2026-06-10 — Fable 5 (released 2026-06-09; **new tier above Opus**, not an Opus replacement) multi-model restructure; per-model deltas now live in `references/claude-<model>-compatibility.md` (supersedes the single-model 4.8 pass, 2026-05-30). Same day: cache-safety & token-efficiency rules — the CC prompt cache is keyed by (model, effort), so model/effort pins belong in subagent contexts only (`references/cache-and-token-efficiency.md`).
 
 ## ⚠️ Model-Aware Instruction Authoring (MANDATORY)
 
-Frontier Claude models follow instructions literally and strongly — and each release shifts *how* to author for them. The 8 Core Rules below are **durable**: they originated with Opus 4.7 and apply unchanged through Opus 4.8 and Fable 5. Per-model behavioural deltas live in the compatibility references — **load the matching file whenever auditing or authoring for a specific model**; for instructions consumed by mixed/unknown models, author to the Core Rules + the brevity-first/removal-first principle (established by Fable 5, extended to the Opus tier by Opus 5).
+Frontier Claude models follow instructions literally and strongly — and each release shifts *how* to author for them. The 8 Core Rules below are **durable**: they originated with Opus 4.7 and apply unchanged through Opus 4.8, Fable 5, and Fable 5.1. Per-model behavioural deltas live in the compatibility references — **load the matching file whenever auditing or authoring for a specific model**; for instructions consumed by mixed/unknown models, author to the Core Rules + the brevity-first/removal-first principle (established by Fable 5, extended to the Opus tier by Opus 5).
 
 ### Current Models → Compatibility References
 
 | Model | Role | CC alias | Reference |
 |---|---|---|---|
-| **Fable 5** (`claude-fable-5`, rel. 2026-06-09) | Frontier tier above Opus — hard, long-horizon work; $10/$50 per MTok (2× Opus) | `fable` | `references/claude-fable-5-compatibility.md` |
+| **Fable 5.1** (`claude-fable-5-1`, rel. 2026-09-01) | Frontier tier above Opus — hard, long-horizon work; $10/$50 per MTok (2× Opus), cache reads $0.25/MTok | `fable` | `references/claude-fable-5-1-compatibility.md` (layered on the Fable 5 file) |
+| Fable 5 (`claude-fable-5`, rel. 2026-06-09) | Superseded — Fable 5.1 is drop-in; Fable 5 file retained as the base (Parts 1–3) that the 5.1 file extends | — | `references/claude-fable-5-compatibility.md` |
 | **Opus 5** (`claude-opus-5`, rel. July 2026) | Opus-tier workhorse — step-change over 4.8; agentic coding, review, routine traffic; $5/$25 per MTok (unchanged) | `opus` | `references/claude-opus-5-compatibility.md` |
 | Opus 4.8 (`claude-opus-4-8`) and earlier | Superseded — migrate using the Opus 5 file; 4.8 file retained for Core Rules rationale (Part 1) | — | `references/claude-opus-4-8-compatibility.md` |
 
-### Core Rules (durable across Opus 4.7/4.8, Fable 5, and Opus 5)
+### Core Rules (durable across Opus 4.7/4.8, Fable 5.x, and Opus 5)
 
 | Rule | One-liner |
 |------|-----------|
@@ -34,20 +35,36 @@ Frontier Claude models follow instructions literally and strongly — and each r
 | **7. Calibrate length to task** | Replace "< N lines" caps with "match length to task complexity" |
 | **8. Specify tone positively** | If you want warmth, say "respond in a friendly, encouraging tone" |
 
-### Fable 5 Headline Deltas (vs Opus 4.8) — author/audit deltas
+### Fable 5 Headline Deltas (vs Opus 4.8) — base, still apply on Fable 5.1
 
 One API break (thinking cannot be disabled — explicit `disabled` 400s; omit the param). The behavioural shifts that change how you author:
 
 | Delta | What changed | What to do in instructions |
 |---|---|---|
 | **Brevity-first / removal-first** | brief instructions steer most behaviours; legacy prescriptive skills are "often too prescriptive… can degrade output quality" | Collapse don't-lists into one coherent positive instruction; **test default behaviour before keeping any scaffold** |
-| **⚠️ Reasoning-extraction refusals** | "show your thinking / repeat your reasoning" instructions trigger `reasoning_extraction` refusals (fallback → Opus 4.8) | **Audit and remove** from every skill/agent/command — the one refusal authors cause themselves |
+| **⚠️ Reasoning-extraction refusals** | "show your thinking / repeat your reasoning" instructions trigger `reasoning_extraction` refusals (fallback → Opus 4.8 or Opus 5) | **Audit and remove** from every skill/agent/command — the one refusal authors cause themselves |
 | **More proactive / elaborative** | unrequested actions and scope creep without steering | Add one brief boundary instruction where scope discipline matters ("assessment vs fix", "simplest thing that works") |
 | **Pauses / checkpoints more often** | checks in early in long sessions; rare text-only early stops | Autonomous skills: explicit autonomy language + positive pause criteria (destructive ops, scope changes, user-only input) |
 | **Eager, dependable subagents** | dispatches readily; sustains parallel/long-running subagents | Keep fan-out bounds (caps, dedup, single-writer apply); drop "remember to delegate" reminders |
 | **Long runs, evidence-anchored** | minutes–hours at high effort; progress fabrication ~eliminated by an audit instruction | Long-run agents: add audit-claims-against-tool-results + final-message re-grounding; long waits → background tasks |
 
 4.8's deletions stay deleted on Fable 5 (honesty nudges, tool-call reminders, forced progress summaries, manual thinking control) — do not reintroduce.
+
+### Fable 5.1 Headline Deltas (vs Fable 5) — author/audit deltas
+
+Drop-in: Anthropic says Fable 5 prompts "should perform well on Claude Fable 5.1 without changes", and cache reads now cost a quarter of the Fable 5 rate. Two API breaks matter: forced `tool_choice` (`any` / `tool`) now 400s, and thinking blocks are bound to both the producing model and the exact conversation prefix.
+
+| Delta | What changed | What to do in instructions |
+|---|---|---|
+| **Fewer progress updates** | writes less user-facing text during long tool chains, more so at higher effort | **Remove** "hold all findings for the final response" lines; add the opening-line/updates/recap line only where a human watches |
+| **One tool call per turn** | in coding and computer-use loops where the next reads are implied, not requested | Custom loops: append the per-turn batching nudge after each batch of tool results |
+| **Less chat formatting** | uses bold, headers, lists, and quotation marks less than earlier models | **Inverts the old anti-formatting doctrine**: remove those rules, add a positive when-to-format rule |
+| **Extras beyond the task** | unrequested fixes, adjacent-file edits, surplus test files, and this **rises with effort** (FrontierCode peaks at `medium`) | Coding skills: add the scope-and-test leave-out block plus a brevity line; re-baseline effort pins downward |
+| **Whole-file rewrites** | rewrites entire files for small edits more than Fable 5 | File-editing agents: add the surgical-edit line |
+| **Answers from memory at `low`** | calls search and retrieval tools less often at low effort | Raise effort for those turns, or add the search-verification nudge |
+| **Denser prose, unmarked quotations** | longer sentences, fewer paragraph breaks; reproduces source passages without marking them | Add the mannered-prose line; give summarising skills one complete quotation worked example |
+
+**Harness-injected on Claude Code:** version 2.1.257 already injects, verbatim, the over-planning block, the progress-updates line, both finish-the-task blocks (autonomy and "Delivering work"), the state-change caution, the terminal-output note, and the per-turn batching nudge. **Do not duplicate any of these in CLAUDE.md, rules, skills, or agents.** Duplication is a token tax on every turn and over-steers a model already carrying the instruction. Skills shipped to other surfaces (Claude Desktop and Team zips, Codex, Gemini, ChatGPT) receive none of them and must embed what they depend on. Full split and the author-owned list: Part 2A of `references/claude-fable-5-1-compatibility.md`.
 
 ### Opus 5 Headline Deltas (vs Opus 4.8) — author/audit deltas
 
@@ -73,27 +90,28 @@ Before rewriting any instruction file for a new model, isolate the failure behav
 Instruction file prose cannot escalate effort. Do not write "assume high effort" or "think deeply" in CLAUDE.md / SKILL.md body content. Effort is set via (priority order):
 - `CLAUDE_CODE_EFFORT_LEVEL` env var (highest priority)
 - `effort:` field in YAML frontmatter (per-skill/agent/command)
-- `/effort low|medium|high|xhigh` (per-session)
-- model default — `high` on Fable 5, Opus 5, and Opus 4.8
+- `/effort low|medium|high|xhigh|max` (per-session)
+- model default — `high` on Fable 5.1, Fable 5, Opus 5, Sonnet 5, and Opus 4.8
 
-Fable 5 recommendation: start `high` (the default), reserve `xhigh` for the most capability-sensitive workloads — the 4.8-era "xhigh for coding/agentic" rule does **not** carry over. Opus 5 recommendation: default `high`; use `low`/`medium` liberally as the primary cost/latency control wherever quality holds (Anthropic, official); step up to `xhigh`/`max` (API ladder) for demanding agentic coding. Re-baseline existing `effort:` pins on upgrade — run an effort sweep rather than carrying prior-model pins forward.
+Fable 5.x recommendation: start `high` (the default). On Fable 5.1, `medium` roughly matches Fable 5 at lower cost, and `low` is often competitive with Opus and Sonnet on cost per task while scoring higher; `xhigh`/`max` give the largest gains but add thinking time and, on coding, more out-of-scope edits. Re-run the effort sweep on 5.1 even if one was run on Fable 5: level names do not map to the same amount of thinking across models. The 4.8-era "xhigh for coding/agentic" rule does **not** carry over. Opus 5 recommendation: default `high`; use `low`/`medium` liberally as the primary cost/latency control wherever quality holds (Anthropic, official); step up to `xhigh`/`max` (API ladder) for demanding agentic coding. Re-baseline existing `effort:` pins on upgrade — run an effort sweep rather than carrying prior-model pins forward.
 
 ### Model × Effort Is ONE Decision (cross-model calculus)
 
-Effort labels are **not comparable across models**: Fable 5 at `medium` outperforms every other model at any effort level, and even Fable `low` often exceeds prior models' `xhigh` (Anthropic, official). When pinning model+effort for a subagent/skill, decide jointly:
+Effort labels are **not comparable across models**: Fable 5.1 at `medium` scores about level with Fable 5 at `xhigh` on FrontierCode at roughly half the cost per task, and Anthropic reported Fable 5 at `medium` outperforming every other model at any effort level. When pinning model+effort for a subagent/skill, decide jointly:
 
 | Dominant constraint | Better pick |
 |---|---|
-| Capability ceiling, latency-tolerant | **Fable 5 at modest effort** — `medium`/`low` can beat Opus-tier `xhigh`, often at less than the 2× sticker cost (fewer tokens at lower effort; measure, don't assume) |
+| Capability ceiling, latency-tolerant | **Fable 5.1 at modest effort** — `medium`/`low` can beat Opus-tier `xhigh`, often at less than the 2× sticker cost (fewer tokens at lower effort, and cache reads at a quarter of the Fable 5 rate; measure, don't assume) |
 | Latency-sensitive / interactive | **Opus 5 or smaller** — Fable's first token can take ~a minute regardless of effort |
-| Routine high-volume | **Opus 5 / Sonnet / Haiku** — official routing: hard, long-horizon jobs → Fable 5; routine traffic → Opus-or-smaller. Opus 5 at `low`/`medium` is the new cost-efficient workhorse point (strong quality at a fraction of the tokens; frontier intelligence at half Fable's price) |
+| Routine high-volume | **Opus 5 / Sonnet / Haiku** — official routing: hard, long-horizon jobs → Fable 5.1; routine traffic → Opus-or-smaller. Opus 5 at `low`/`medium` remains a cost-efficient workhorse point, but **Fable 5.1 at `low`/`medium` now belongs in the cost-per-task comparison** — per-task cost can land below Opus 5 at low to high effort |
 
 **Cache safety is the third axis.** The CC prompt cache is keyed by **(model, effort)** jointly — a main-thread pin of *either* forces a full uncached re-read of the conversation at activation and a partial re-read at revert, regardless of which direction you pin. Execute pinned instructions as subagents (see Model Configuration below); full mechanics + cost math: `references/cache-and-token-efficiency.md`.
 
 ### Deep Dive
 
 Per-model detail — full delta rationale, scaffolding to remove/add tables, migration audit checklists, failure modes, research sources:
-- **Fable 5:** `references/claude-fable-5-compatibility.md` (incl. effort calculus, safeguard/refusal mechanics, autonomy patterns)
+- **Fable 5.1:** `references/claude-fable-5-1-compatibility.md` (CURRENT frontier: the 5.1 deltas, harness-injected vs author-owned split, effort/cost calculus, safeguards and fallback, system-card authoring findings; layered on the Fable 5 file)
+- **Fable 5:** `references/claude-fable-5-compatibility.md` (the base the 5.1 file extends: brevity-first authoring, effort calculus, safeguard/refusal mechanics, autonomy patterns)
 - **Opus 5:** `references/claude-opus-5-compatibility.md` (incl. removal targets, official template snippets, thinking-disabled artifact mitigations, migration checklist, field reports)
 - **Opus 4.8:** `references/claude-opus-4-8-compatibility.md` (incl. the Core Rules rationale in Part 1)
 
@@ -144,7 +162,7 @@ All CLAUDE.md content loads into every message context — every token costs con
 - Optimise for AI comprehension, not human readability (human-readable is a bonus, not a goal)
 - No redundant phrasing ("Please note that...", "It is important to...")
 - Compress: if 3 words convey the same as 10, use 3
-- **Apply the Core Rules** (see Model-Aware Instruction Authoring at the top of this skill): positive framings over negative constraints, explicit scope, resolved precedence for conflicting directives, marked illustrative lists, scoped rhetorical language, task-complexity calibration for length. On Fable 5, also brevity-first: one coherent instruction over enumerated don't-lists.
+- **Apply the Core Rules** (see Model-Aware Instruction Authoring at the top of this skill): positive framings over negative constraints, explicit scope, resolved precedence for conflicting directives, marked illustrative lists, scoped rhetorical language, task-complexity calibration for length. On Fable 5.x, also brevity-first: one coherent instruction over enumerated don't-lists.
 
 ### Rules Directory Patterns
 
@@ -211,7 +229,7 @@ hooks:                              # Lifecycle hooks (see Hooks section)
 
 - **Default: OMIT the `model` field entirely** — the agent/skill/command then inherits the session's model. This is the correct choice for almost all instructions: it keeps them forward-compatible as models improve and respects the user's session-level model choice.
 - **Pin only when the instruction clearly and unambiguously calls for it** — typically a high-volume mechanical subagent where a smaller/cheaper tier is obviously sufficient (pattern scanning, format conversion, bulk retrieval). Make that judgement per-instruction at creation time; do not pin by habit.
-- **Never pin upward to a larger model "for quality"** — that decision belongs to the session, not the instruction file. (Doubly so for `fable` at 2× Opus cost.)
+- **Never pin upward to a larger model "for quality"** — that decision belongs to the session, not the instruction file. (Doubly so for `fable` at 2× Opus cost per token, though on Fable 5.1 cache reads bill at a quarter of the Fable 5 rate.)
 - **When a pin IS justified, decide model and effort together** (see Model × Effort above): for capability-bound, latency-tolerant subagent work, `fable` at `medium`/`low` effort can dominate `opus` at `xhigh`.
 - **Pins are cache-safe only in subagent contexts.** The CC prompt cache is keyed by (model, effort) — a main-thread skill/command pin double cache-busts the session (full uncached re-read at activation, partial re-read at revert). Agents are safe by construction (own subagent conversation, own cache). **A skill/command with a hardcoded `model:`/`effort:` must always run as a subagent — set `context: fork` (+ `agent:`) alongside the pin.** Mechanics + cost math: `references/cache-and-token-efficiency.md`.
 - **Conversation forks cannot be pinned.** `subagent_type: "fork"` ignores `model` overrides and has no frontmatter — a fork always bills the session model at session effort. When a pin matters, delegate to a named agent instead of forking (see Forking — Two Distinct Mechanisms).
@@ -342,7 +360,7 @@ A conversation fork inherits the whole conversation and the parent's prompt cach
 
 Facts that matter when authoring instructions (verified against official docs + a live fork test, 2026-08-14):
 
-- **Model/effort pins are impossible.** A `model` override on a fork is ignored; the fork bills the session model at session effort. The only lever for a cheaper or pinned model is a named subagent — and the trade-offs never combine: cache-sharing requires the parent model, a cheap model requires a cold start.
+- **Model/effort pins are impossible.** A `model` override on a fork is ignored; the fork bills the session model at session effort (under a Fable 5.x main loop, every fork bills Fable, with cache reads at a quarter of the Fable 5 rate on 5.1). The only lever for a cheaper or pinned model is a named subagent — and the trade-offs never combine: cache-sharing requires the parent model, a cheap model requires a cold start.
 - **Cost shape:** the fork's first request reads the parent's cache (~0.1× input rate) — officially "cheaper than spawning a fresh subagent for tasks that need the same context" — but the floor cost scales with conversation length at parent-model rates (live measurement: ~151k tokens for a trivial 120-word fork reply in a long session). Reserve forks for context-entangled work; never fork small tasks.
 - **Tools:** forks skip the subagent tool-narrowing filters and receive the main conversation's exact tool pool (interactive-only tools such as AskUserQuestion are still stripped from every subagent).
 - **Bounds:** a fork cannot spawn another fork; at the subagent depth limit its inherited Agent tool errors instead of spawning. To bar forks, use the permission deny rule `Agent(fork)` — the `CLAUDE_CODE_FORK_SUBAGENT=0` env var does not propagate to subagents (github.com/anthropics/claude-code issue #68619).
@@ -368,10 +386,11 @@ effort: low
 | `low` | ○ | Quick lookups, simple transforms, high-volume tasks |
 | `medium` | ◐ | Balanced analysis, most general tasks |
 | `high` | ● | Complex reasoning, strategic analysis, deep research |
-| `xhigh` | ◉ | Most capability-sensitive work (Fable 5, Opus 4.8/4.7 only) |
+| `xhigh` | ◉ | Long-horizon, capability-sensitive work (Fable 5.x, Opus 5, Opus 4.8/4.7, Sonnet 5) |
+| `max` | ◎ | Absolute ceiling, unconstrained token spend (Fable 5.x, Opus 5, Opus 4.8/4.7/4.6, Sonnet 5/4.6); rarely justified in a pin; on Fable 5.1 `xhigh` matches `max` at 19 to 25% fewer output tokens on knowledge work |
 | (omit) | — | Inherit session effort (default, most common) |
 
-**Default: OMIT the `effort` field** — inherit the session's effort. Specify it only when the instruction clearly and unambiguously calls for a different depth (e.g. a trivial high-volume lookup). Do not set higher effort to chase quality — that is the session's decision. Effort values are model-relative (Fable 5 `medium` outperforms other models at any effort — see Model × Effort above); re-baseline pinned values when the model line changes.
+**Default: OMIT the `effort` field** — inherit the session's effort. Specify it only when the instruction clearly and unambiguously calls for a different depth (e.g. a trivial high-volume lookup). Do not set higher effort to chase quality — that is the session's decision. Effort values are model-relative (on Fable 5.1, `medium` roughly matches Fable 5 at lower cost — see Model × Effort above); re-baseline pinned values when the model line changes.
 
 **Cache rule:** effort pins share the model pin's cache behaviour — the CC cache is keyed by (model, effort), so a main-thread effort pin double cache-busts the session, with the entry re-read billed at the *active* model's rate. Pin only on agents or `context: fork` skills; a pin resolving to the already-active level keeps the cache. Detail: `references/cache-and-token-efficiency.md`.
 
@@ -639,7 +658,8 @@ For complex multi-file operations (e.g., creating an entire instruction ecosyste
 ## References
 
 Detailed guides in `references/` subdirectory:
-- **claude-fable-5-compatibility.md**: Fable 5 deltas (brevity-first/removal-first authoring, reasoning-extraction refusal trap, proactivity boundaries, autonomy/checkpoint patterns, subagent bounds, progress-audit scaffold) + cross-model effort calculus, safeguard/refusal mechanics, Fable 5 migration audit checklist (steps 8–13), failure modes, research sources
+- **claude-fable-5-1-compatibility.md**: Fable 5.1 guide (CURRENT frontier): the 5.1 behavioural deltas with the official snippets (progress updates, per-turn tool batching, finish-the-whole-task, scope and test discipline, chat formatting inversion, prose density, unmarked quotations, whole-file rewrites, low-effort search, long outputs at xhigh/max, compaction summaries, async subagents, vision), the API breaks (forced `tool_choice`, thinking-block binding, per-message effort), the harness-injected vs author-owned split for Claude Code, effort and cost calculus with the 5.1 routing table, safeguards and fallback mechanics, system-card findings that change authoring, remove/add tables, migration audit checklist (steps 14–23), failure modes, research sources
+- **claude-fable-5-compatibility.md**: Fable 5 guide (the base the 5.1 file extends): Fable 5 deltas (brevity-first/removal-first authoring, reasoning-extraction refusal trap, proactivity boundaries, autonomy/checkpoint patterns, subagent bounds, progress-audit scaffold) + cross-model effort calculus, safeguard/refusal mechanics, Fable 5 migration audit checklist (steps 8–13), failure modes, research sources
 - **claude-opus-5-compatibility.md**: Opus-tier guide (CURRENT) — Opus 5 deltas (three removal targets: verification scaffolds, self-correction nudges, review severity pre-filters; effort↮length decoupling; scope/delegation bounds; thinking-disabled artifact mitigations; effort re-baseline incl. `max` tier) + 9-step migration audit checklist with behavioural A/B prompt-debt method, failure modes, field reports, sources
 - **claude-opus-4-8-compatibility.md**: Opus-tier guide (superseded by Opus 5) — 4.8 deltas (effort recalibration, native honesty, tool triggering, dynamic workflows) + the literal-interpretation Core Rules rationale with before/after examples, "scaffolding to remove" table, 7-step migration audit checklist, common failure modes, research sources
 - **cache-and-token-efficiency.md**: How instruction design interacts with CC's prompt cache — the (model, effort) cache key, the main-thread pin double cache-bust with cost math, the subagent-only rule for pinned skills, safe-pattern table, conversation-fork vs named-subagent cache economics, and other cache-relevant authoring decisions (skill body size, MCP deferral, CLAUDE.md mid-session edits)

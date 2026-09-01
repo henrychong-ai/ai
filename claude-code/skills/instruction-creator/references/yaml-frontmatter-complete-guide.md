@@ -85,7 +85,7 @@ hooks:                              # Optional: lifecycle hooks scoped to agent
 #### `effort` (Optional)
 - **Format:** String enum
 - **Purpose:** Override model effort level during agent execution
-- **Values:** `low` (○), `medium` (◐), `high` (●), `xhigh` (◉ — Fable 5 / Opus 4.8/4.7 only; effort values are model-relative, see SKILL.md Model × Effort)
+- **Values:** `low` (○), `medium` (◐), `high` (●), `xhigh` (◉ — Fable 5.x / Opus 5 / Opus 4.8/4.7 / Sonnet 5), `max` (◎ — Fable 5.x / Opus 5 / Opus 4.8/4.7/4.6 / Sonnet 5/4.6; effort values are model-relative, see SKILL.md Model × Effort)
 - **Default:** Inherits session effort level
 - **Behaviour:** Overrides session effort while agent is active; reverts when complete
 - **Note:** Cannot override `CLAUDE_CODE_EFFORT_LEVEL` env var
@@ -217,7 +217,7 @@ hooks:                              # Optional: lifecycle hooks scoped to skill
 #### `effort` (Optional)
 - **Format:** String enum
 - **Purpose:** Override model effort level when skill is invoked
-- **Values:** `low` (○), `medium` (◐), `high` (●), `xhigh` (◉ — Fable 5 / Opus 4.8/4.7 only; effort values are model-relative, see SKILL.md Model × Effort)
+- **Values:** `low` (○), `medium` (◐), `high` (●), `xhigh` (◉ — Fable 5.x / Opus 5 / Opus 4.8/4.7 / Sonnet 5), `max` (◎ — Fable 5.x / Opus 5 / Opus 4.8/4.7/4.6 / Sonnet 5/4.6; effort values are model-relative, see SKILL.md Model × Effort)
 - **Default:** Inherits session effort level
 - **Behaviour:** Overrides session effort while skill is active; reverts when complete
 - **Note:** Cannot override `CLAUDE_CODE_EFFORT_LEVEL` env var
@@ -336,7 +336,7 @@ hooks:                                  # Optional: lifecycle hooks
 #### `effort` (Optional)
 - **Format:** String enum
 - **Purpose:** Override model effort level when command is invoked
-- **Values:** `low` (○), `medium` (◐), `high` (●), `xhigh` (◉ — Fable 5 / Opus 4.8/4.7 only; effort values are model-relative, see SKILL.md Model × Effort)
+- **Values:** `low` (○), `medium` (◐), `high` (●), `xhigh` (◉ — Fable 5.x / Opus 5 / Opus 4.8/4.7 / Sonnet 5), `max` (◎ — Fable 5.x / Opus 5 / Opus 4.8/4.7/4.6 / Sonnet 5/4.6; effort values are model-relative, see SKILL.md Model × Effort)
 - **Default:** Inherits session effort level
 - **Behaviour:** Overrides session effort while command is active; reverts when complete
 - **⚠️ Cache:** same rule as the command `model` field — main-thread pins double cache-bust; pin only with `context: fork`. Detail: `cache-and-token-efficiency.md`

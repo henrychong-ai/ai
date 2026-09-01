@@ -16,13 +16,13 @@ A skill's or command's `model:` / `effort:` frontmatter overrides the **main con
 | Remaining requests in the turn | read the fresh cache under the pinned key | cheap |
 | Next user prompt (revert) | the old (session model, session effort) entry is still warm within TTL → old prefix reads at 0.1×; **the skill-era turns are new uncached content** at session-model rates | second, smaller hit |
 
-**Worked example** (200K-token history, Fable 5 session, a skill pinned `opus` + `low`, API rates): entry ≈ 200K × $5/M = **$1.00** uncached plus the cache-write premium; exit ≈ 200K × $1/M cache read plus the skill-era turns at $10/M. The pin saves only the skill's own marginal work — typically $0.10–0.20. **Net loss in any long session.** A main-thread pin pays off only when the conversation is short or the skill itself processes very large volume on the cheaper model — measure before assuming.
+**Worked example** (200K-token history, Fable 5 session, a skill pinned `opus` + `low`, API rates): entry ≈ 200K × $5/M = **$1.00** uncached plus the cache-write premium; exit ≈ 200K × $0.25/M cache read on Fable 5.1 ($1/M on Fable 5) plus the skill-era turns at $10/M. The pin saves only the skill's own marginal work — typically $0.10–0.20. **Net loss in any long session.** A main-thread pin pays off only when the conversation is short or the skill itself processes very large volume on the cheaper model — measure before assuming.
 
 Nuances:
 
 - **Effort-only pins are not the cheap version** — same double bust, and the entry re-read bills at the *active* model's rate (in a Fable 5 session, an `effort: low`-only pin re-reads at $10/M — twice what the opus-pin's entry costs for the same mistake).
 - **A pin that resolves to the already-active level keeps the cache** (documented no-op) — e.g. `effort: high` in a session already at the default.
-- **Fable 5's automatic safety fallback to Opus is also a model switch** (full re-read) — outside the author's control, but it explains surprise slow turns in security-/bio-adjacent sessions.
+- **Fable 5.x's automatic safety fallback (Opus 4.8 for cyber, Opus 5 for bio) is also a model switch** (full re-read) — outside the author's control, but it explains surprise slow turns in security-/bio-adjacent sessions.
 
 ## The safe patterns
 
@@ -45,6 +45,7 @@ A conversation fork inherits the parent's system prompt, tools, and history **by
 
 - **Floor cost ≈ parent context size at parent-model (cache-read) rates.** Measured live 2026-08-14: a trivial fork in a long session consumed ~151k tokens to return 120 words with zero tool calls. Cheap *relative to* rebuilding equivalent context cold; never cheap in absolute terms — don't fork small tasks.
 - **Forks cannot be model- or effort-pinned** — `model` overrides are ignored, and forks are runtime-only (no frontmatter). The cache-sharing and cheap-model levers are mutually exclusive: cache reuse requires a byte-identical prefix on the same model; a cheaper model requires a named subagent's cold start.
+- **Fable 5.1 changes the dollars, not the rule.** A fork's cache read bills at $0.25/M on 5.1, so the measured 151k-token trivial fork costs about $0.04 in cache reads rather than $0.15. The token count a subscription plan meters is unchanged, so keep the don't-fork-small-tasks rule in token terms, not dollar terms.
 - **Decision rule:** fork when context-transfer cost is the problem being solved (re-briefing would be long or lossy, or several approaches should launch from the same starting point); named pinned subagent when volume or model cost is the constraint.
 
 ## Other authoring decisions with cache consequences
@@ -57,9 +58,15 @@ All verified against the CC prompt-caching doc:
 - **CLAUDE.md edits mid-session** don't invalidate the cache — but also don't apply until `/clear`, `/compact`, or restart. Never author instructions that assume mid-session CLAUDE.md reloads.
 - **`/compact`** rebuilds the conversation layer by design. Long-running autonomous skills should checkpoint durable state to disk rather than rely on chat history, which bounds what compaction can cost them.
 
+## Fable 5.1 notes (2026-09-01)
+
+- **Cache reads are 0.025× base on Fable 5.1** ($0.25/MTok, against $1 on Fable 5 and $0.50 on Opus 5). That changes the dollar figures in the worked example and the fork economics above; it changes none of the doctrine, because the cache-bust still costs a full uncached re-read at the *input* rate and a subscription plan still meters tokens.
+- **The API's per-message effort beta is not available in Claude Code.** A `role: "system"` message carrying `output_config.effort` changes effort while preserving the prompt cache on Fable 5.1, Mythos 5.1, and Opus 5 (400 on Fable 5), but **Claude Code has not adopted it as of 2.1.257**: its prompt-caching doc still gives each effort level its own cache, so a mid-session `/effort` still busts. The subagent-only rule for pins is unchanged.
+- **Hand-built API integrations face a second cache hazard on 5.1.** Editing earlier turns now invalidates the thinking blocks that follow them as well as the cache, and for accounts created on or after 2026-08-31 that is a 400 rather than a silent cost. Keep history append-only; use turn-scoped system messages for per-turn reminders. Mechanics: the Fable 5.1 migration guide, https://platform.claude.com/docs/en/models/fable-5-1/migration-guide.
+
 ## Sources
 
-- code.claude.com/docs/en/prompt-caching — the (model, effort) cache keys, full invalidation/keep lists, TTL policy (1h subscription main thread / 5m subagents), subagent-vs-fork cache behaviour
+- code.claude.com/docs/en/prompt-caching (re-verified 2026-09-01) — the (model, effort) cache keys, full invalidation/keep lists, TTL policy (1h subscription main thread / 5m subagents), subagent-vs-fork cache behaviour
 - code.claude.com/docs/en/sub-agents — conversation-fork definition ("inherits the entire conversation so far"), fork-vs-named comparison table, "cheaper than spawning a fresh subagent for tasks that need the same context", fork-mode defaults + `Agent(fork)` deny rule
 - code.claude.com/docs/en/skills — `context: fork` runs the skill body in a fresh subagent with no conversation history; `background:` field (v2.1.218+)
 - code.claude.com/docs/en/skills — frontmatter reference: `model:` override is turn-scoped on the main thread, reverts next prompt
