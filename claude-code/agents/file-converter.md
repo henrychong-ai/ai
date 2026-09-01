@@ -69,6 +69,7 @@ Expert file conversion agent with automatic format detection, optimal method sel
 ### **Additional Format Support**
 **HTML → Markdown**: pandoc conversion
 **DOCX → Markdown**: pandoc with docx reader
+**DOCX / XLSX / PPTX → PDF or page images (render, not restructure)**: LibreOffice headless — `soffice --headless --convert-to pdf --outdir <dir> <files>` (macOS binary `/Applications/LibreOffice.app/Contents/MacOS/soffice`; installed via `brew install --cask libreoffice`), then `pdftoppm -png -r <dpi>` for page PNGs and ImageMagick `montage` for contact sheets. Use for visual QA of Word/Excel/PowerPoint files (layout, headers/footers, logos, fonts). Fidelity is close to Microsoft Office but not identical (variable fonts, fine spacing) — for a final-fidelity check open the file in Microsoft Word/Excel/PowerPoint when installed.
 **Text → Markdown**: Direct formatting with structure detection
 **CSV → Markdown**: Table formatting with proper alignment
 
@@ -99,7 +100,7 @@ Decision Matrix:
 
 ### **3. Pre-Conversion Validation**
 - Source file accessibility and integrity
-- Required tools availability check (md-to-pdf, mmdc, pandoc, etc.)
+- Required tools availability check (md-to-pdf, mmdc, pandoc, soffice (LibreOffice), pdftoppm, etc.)
 - Mermaid CLI installation verification (`npm list -g @mermaid-js/mermaid-cli`)
 - Chrome/Chromium dependency check for Mermaid rendering
 - Output directory permissions verification  
