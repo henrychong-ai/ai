@@ -30,6 +30,7 @@ Autonomous domain specialists that handle complex, multi-step tasks. Copy to `~/
 
 | Agent | Description |
 |-------|-------------|
+| [codex-relay](claude-code/agents/codex-relay.md) | Mechanical relay to the OpenAI Codex plugin — one companion-CLI call, response returned verbatim |
 | [file-converter](claude-code/agents/file-converter.md) | Intelligent file format conversion with auto-detection and validation |
 | [media-downloader](claude-code/agents/media-downloader.md) | Download videos/audio from web URLs using yt-dlp |
 
@@ -40,7 +41,7 @@ Bundled knowledge packages with reference materials. Copy entire folder to `~/.c
 | Skill | Description |
 |-------|-------------|
 | [1password](claude-code/skills/1password/) | 1Password CLI, secrets management, op run setup |
-| [codex](claude-code/skills/codex/) | OpenAI Codex MCP integration for second opinions |
+| [codex](claude-code/skills/codex/) | Route work to GPT-6 Astra and GPT-5.6 (Sol/Terra/Luna) through the official Codex plugin — second opinions and code review |
 | [dotnet](claude-code/skills/dotnet/) | .NET development specialist for enterprise applications |
 | [ffmpeg](claude-code/skills/ffmpeg/) | Video/audio processing with ffmpeg |
 | [gemini-gem-creator](claude-code/skills/gemini-gem-creator/) | Create and convert Gemini Custom Gems |

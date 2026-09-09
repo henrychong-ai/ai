@@ -8,7 +8,7 @@ allowed-tools: Agent, Bash
 
 Second opinions, hard problems, and code review via GPT-6 Astra or GPT-5.6. **Dispatch runs in the background via the Agent tool** — the main thread stays free while Codex thinks; the harness notifies on completion and Claude integrates the response then.
 
-**Transport (since 2026-09-09):** the official **Codex plugin for Claude Code** (`codex@openai-codex`, marketplace `openai/codex-plugin-cc`). Its companion CLI talks to the Codex **app-server** runtime, a shared local daemon started on demand, which inherits `~/.codex/config.toml` and the existing ChatGPT login. This replaces the stdio MCP server (`codex mcp-server`, deprecated in Codex CLI 0.149.1 and removed from this estate on 2026-09-09) — the tools `mcp__codex__codex` and `mcp__codex__codex-reply` no longer exist. Setup, upgrade, and troubleshooting: `references/codex-plugin-setup.md`.
+**Transport (since 2026-09-09):** the official **Codex plugin for Claude Code** (`codex@openai-codex`, marketplace `openai/codex-plugin-cc`). Its companion CLI talks to the Codex **app-server** runtime, a shared local daemon started on demand, which inherits `~/.codex/config.toml` and the existing ChatGPT login. This replaces the stdio MCP server (`codex mcp-server`, deprecated in Codex CLI 0.149.1 and removed from this setup on 2026-09-09) — the tools `mcp__codex__codex` and `mcp__codex__codex-reply` no longer exist. Setup, upgrade, and troubleshooting: `references/codex-plugin-setup.md`.
 
 ## Quick Reference
 
@@ -56,7 +56,7 @@ The plugin ships slash commands of its own. Prefer them where they fit; use `/co
 
 ## Companion CLI Reference
 
-Call the companion through the wrapper on PATH (this estate: `~/scripts/codex-companion`), which resolves the version-volatile plugin root for you:
+Call the companion through the wrapper on PATH (for example `~/scripts/codex-companion`), which resolves the version-volatile plugin root for you:
 
 ```bash
 ~/scripts/codex-companion task --model gpt-6-astra --effort medium --cwd "$PWD" "prepared prompt"
