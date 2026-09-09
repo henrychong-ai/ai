@@ -1,27 +1,26 @@
 ---
 name: codex
-description: "Routes requests to OpenAI GPT-5.6 (Sol/Terra/Luna) via Codex MCP for second opinions, hard problems, and code review. Runs in background by default via Agent tool (main thread stays free; harness notifies on completion); foreground only on explicit request. Triggers on /codex, \"use codex\"; model-aware: sol (default) / terra / luna; reasoning levels: none/low/medium/high/xhigh (default xhigh)/max/ultra; service tiers: fast/standard."
-allowed-tools: Agent, mcp__codex__codex, mcp__codex__codex-reply
+description: "Routes requests to OpenAI GPT-5.6 (Sol/Terra/Luna) through the official Codex plugin for Claude Code — second opinions, hard problems, code review. Runs in the background by default via the Agent tool (main thread stays free; the harness notifies on completion); foreground on explicit request. Triggers on /codex, \"use codex\"; model-aware: sol (default) / terra / luna; reasoning levels: none/minimal/low/medium/high/xhigh (default xhigh)."
+allowed-tools: Agent, Bash
 ---
 
 # Codex Skill — OpenAI GPT-5.6 (Sol / Terra / Luna)
 
-Second opinions, hard problems, code review via GPT-5.6. **Dispatch runs in the background via the Agent tool** — the main thread stays free while Codex thinks; the harness notifies on completion and Claude integrates the response then.
+Second opinions, hard problems, and code review via GPT-5.6. **Dispatch runs in the background via the Agent tool** — the main thread stays free while Codex thinks; the harness notifies on completion and Claude integrates the response then.
 
-**Model-aware (since 2026-07-13):** `/codex` accepts a model tier — **`sol`** (`gpt-5.6-sol`, flagship, **default**), **`terra`** (`gpt-5.6-terra`, balanced), **`luna`** (`gpt-5.6-luna`, fastest/cheapest) — alongside reasoning level and service tier, in any order (e.g. `/codex luna xhigh`, `/codex sol xhigh fast`, `/codex terra high standard`).
+**Transport (since 2026-09-09):** the official **Codex plugin for Claude Code** (`codex@openai-codex`, marketplace `openai/codex-plugin-cc`). Its companion CLI talks to the Codex **app-server** runtime, a shared local daemon started on demand, which inherits `~/.codex/config.toml` and the existing ChatGPT login. This replaces the stdio MCP server (`codex mcp-server`, deprecated in Codex CLI 0.149.1 and removed from this estate on 2026-09-09) — the tools `mcp__codex__codex` and `mcp__codex__codex-reply` no longer exist. Setup, upgrade, and troubleshooting: `references/codex-plugin-setup.md`.
 
 ## Quick Reference
 
-Grammar: `/codex [model] [reasoning] [tier] [foreground]` — arguments in any order; all optional.
+Grammar: `/codex [model] [reasoning] [foreground]` — arguments in any order; all optional.
 
-| Trigger | Model | Reasoning | Service Tier |
-|---------|-------|-----------|--------------|
-| `/codex` | sol | xhigh | fast (default) |
-| `/codex [model]` | specified | xhigh | fast |
-| `/codex [level]` | sol | specified | fast |
-| `/codex luna xhigh` | luna | xhigh | fast |
-| `/codex sol xhigh fast` | sol | xhigh | fast |
-| `/codex terra high standard` | terra | high | standard |
+| Trigger | Model | Reasoning |
+|---------|-------|-----------|
+| `/codex` | sol | xhigh |
+| `/codex [model]` | specified | xhigh |
+| `/codex [level]` | sol | specified |
+| `/codex luna xhigh` | luna | xhigh |
+| `/codex terra high` | terra | high |
 
 **Models** (GPT-5.6 family — tier names are durable; the generation number advances on its own cadence):
 
@@ -31,170 +30,102 @@ Grammar: `/codex [model] [reasoning] [tier] [foreground]` — arguments in any o
 | `terra` | `gpt-5.6-terra` | Balanced everyday work (≈GPT-5.5 quality, ~half Sol's cost) |
 | `luna` | `gpt-5.6-luna` | Fastest/cheapest — high-volume or simple checks |
 
-**Reasoning:** `none` → `low` → `medium` → `high` → `xhigh` (default) → `max` → `ultra` — both opt-in. `max` = deepest single-agent reasoning (settings-enabled, costly). `ultra` = `max` + Codex cooperative subagents (automatic task delegation; subagents inherit the parent model + effort → highest cost). ⚠️ `ultra` is reliably available only via the Codex Desktop app / native CLI; over this skill's MCP/websocket path it is best-effort and may downgrade to `max` (cc-switch #5209).
-**Tiers:** `fast` (default) • `standard`/`normal` (opt-in) — see the service-tier note under *MANDATORY: Always Pass Config Block*.
+**Reasoning:** `none` → `minimal` → `low` → `medium` → `high` → `xhigh` (this skill's default). These six are the full set the companion accepts; `max` and `ultra` are rejected with `Unsupported reasoning effort`, so route work needing them to the Codex Desktop app or the native CLI. Omitting `--effort` falls back to `model_reasoning_effort` in `~/.codex/config.toml`.
 
-Arguments appear in any order. Extract model tier + reasoning level + service tier from user input; any dimension the user omits takes its default (sol / xhigh / fast). Codex "ultra" auto-delegation mode is deliberately not exposed — it spawns sub-agents, conflicting with the leaf-relay background dispatch.
+**Service tier is config-global.** There is no per-call flag: the tier comes from `service_tier` in `~/.codex/config.toml` (`"default"` for standard speed, `"fast"` for priority routing). A user asking for `fast` or `standard` per call gets the configured tier — say so, and point at config.toml as the place to change it.
+
+Extract model tier and reasoning level from user input in any order; any dimension the user omits takes its default (sol / xhigh).
+
+## Plugin Commands
+
+The plugin ships slash commands of its own. Prefer them where they fit; use `/codex` for arbitrary prompts and second opinions with an explicit model and effort.
+
+| Command | Use for |
+|---------|---------|
+| `/codex:review` | Codex's native review of local git state (working tree or branch) — no custom focus text |
+| `/codex:adversarial-review` | Challenge review of local git state; accepts focus text |
+| `/codex:rescue` | Hand a stuck task to the plugin's write-capable rescue agent |
+| `/codex:status`, `/codex:result`, `/codex:cancel` | Manage background plugin jobs |
+| `/codex:setup` | Readiness check; also toggles the optional stop-time review gate |
+| `/codex:transfer` | Hand the current Claude session's context to Codex |
+
+## Companion CLI Reference
+
+Resolve the version-volatile plugin root, then call the companion:
+
+```bash
+CODEX_COMPANION=$(ls -d ~/.claude/plugins/cache/openai-codex/codex/*/scripts/codex-companion.mjs | sort -V | tail -1)
+node "$CODEX_COMPANION" task --model gpt-5.6-sol --effort xhigh --cwd "$PWD" "prepared prompt"
+```
+
+| Subcommand | Flags | Notes |
+|------------|-------|-------|
+| `task` | `[--background] [--write] [--resume-last\|--resume\|--fresh] [--model <id>] [-m <id>] [--effort <level>] [--cwd <dir>] [--prompt-file <file>] [--json] [prompt]` | The general query / second-opinion path. Sandbox defaults to **read-only** and approval policy to **never**, so it is safe in a background subagent. `--write` switches to a workspace-write sandbox. Without `--background` it runs in the foreground, printing `[codex] …` progress lines then the final assistant message. |
+| `review` | `[--wait\|--background] [--base <ref>] [--scope auto\|working-tree\|branch]` | Codex's native diff review |
+| `adversarial-review` | same as `review`, plus trailing focus text | Challenge review |
+| `status` | `[job-id] [--wait] [--timeout-ms <ms>] [--all] [--json]` | Background job state |
+| `result` / `cancel` | `[job-id] [--json]` | Fetch or stop a background job |
+| `setup` | `[--json] [--enable-review-gate\|--disable-review-gate]` | Readiness probe; makes no model call |
+| `task-resume-candidate` | `--json` | Names the thread `--resume-last` would continue |
+| `transfer` | `[--source <claude-jsonl>] [--json]` | Session handoff to Codex |
+
+**Flag hygiene:** the parser treats an unrecognised flag as prompt text rather than erroring, so a stray `--wait` on `task` silently lands inside the prompt Codex reads. Pass `task` only the flags in the table above. Model strings pass through verbatim (the sole alias is `spark`), so a typo reaches the API as a model name.
+
+**Long prompts:** write the prompt to a file under `$TMPDIR` and pass `--prompt-file <file>` instead of inlining it as an argument.
+
+**Health:** `node "$CODEX_COMPANION" setup --json` returns `ready`, `codex.available`, `auth.loggedIn`, and `sessionRuntime` without a model call. `ready: false` or `auth.loggedIn: false` means Codex is degraded — report it and suggest `/codex:setup`, and keep going without Codex.
+
+**Usage and rate limits:** `references/codex-rate-limits.md`.
 
 ## Context Preparation
 
 Curate context before calling — quality in = quality out:
-1. Extract relevant code snippets (not entire files)
-2. Include full error traces if debugging
-3. State what's been tried
+1. Extract the relevant code snippets rather than whole files
+2. Include full error traces when debugging
+3. State what has been tried
 4. Define what "solved" looks like
 5. Mention constraints (performance, security, compatibility)
 
-**Anti-patterns:** Dumping entire files • Vague questions • Missing tech context • No success criteria
+**Anti-patterns:** dumping entire files • vague questions • missing tech context • no success criteria.
 
 ## Execution: Background Dispatch (DEFAULT)
 
-**Every `/codex` invocation runs in the background by default.** Dispatch the Codex MCP call via the `Agent` tool with `run_in_background: true`. The main thread does **not** call `mcp__codex__codex` synchronously — that would block until Codex returns.
+**Every `/codex` invocation runs in the background by default.** Dispatch the companion call through the `Agent` tool with `run_in_background: true`; the main thread runs no synchronous Codex call, which would block until Codex returns.
 
-**Foreground override (explicit request only):** Run synchronously — calling `mcp__codex__codex` directly on the main thread — only when the user explicitly asks for it (e.g. `/codex foreground …`, "run codex in the foreground", "wait for codex"). Absent an explicit foreground request, always dispatch in the background.
+**Foreground override (explicit request only):** run the companion command directly on the main thread when the user asks for it (`/codex foreground …`, "run codex in the foreground", "wait for codex").
 
-After dispatch, reply to the user with one short line (e.g. `Codex query dispatched; will surface response when ready`) and continue with other work. When the harness fires the background-completion notification, surface and integrate the Codex output per the **Response Integration** section below.
+After dispatch, reply with one short line (e.g. `Codex query dispatched; will surface the response when ready`) and continue with other work. When the harness fires the completion notification, integrate the output per **Response Integration**.
 
 ### Dispatch Pattern
 
 ```
 Agent({
   description: "Codex: [3-5 word topic]",
-  subagent_type: "general-purpose",
-  model: "sonnet",           // thin pass-through relay — pin to Sonnet; never inherit the (possibly Opus) session model. Reliable verbatim relay without the Opus cost; do NOT use a fork (fork pins the parent model + can't downgrade)
+  subagent_type: "codex-relay",   // dedicated leaf relay agent; its frontmatter pins model: sonnet + effort: medium. The Agent tool has no per-call effort param, so effort is pinned in the agent definition (~/.claude/agents/codex-relay.md). Verbatim relay at Sonnet cost; use a named agent rather than a fork, which pins the parent model. A newly created agent registers at session start.
   run_in_background: true,
-  prompt: "You are a mechanical relay — do NOT analyse, plan, reason about, or add commentary to the task. Call mcp__codex__codex exactly once with the parameters below, then return Codex's full response verbatim — no summarisation, no truncation, no commentary.\n\nprompt: [prepared prompt]\ncwd: [working dir]\nsandbox: \"read-only\"        // default (non-mutating); escalate to workspace-write ONLY for write/run tasks; never danger-full-access\napproval-policy: \"never\"    // MANDATORY in background — no interactive approver exists in a subagent, so any approval gate = silent hang\nconfig: { model: [gpt-5.6-sol (default) | gpt-5.6-terra | gpt-5.6-luna], model_reasoning_effort: [xhigh (default) | none/low/medium/high/max/ultra], service_tier: [fast (default) | standard] }"
+  // Relay behaviour (verbatim pass-through, single Bash call, leaf-only) lives in the
+  // agent's own system prompt — the task prompt carries only the call parameters:
+  prompt: "Run the Codex companion once with:\n\n--model gpt-5.6-sol        // default; gpt-5.6-terra | gpt-5.6-luna when the user names terra/luna\n--effort xhigh             // default; none/minimal/low/medium/high/xhigh\n--cwd [working dir]\n[--write]                  // only when Codex must modify or run something; omit for read-only review and reasoning\n[--resume-last]            // only for a follow-up on the previous thread\n\nPrompt:\n[prepared prompt]"
 })
 ```
+
+`--background` stays out of the relay's command: the Agent dispatch already provides the backgrounding, and adding it would leave a tracked job for the relay to poll.
 
 ### Continue an Existing Thread
 
-For follow-ups, dispatch the same way but instruct the background agent to call `mcp__codex__codex-reply` with the `threadId` from the prior response plus the new `prompt`.
+For follow-ups, dispatch the same way and add `--resume-last`, which continues the most recent Codex task thread for that workspace. This replaces the old thread-ID follow-up call. `task-resume-candidate --json` names the thread that would be resumed; `--fresh` forces a new one.
 
 ### Parallel Queries
 
-Spawn multiple background `Agent` calls in a single message — one per branch (e.g. approach A vs approach B). Each fires its own completion notification; integrate as they return.
-
-## MCP Tool Schema
-
-### `mcp__codex__codex`
-
-| Parameter | Type | Required | Notes |
-|-----------|------|----------|-------|
-| `prompt` | string | **Yes** | Initial user prompt |
-| `model` | string | No | Top-level override (also in config — use config for consistency) |
-| `config` | object | No | config.toml overrides (`additionalProperties: true`) |
-| `cwd` | string | No | Working directory |
-| `sandbox` | enum | No | `read-only` / `workspace-write` / `danger-full-access` |
-| `approval-policy` | enum | No | `untrusted` / `on-failure` / `on-request` / `never` |
-| `profile` | string | No | Config profile from config.toml |
-| `base-instructions` | string | No | Replace default instructions |
-| `developer-instructions` | string | No | Injected as developer role message |
-| `compact-prompt` | string | No | Prompt used when compacting the conversation |
-
-### `mcp__codex__codex-reply`
-
-| Parameter | Type | Required | Notes |
-|-----------|------|----------|-------|
-| `prompt` | string | **Yes** | Follow-up prompt |
-| `threadId` | string | Yes (effectively) | Thread ID from previous response |
-| ~~`conversationId`~~ | — | — | **DEPRECATED** — use `threadId` |
-
-**Checking usage / rate limits:** the MCP can't report quota — see `references/codex-rate-limits.md`.
-
-## MCP Syntax (Reference for the Background Agent)
-
-The patterns below describe how the spawned background agent calls `mcp__codex__codex`. The `/codex` skill itself never calls these MCP tools from the main thread — it only spawns the wrapper Agent.
-
-### MANDATORY: Always Pass Config Block
-
-Every call MUST include `config` with `model`, `model_reasoning_effort`, and `service_tier`, AND explicitly set the top-level `sandbox` and `approval-policy` params. Never rely on config.toml defaults.
-
-**Non-blocking approval is MANDATORY for background dispatch.** A background Agent/subagent has **no interactive approver**, so any approval-gated codex action blocks the MCP call indefinitely — the silent, no-error "hang" (the call never returns, no completion notification). Codex reasons fine, then freezes the moment it tries to act. Always pass:
-- `approval-policy: "never"` — codex never pauses for an approval that cannot be granted in a background context.
-- `sandbox: "read-only"` (**default**) — safe to never-approve because nothing can mutate. Correct for the common case (second opinion / review / reasoning, which only reads).
-- Escalate to `sandbox: "workspace-write"` ONLY when codex must write or run; keep `approval-policy: "never"` (or `on-failure`) so it still never blocks — bounded to the workspace. **Never pair `approval-policy: "never"` with `danger-full-access`** — non-blocking approval is safe only because the sandbox bounds what can happen, so never combine it with an unbounded sandbox.
-
-(Detection/recovery for a residual hang — e.g. transport stall or rate-limit — remains: `stat` the background agent's `.output` for a tiny + stale signature, never Read the JSONL; then stop and re-dispatch.)
-
-**Defaults:** `gpt-5.6-sol` + `xhigh` + `fast`. Do not downgrade reasoning or switch model tier without explicit user request.
-
-**Service tier — `fast` is the CONFIG value; Codex maps it internally to the `priority` request tier.** Write `service_tier: "fast"` (the config-layer name), never `"priority"` as a config value; use `"standard"`/`"default"` for normal speed. ⚠️ Over the MCP/websocket path this skill uses, `service_tier: "fast"` has been reported ineffective in some cases (openai/codex #14204 — closed; OpenAI states Fast is server-routed, so an observed `default` is inconclusive). `features.fast_mode` is a client-side feature gate (on by default), not a model capability flag. Treat `fast` as best-effort: worst case is standard speed, no error.
-
-> **Parameter Placement:**
-> - `model_reasoning_effort` and `service_tier` are **NOT** top-level params — **only work inside `config`**
-> - `model` exists at top level AND in config — **always use `config`** for consistency
-> - Top-level `model_reasoning_effort` or `service_tier` will **silently fail**
-
-### Correct Syntax
-```
-mcp__codex__codex({
-  prompt: "[prepared prompt]",
-  cwd: "[working dir]",                    // pass explicitly so codex isn't operating in an unexpected dir
-  sandbox: "read-only",                   // default; workspace-write only for write/run tasks; never danger-full-access + never
-  "approval-policy": "never",             // MANDATORY in background — no approver exists, so any gate = silent hang
-  config: {
-    "model": "gpt-5.6-sol",               // default tier; gpt-5.6-terra | gpt-5.6-luna when the user names terra/luna
-    "model_reasoning_effort": "xhigh",     // default; or user-specified: none/low/medium/high/max/ultra
-    "service_tier": "fast"                 // config value "fast" → Codex maps to the "priority" request tier; "standard"/"default" opt-in
-  }
-})
-```
-
-### Continue Conversation
-```
-mcp__codex__codex-reply({
-  threadId: "[from previous response]",
-  prompt: "[follow-up]"
-})
-```
-
-### Parallel Queries
-```
-mcp__codex__codex({
-  prompt: "Analyze approach A...",
-  config: { "model": "gpt-5.6-sol", "model_reasoning_effort": "xhigh", "service_tier": "fast" }
-})
-mcp__codex__codex({
-  prompt: "Analyze approach B...",
-  config: { "model": "gpt-5.6-sol", "model_reasoning_effort": "xhigh", "service_tier": "fast" }
-})
-```
-
-### Common Mistakes
-
-**❌ Config values at top level**
-```
-mcp__codex__codex({
-  prompt: "...",
-  model_reasoning_effort: "xhigh",   // ❌ NOT top-level — silently ignored
-  service_tier: "fast"               // ❌ NOT top-level — silently ignored
-})
-```
-
-**❌ Missing config block**
-```
-mcp__codex__codex({
-  prompt: "...",
-  model: "gpt-5.6-sol"              // ❌ Only sets model, loses reasoning + tier
-})
-```
-
-**❌ Deprecated conversationId**
-```
-mcp__codex__codex-reply({
-  conversationId: "...",             // ❌ Use threadId instead
-  prompt: "..."
-})
-```
+Issue multiple background `Agent` calls in a single message — one per branch (e.g. approach A vs approach B). Each fires its own completion notification; integrate them as they return.
 
 ## Response Integration
 
-Triggered when the background Agent's completion notification fires. Don't pass through — INTEGRATE with main thread context.
+Triggered when the background Agent's completion notification fires. Integrate with main-thread context rather than passing the text through.
 
 | Pattern | When | Action |
 |---------|------|--------|
-| **Implement** | Working code returned | Verify fit → Adapt style → Implement → Test |
-| **Synthesise** | Second opinion | Both perspectives → Agreements/differences → Recommendation |
-| **Iterate** | Needs refinement | Dispatch a fresh background Agent that calls `codex-reply` with the prior `threadId` |
-| **Conflict** | Disagreement | Both approaches → Trade-offs → Recommend with rationale |
+| **Implement** | Working code returned | Verify fit → adapt style → implement → test |
+| **Synthesise** | Second opinion | Both perspectives → agreements and differences → recommendation |
+| **Iterate** | Needs refinement | Dispatch a fresh background Agent with `--resume-last` |
+| **Conflict** | Disagreement | Both approaches → trade-offs → recommend with rationale |
