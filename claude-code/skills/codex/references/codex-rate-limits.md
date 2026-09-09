@@ -15,7 +15,7 @@ f=$(find ~/.codex/sessions -name 'rollout-*.jsonl' | xargs ls -t | head -1); gre
 
 ## Get a live reading
 The snapshot **only refreshes when a turn runs**, so the command above reads the *last* session's value. For a current reading, trigger one turn first:
-- **Minimal companion ping:** resolve the plugin root, then `node "$CODEX_COMPANION" task --model gpt-5.6-luna --effort none "reply ok"` (read-only sandbox and never-approve are the `task` defaults) — then run the command above.
+- **Minimal companion ping:** `~/scripts/codex-companion task --model gpt-5.6-luna --effort none "reply ok"` (read-only sandbox and never-approve are the `task` defaults) — then run the command above.
 - **Interactive:** run `codex` → `/status` (shows both windows live).
 
 This is the **OpenAI / ChatGPT-plan** quota — entirely separate from Anthropic/Claude rate limits.

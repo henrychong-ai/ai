@@ -55,6 +55,8 @@ Keys used by the plugin path:
 | `model_reasoning_effort` | Effort when a call omits `--effort`; the companion accepts `none`/`minimal`/`low`/`medium`/`high`/`xhigh` and rejects `max`/`ultra`, which the model catalogue lists but this path cannot request |
 | `service_tier` | **Config-global** — the plugin exposes no per-call tier flag, so switching between standard and priority routing means editing this value |
 
+These config values apply only when a call omits the flag. `/codex` and `/autosequence` both pass `--model` and `--effort` explicitly, so the skill default (`gpt-6-astra` at `medium`) holds regardless of what `model` and `model_reasoning_effort` say here.
+
 Two config shapes to keep clear of: `approvals_reviewer = "auto_review"`, which auto-approved a destructive sandbox escalation in headless `codex exec`; and a key whose type the CLI does not expect (a map where a boolean belongs, such as `features.context_management`), which crashes the runtime on parse.
 
 ### 4. Install the plugin
@@ -71,23 +73,25 @@ Verify with `claude plugin list`.
 In a Claude Code session, run `/codex:setup`, or from a shell:
 
 ```bash
-CODEX_COMPANION=$(ls -d ~/.claude/plugins/cache/openai-codex/codex/*/scripts/codex-companion.mjs | sort -V | tail -1)
-node "$CODEX_COMPANION" setup --json
+~/scripts/codex-companion setup --json
 ```
 
 Then a live round-trip:
 
 ```bash
-node "$CODEX_COMPANION" task --model gpt-5.6-luna --effort low "Reply with exactly: plugin ok"
+~/scripts/codex-companion task --model gpt-5.6-luna --effort low "Reply with exactly: plugin ok"
 ```
 
 ## Plugin Root Resolution
 
-The plugin unpacks to `~/.claude/plugins/cache/openai-codex/codex/<version>/`. The version segment changes on every upgrade, so resolve it rather than hardcoding it. Plugin-authored commands get `${CLAUDE_PLUGIN_ROOT}`; anything outside the plugin (this skill, the `codex-relay` agent, `/autosequence`) uses the glob:
+The plugin unpacks to `~/.claude/plugins/cache/openai-codex/codex/<version>/`, and the version segment changes on every upgrade. Plugin-authored commands get `${CLAUDE_PLUGIN_ROOT}`; everything outside the plugin — this skill, the `codex-relay` agent, `/autosequence` — goes through a small wrapper script on PATH instead, so callers name one fixed path and a permission rule can allow it once. On this estate that wrapper is `~/scripts/codex-companion`: it resolves the newest plugin root, execs `node` on the companion with the arguments untouched, and exits 127 with an install hint when the plugin is absent. Reproduce it anywhere with the resolution it wraps:
 
 ```bash
 CODEX_COMPANION=$(ls -d ~/.claude/plugins/cache/openai-codex/codex/*/scripts/codex-companion.mjs | sort -V | tail -1)
+node "$CODEX_COMPANION" "$@"
 ```
+
+Anyone without the wrapper substitutes those two lines for every `~/scripts/codex-companion` call in these docs.
 
 ## Runtime Model
 

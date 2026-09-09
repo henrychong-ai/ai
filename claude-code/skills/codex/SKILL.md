@@ -1,6 +1,6 @@
 ---
 name: codex
-description: "Routes requests to OpenAI GPT-6 Astra and the GPT-5.6 family (Sol/Terra/Luna) through the official Codex plugin for Claude Code — second opinions, hard problems, code review. Runs in the background by default via the Agent tool (main thread stays free; the harness notifies on completion); foreground on explicit request. Triggers on /codex, \"use codex\"; model-aware: astra (frontier) / sol (default) / terra / luna; reasoning levels: none/minimal/low/medium/high/xhigh (default xhigh)."
+description: "Routes requests to OpenAI GPT-6 Astra and the GPT-5.6 family (Sol/Terra/Luna) through the official Codex plugin for Claude Code — second opinions, hard problems, code review. Runs in the background by default via the Agent tool (main thread stays free; the harness notifies on completion); foreground on explicit request. Triggers on /codex, \"use codex\"; model-aware: astra (default) / sol / terra / luna; reasoning levels: none/minimal/low/medium/high/xhigh (default medium)."
 allowed-tools: Agent, Bash
 ---
 
@@ -16,30 +16,30 @@ Grammar: `/codex [model] [reasoning] [foreground]` — arguments in any order; a
 
 | Trigger | Model | Reasoning |
 |---------|-------|-----------|
-| `/codex` | sol | xhigh |
-| `/codex [model]` | specified | xhigh |
-| `/codex [level]` | sol | specified |
-| `/codex astra` | astra | xhigh |
-| `/codex astra medium` | astra | medium |
-| `/codex luna xhigh` | luna | xhigh |
+| `/codex` | astra | medium |
+| `/codex [model]` | specified | medium |
+| `/codex [level]` | astra | specified |
+| `/codex high` | astra | high |
+| `/codex sol xhigh` | sol | xhigh |
 | `/codex terra high` | terra | high |
+| `/codex luna low` | luna | low |
 
 **Models** (tier names are durable; the generation number advances on its own cadence — GPT-6 Astra sits above the still-available GPT-5.6 family):
 
 | Arg | Model ID | Use for (illustrative — not required outputs) |
 |-----|----------|-----------------------------------------------|
-| `astra` | `gpt-6-astra` | Frontier flagship (released 2026-09-03), succeeding Sol — the catalogue's "most capable model for complex, demanding work". Strongest agentic execution, roughly 1.9x faster task completion than Sol on Mind2Web, shorter and less verbose reasoning, stronger long-context retrieval. Catalogue default effort `medium`. $10 in / $50 out per million tokens, against Sol's $5 / $30. On ChatGPT Pro, Business, and Enterprise plus the API. Source: [DataCamp GPT-6 Astra overview](https://www.datacamp.com/blog/gpt-6-astra) |
-| `sol` *(default)* | `gpt-5.6-sol` | Deep reasoning workhorse — hard problems, cross-model second opinions, code review |
+| `astra` *(default)* | `gpt-6-astra` | Frontier flagship (released 2026-09-03), succeeding Sol — the catalogue's "most capable model for complex, demanding work". Strongest agentic execution, roughly 1.9x faster task completion than Sol on Mind2Web, shorter and less verbose reasoning, stronger long-context retrieval. Catalogue default effort `medium`. $10 in / $50 out per million tokens, against Sol's $5 / $30. On ChatGPT Pro, Business, and Enterprise plus the API. Source: [DataCamp GPT-6 Astra overview](https://www.datacamp.com/blog/gpt-6-astra) |
+| `sol` | `gpt-5.6-sol` | Previous flagship — deep reasoning at half Astra's price |
 | `terra` | `gpt-5.6-terra` | Balanced everyday work (≈GPT-5.5 quality, ~half Sol's cost) |
 | `luna` | `gpt-5.6-luna` | Fastest/cheapest — high-volume or simple checks |
 
 `spark` is a plugin alias for `gpt-5.3-codex-spark`, an ultra-fast coding model outside this skill's grammar; pass it explicitly as `--model spark` when a call genuinely wants it.
 
-**Reasoning:** `none` → `minimal` → `low` → `medium` → `high` → `xhigh` (this skill's default). These six are the full set the **companion** accepts — the model catalogue also lists `max` (and `ultra` on Astra, Sol, and Terra), but the companion rejects both with `Unsupported reasoning effort`, so route work needing them to the Codex Desktop app or the native CLI. Omitting `--effort` falls back to `model_reasoning_effort` in `~/.codex/config.toml`.
+**Reasoning:** `none` → `minimal` → `low` → `medium` → `high` → `xhigh`, defaulting to `medium` (Astra's own catalogue default). These six are the full set the **companion** accepts — the model catalogue also lists `max` (and `ultra` on Astra, Sol, and Terra), but the companion rejects both with `Unsupported reasoning effort`, so route work needing them to the Codex Desktop app or the native CLI. Omitting `--effort` falls back to `model_reasoning_effort` in `~/.codex/config.toml`.
 
 **Service tier is config-global.** There is no per-call flag: the tier comes from `service_tier` in `~/.codex/config.toml` (`"default"` for standard speed, `"fast"` for priority routing). A user asking for `fast` or `standard` per call gets the configured tier — say so, and point at config.toml as the place to change it.
 
-Extract model tier and reasoning level from user input in any order; any dimension the user omits takes its default (sol / xhigh). Astra is opt-in by name: `/codex astra` or `/codex astra medium`.
+Extract model tier and reasoning level from user input in any order; any dimension the user omits takes its default (astra / medium).
 
 ## Plugin Commands
 
@@ -56,12 +56,13 @@ The plugin ships slash commands of its own. Prefer them where they fit; use `/co
 
 ## Companion CLI Reference
 
-Resolve the version-volatile plugin root, then call the companion:
+Call the companion through the wrapper on PATH (this estate: `~/scripts/codex-companion`), which resolves the version-volatile plugin root for you:
 
 ```bash
-CODEX_COMPANION=$(ls -d ~/.claude/plugins/cache/openai-codex/codex/*/scripts/codex-companion.mjs | sort -V | tail -1)
-node "$CODEX_COMPANION" task --model gpt-5.6-sol --effort xhigh --cwd "$PWD" "prepared prompt"
+~/scripts/codex-companion task --model gpt-6-astra --effort medium --cwd "$PWD" "prepared prompt"
 ```
+
+Without the wrapper, resolve the plugin root inline instead — see `references/codex-plugin-setup.md`.
 
 | Subcommand | Flags | Notes |
 |------------|-------|-------|
@@ -78,7 +79,7 @@ node "$CODEX_COMPANION" task --model gpt-5.6-sol --effort xhigh --cwd "$PWD" "pr
 
 **Long prompts:** write the prompt to a file under `$TMPDIR` and pass `--prompt-file <file>` instead of inlining it as an argument.
 
-**Health:** `node "$CODEX_COMPANION" setup --json` returns `ready`, `codex.available`, `auth.loggedIn`, and `sessionRuntime` without a model call. `ready: false` or `auth.loggedIn: false` means Codex is degraded — report it and suggest `/codex:setup`, and keep going without Codex.
+**Health:** `~/scripts/codex-companion setup --json` returns `ready`, `codex.available`, `auth.loggedIn`, and `sessionRuntime` without a model call. `ready: false` or `auth.loggedIn: false` means Codex is degraded — report it and suggest `/codex:setup`, and keep going without Codex.
 
 **Usage and rate limits:** `references/codex-rate-limits.md`.
 
@@ -110,7 +111,7 @@ Agent({
   run_in_background: true,
   // Relay behaviour (verbatim pass-through, single Bash call, leaf-only) lives in the
   // agent's own system prompt — the task prompt carries only the call parameters:
-  prompt: "Run the Codex companion once with:\n\n--model gpt-5.6-sol        // default; gpt-6-astra when the user names astra; gpt-5.6-terra | gpt-5.6-luna when the user names terra/luna\n--effort xhigh             // default; none/minimal/low/medium/high/xhigh\n--cwd [working dir]\n[--write]                  // only when Codex must modify or run something; omit for read-only review and reasoning\n[--resume-last]            // only for a follow-up on the previous thread\n\nPrompt:\n[prepared prompt]"
+  prompt: "Run the Codex companion once with:\n\n--model gpt-6-astra        // default; gpt-5.6-sol | gpt-5.6-terra | gpt-5.6-luna when the user names sol/terra/luna\n--effort medium            // default; none/minimal/low/medium/high/xhigh\n--cwd [working dir]\n[--write]                  // only when Codex must modify or run something; omit for read-only review and reasoning\n[--resume-last]            // only for a follow-up on the previous thread\n\nPrompt:\n[prepared prompt]"
 })
 ```
 
