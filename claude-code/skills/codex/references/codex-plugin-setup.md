@@ -35,7 +35,7 @@ mkdir -p ~/.codex
 cat > ~/.codex/config.toml << 'EOF'
 sandbox_mode           = "workspace-write"
 approval_policy        = "never"
-model                  = "gpt-5.6-sol"   # gpt-5.6-sol (flagship, default) | gpt-5.6-terra | gpt-5.6-luna
+model                  = "gpt-5.6-sol"   # gpt-6-astra (frontier) | gpt-5.6-sol (this config's default) | gpt-5.6-terra | gpt-5.6-luna
 model_reasoning_effort = "xhigh"          # none | minimal | low | medium | high | xhigh
 service_tier           = "default"        # "default" = standard speed; "fast" = priority routing
 
@@ -52,7 +52,7 @@ Keys used by the plugin path:
 | Key | Effect |
 |-----|--------|
 | `model` | Model when a call omits `--model` |
-| `model_reasoning_effort` | Effort when a call omits `--effort`; the companion accepts `none`/`minimal`/`low`/`medium`/`high`/`xhigh` and rejects `max`/`ultra` |
+| `model_reasoning_effort` | Effort when a call omits `--effort`; the companion accepts `none`/`minimal`/`low`/`medium`/`high`/`xhigh` and rejects `max`/`ultra`, which the model catalogue lists but this path cannot request |
 | `service_tier` | **Config-global** — the plugin exposes no per-call tier flag, so switching between standard and priority routing means editing this value |
 
 Two config shapes to keep clear of: `approvals_reviewer = "auto_review"`, which auto-approved a destructive sandbox escalation in headless `codex exec`; and a key whose type the CLI does not expect (a map where a boolean belongs, such as `features.context_management`), which crashes the runtime on parse.

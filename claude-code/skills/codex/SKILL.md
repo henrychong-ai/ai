@@ -1,12 +1,12 @@
 ---
 name: codex
-description: "Routes requests to OpenAI GPT-5.6 (Sol/Terra/Luna) through the official Codex plugin for Claude Code — second opinions, hard problems, code review. Runs in the background by default via the Agent tool (main thread stays free; the harness notifies on completion); foreground on explicit request. Triggers on /codex, \"use codex\"; model-aware: sol (default) / terra / luna; reasoning levels: none/minimal/low/medium/high/xhigh (default xhigh)."
+description: "Routes requests to OpenAI GPT-6 Astra and the GPT-5.6 family (Sol/Terra/Luna) through the official Codex plugin for Claude Code — second opinions, hard problems, code review. Runs in the background by default via the Agent tool (main thread stays free; the harness notifies on completion); foreground on explicit request. Triggers on /codex, \"use codex\"; model-aware: astra (frontier) / sol (default) / terra / luna; reasoning levels: none/minimal/low/medium/high/xhigh (default xhigh)."
 allowed-tools: Agent, Bash
 ---
 
-# Codex Skill — OpenAI GPT-5.6 (Sol / Terra / Luna)
+# Codex Skill — OpenAI GPT-6 Astra + GPT-5.6 (Sol / Terra / Luna)
 
-Second opinions, hard problems, and code review via GPT-5.6. **Dispatch runs in the background via the Agent tool** — the main thread stays free while Codex thinks; the harness notifies on completion and Claude integrates the response then.
+Second opinions, hard problems, and code review via GPT-6 Astra or GPT-5.6. **Dispatch runs in the background via the Agent tool** — the main thread stays free while Codex thinks; the harness notifies on completion and Claude integrates the response then.
 
 **Transport (since 2026-09-09):** the official **Codex plugin for Claude Code** (`codex@openai-codex`, marketplace `openai/codex-plugin-cc`). Its companion CLI talks to the Codex **app-server** runtime, a shared local daemon started on demand, which inherits `~/.codex/config.toml` and the existing ChatGPT login. This replaces the stdio MCP server (`codex mcp-server`, deprecated in Codex CLI 0.149.1 and removed from this estate on 2026-09-09) — the tools `mcp__codex__codex` and `mcp__codex__codex-reply` no longer exist. Setup, upgrade, and troubleshooting: `references/codex-plugin-setup.md`.
 
@@ -19,22 +19,27 @@ Grammar: `/codex [model] [reasoning] [foreground]` — arguments in any order; a
 | `/codex` | sol | xhigh |
 | `/codex [model]` | specified | xhigh |
 | `/codex [level]` | sol | specified |
+| `/codex astra` | astra | xhigh |
+| `/codex astra medium` | astra | medium |
 | `/codex luna xhigh` | luna | xhigh |
 | `/codex terra high` | terra | high |
 
-**Models** (GPT-5.6 family — tier names are durable; the generation number advances on its own cadence):
+**Models** (tier names are durable; the generation number advances on its own cadence — GPT-6 Astra sits above the still-available GPT-5.6 family):
 
 | Arg | Model ID | Use for (illustrative — not required outputs) |
 |-----|----------|-----------------------------------------------|
-| `sol` *(default)* | `gpt-5.6-sol` | Flagship deep reasoning — hardest problems, cross-model second opinions, code review |
+| `astra` | `gpt-6-astra` | Frontier flagship (released 2026-09-03), succeeding Sol — the catalogue's "most capable model for complex, demanding work". Strongest agentic execution, roughly 1.9x faster task completion than Sol on Mind2Web, shorter and less verbose reasoning, stronger long-context retrieval. Catalogue default effort `medium`. $10 in / $50 out per million tokens, against Sol's $5 / $30. On ChatGPT Pro, Business, and Enterprise plus the API. Source: [DataCamp GPT-6 Astra overview](https://www.datacamp.com/blog/gpt-6-astra) |
+| `sol` *(default)* | `gpt-5.6-sol` | Deep reasoning workhorse — hard problems, cross-model second opinions, code review |
 | `terra` | `gpt-5.6-terra` | Balanced everyday work (≈GPT-5.5 quality, ~half Sol's cost) |
 | `luna` | `gpt-5.6-luna` | Fastest/cheapest — high-volume or simple checks |
 
-**Reasoning:** `none` → `minimal` → `low` → `medium` → `high` → `xhigh` (this skill's default). These six are the full set the companion accepts; `max` and `ultra` are rejected with `Unsupported reasoning effort`, so route work needing them to the Codex Desktop app or the native CLI. Omitting `--effort` falls back to `model_reasoning_effort` in `~/.codex/config.toml`.
+`spark` is a plugin alias for `gpt-5.3-codex-spark`, an ultra-fast coding model outside this skill's grammar; pass it explicitly as `--model spark` when a call genuinely wants it.
+
+**Reasoning:** `none` → `minimal` → `low` → `medium` → `high` → `xhigh` (this skill's default). These six are the full set the **companion** accepts — the model catalogue also lists `max` (and `ultra` on Astra, Sol, and Terra), but the companion rejects both with `Unsupported reasoning effort`, so route work needing them to the Codex Desktop app or the native CLI. Omitting `--effort` falls back to `model_reasoning_effort` in `~/.codex/config.toml`.
 
 **Service tier is config-global.** There is no per-call flag: the tier comes from `service_tier` in `~/.codex/config.toml` (`"default"` for standard speed, `"fast"` for priority routing). A user asking for `fast` or `standard` per call gets the configured tier — say so, and point at config.toml as the place to change it.
 
-Extract model tier and reasoning level from user input in any order; any dimension the user omits takes its default (sol / xhigh).
+Extract model tier and reasoning level from user input in any order; any dimension the user omits takes its default (sol / xhigh). Astra is opt-in by name: `/codex astra` or `/codex astra medium`.
 
 ## Plugin Commands
 
@@ -105,7 +110,7 @@ Agent({
   run_in_background: true,
   // Relay behaviour (verbatim pass-through, single Bash call, leaf-only) lives in the
   // agent's own system prompt — the task prompt carries only the call parameters:
-  prompt: "Run the Codex companion once with:\n\n--model gpt-5.6-sol        // default; gpt-5.6-terra | gpt-5.6-luna when the user names terra/luna\n--effort xhigh             // default; none/minimal/low/medium/high/xhigh\n--cwd [working dir]\n[--write]                  // only when Codex must modify or run something; omit for read-only review and reasoning\n[--resume-last]            // only for a follow-up on the previous thread\n\nPrompt:\n[prepared prompt]"
+  prompt: "Run the Codex companion once with:\n\n--model gpt-5.6-sol        // default; gpt-6-astra when the user names astra; gpt-5.6-terra | gpt-5.6-luna when the user names terra/luna\n--effort xhigh             // default; none/minimal/low/medium/high/xhigh\n--cwd [working dir]\n[--write]                  // only when Codex must modify or run something; omit for read-only review and reasoning\n[--resume-last]            // only for a follow-up on the previous thread\n\nPrompt:\n[prepared prompt]"
 })
 ```
 
