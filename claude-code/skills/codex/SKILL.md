@@ -37,7 +37,7 @@ Grammar: `/codex [model] [reasoning] [foreground]` — arguments in any order; a
 
 **Reasoning:** `none` → `minimal` → `low` → `medium` → `high` → `xhigh`, defaulting to `medium` (Astra's own catalogue default). These six are the full set the **companion** accepts — the model catalogue also lists `max` (and `ultra` on Astra, Sol, and Terra), but the companion rejects both with `Unsupported reasoning effort`, so route work needing them to the Codex Desktop app or the native CLI. Omitting `--effort` falls back to `model_reasoning_effort` in `~/.codex/config.toml`.
 
-**Service tier is config-global.** There is no per-call flag: the tier comes from `service_tier` in `~/.codex/config.toml` (`"default"` for standard speed, `"fast"` for priority routing). A user asking for `fast` or `standard` per call gets the configured tier — say so, and point at config.toml as the place to change it.
+**Service tier is config-global.** There is no per-call flag: the tier comes from `service_tier` in `~/.codex/config.toml` (`"default"` for standard processing, `"fast"` for priority routing — on ChatGPT-plan auth Fast is ~1.5x speed at **2.5x plan usage** for GPT-5.6, not free). A user asking for `fast` or `standard` per call gets the configured tier — say so, and point at config.toml as the place to change it.
 
 Extract model tier and reasoning level from user input in any order; any dimension the user omits takes its default (astra / medium).
 

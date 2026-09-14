@@ -37,7 +37,7 @@ sandbox_mode           = "workspace-write"
 approval_policy        = "never"
 model                  = "gpt-5.6-sol"   # gpt-6-astra (frontier) | gpt-5.6-sol (this config's default) | gpt-5.6-terra | gpt-5.6-luna
 model_reasoning_effort = "xhigh"          # none | minimal | low | medium | high | xhigh
-service_tier           = "default"        # "default" = standard speed; "fast" = priority routing
+service_tier           = "default"        # "default" = standard processing; "fast" = priority routing (~1.5x speed, 2.5x ChatGPT-plan usage on GPT-5.6)
 
 [features]
 web_search_request = true
@@ -53,7 +53,7 @@ Keys used by the plugin path:
 |-----|--------|
 | `model` | Model when a call omits `--model` |
 | `model_reasoning_effort` | Effort when a call omits `--effort`; the companion accepts `none`/`minimal`/`low`/`medium`/`high`/`xhigh` and rejects `max`/`ultra`, which the model catalogue lists but this path cannot request |
-| `service_tier` | **Config-global** — the plugin exposes no per-call tier flag, so switching between standard and priority routing means editing this value |
+| `service_tier` | **Config-global** — the plugin exposes no per-call tier flag, so switching between standard and priority routing means editing this value. Fast is not free on ChatGPT-plan auth: 2.5x plan usage for ~1.5x speed on GPT-5.6 (API-key auth ignores the key). The Desktop app keeps its own `[desktop] default-service-tier` (`priority` = Fast) — leave it to the app |
 
 These config values apply only when a call omits the flag. `/codex` and the `codex-relay` agent both pass `--model` and `--effort` explicitly, so the skill default (`gpt-6-astra` at `medium`) holds regardless of what `model` and `model_reasoning_effort` say here.
 
