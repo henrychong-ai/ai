@@ -13,4 +13,6 @@ Keep it current as the skill evolves. If nothing is open, say so explicitly.
 - [ ] Consider splitting the model compatibility references into a per-tier index once a fourth frontier-tier file lands, so SKILL.md points at one router rather than four files.
 
 ## Unverified data / placeholders
+- [ ] Verify whether Claude Desktop Code-tab sessions receive the account-level "Instructions for Claude" text in addition to `~/.claude/CLAUDE.md`. If they do, paste artefacts for that field need an explicit CLAUDE.md-is-canonical precedence line (recorded 2026-09-14 as unverified).
+- [ ] Verify whether the Cowork "Global instructions" field carries the same 32,768-code-point cap as "Instructions for Claude", and whether the two fields still exist separately after the Cowork-to-cloud migration (the app's i18n keeps both labels; observed 2026-09-14).
 - [ ] Claude Code harness-injection list (Part 2A of the Fable 5.1 reference): single-session observation, 2026-09-01, marked as an inference in the file itself.

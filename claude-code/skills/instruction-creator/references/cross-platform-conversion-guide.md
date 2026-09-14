@@ -74,6 +74,32 @@ DXT (now MCPB) extensions are for bundling **MCP servers** into Claude Desktop �
 
 ---
 
+## Instruction Size Limits by Surface
+
+Account-level instruction fields are the one place where a paste can fail *silently for the user and loudly for Claude*: the field accepts the text, and the sessions it feeds simply stop receiving instructions. Check the limit before every paste and every packaging run.
+
+| Surface / field | Limit | Unit | Behaviour when exceeded | Status |
+|---|---|---|---|---|
+| Claude Desktop / claude.ai **Instructions for Claude** (account-level; formerly Cowork "Global instructions"; feeds cloud-run "Claude sessions": Chat, Cowork, Dispatch) | **32,768** | Unicode code points | Blocking: banner *"over the 32,768 allowed in Claude sessions. Claude won't use them until they're shorter"*; the sessions run with no instructions. Server-enforced; the app's local check is 4,000,000 and does not protect you | Observed 2026-09-14, Desktop 1.52386.6; undocumented |
+| Cowork **Global instructions** (Settings → Cowork) | assume 32,768 | code points | assume blocking | Unverified |
+| Claude.ai Project custom instructions | not measured here | — | — | Check the field before relying on it |
+| Skill `description` frontmatter | 1,024 | characters | Upload rejected with `field 'description' in SKILL.md must be at most 1024 characters` | Verified |
+| Skill `.zip` upload (Desktop / Teams org skill) | 30 MB | bytes | Upload rejected | Verified (`claude-desktop-packaging-guide.md`) |
+| Claude Code `CLAUDE.md` and `.claude/rules/*.md` | 4 MiB | bytes | A larger file is skipped; recommendation stays under 200 lines per file | Official docs |
+| Claude Code auto-memory `MEMORY.md` | 200 lines or 25 KB | lines / bytes | Content past the threshold is not loaded | Official docs |
+
+### How to measure
+
+Count **Unicode code points**, which is what the 32,768 check uses (a 40,021-code-point paste produced exactly the banner figure 40,021; its UTF-16 length was 40,063 and its byte length 40,631). `python3 -c 'import sys; print(len(open(sys.argv[1], encoding="utf-8").read()))' FILE` is the reference measurement. `wc -c` reports bytes and over-counts every emoji, arrow, and em-dash; JavaScript `.length` over-counts astral-plane emoji.
+
+### Derivation rule for paste fields
+
+1. **Never hand-paste a master file.** A pasted copy has no sync path back to the master, so it rots the moment the master moves. Generate the paste artefact from the master by script and stamp it with the master's version.
+2. **Split by what is true for every session versus what is true because of the tools.** Identity, interpretation rules, precedence, preferences, and conventions belong in the account-level field. Tool routing, MCP limits, filesystem paths, and credential mechanics belong in the surface adapter (for example a Cowork-only field) or in on-demand file pointers. Zero overlap between the two fields: duplicated text is a token tax on every turn and over-steers frontier models.
+3. **Assert the size at generation time.** Target at most 90% of the cap (29,491 code points for a 32,768 field) so a normal release cadence does not re-trip the limit; fail the generation loudly when exceeded rather than trimming silently.
+4. **Declare precedence with any co-loaded file.** If the same account also loads a project or user `CLAUDE.md` in some session types, state in both artefacts which one is canonical when both are present (Core Rule 3).
+5. **When a field is already over the limit, cut in this order:** harness mechanics → reference material that a pointer can replace → long illustrative tables → prose framing. Cut whole sections, not sentences; a section trimmed to half its length usually loses its meaning while keeping its cost.
+
 ## Skill Portability Classification
 
 ### Portable Skills (Convert These)
