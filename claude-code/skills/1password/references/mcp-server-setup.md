@@ -232,7 +232,7 @@ If you have multiple 1Password accounts:
 op account list
 
 # Specify account in secret reference
-op://my.1password.com/Personal/Item/field
+op://account.1password.com/Personal/Item/field
 op://company.1password.com/Work/Item/field
 ```
 
