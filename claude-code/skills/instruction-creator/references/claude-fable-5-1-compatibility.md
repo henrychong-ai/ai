@@ -3,10 +3,10 @@
 *Companion reference to the Model-Aware Instruction Authoring section in SKILL.md. Delta file, not a rewrite.*
 
 **Fable 5.1 released:** 2026-09-01 (a point release over Fable 5)
-**Last updated:** 2026-09-01
+**Last updated:** 2026-09-24 (per-message-effort row, Opus 5.5 cache-read comparison, and Related References only)
 **Model IDs:** `claude-fable-5-1`; `claude-mythos-5-1` is the same weights with permissive safeguards, restricted to vetted partners.
 **Aliases:** `fable` resolves to Fable 5.1 on Claude Code 2.1.255+; new `best` alias resolves to Fable 5.1 where available, else `opus`. `fable[1m]` still accepted, but 5.1 runs 1M natively without it.
-**Pricing:** $10 / $50 per MTok, unchanged. **Cache reads $0.25 / MTok** (0.025x base), against $1 on Fable 5 and $0.50 on Opus 5. Announcement: roughly 25% lower total cost on typical workloads, up to 45% on agentic tasks.
+**Pricing:** $10 / $50 per MTok, unchanged. **Cache reads $0.25 / MTok** (0.025x base), against $1 on Fable 5, $0.50 on Opus 5, and $0.20 on Opus 5.5. Announcement: roughly 25% lower total cost on typical workloads, up to 45% on agentic tasks.
 **Specs:** 1M context (default and max), 128K max output, knowledge cutoff June 2026, retirement not before 2027-09-01. Thinking adaptive and always on (`thinking: disabled` returns 400 at any effort). Five effort levels: `low`, `medium`, `high`, `xhigh`, `max`; default `high`.
 
 Anthropic's position: existing Fable 5 prompts "should perform well on Claude Fable 5.1 without changes". So this is a delta pass, and **Parts 1 to 3 of `claude-fable-5-compatibility.md` remain the base**: brevity-first and removal-first authoring, the reasoning-extraction refusal trap, boundary instructions, autonomy language, bounded fan-out, the progress-audit scaffold, final-message re-grounding, the lesson-recording memory pattern, long-turn design, and evaluation awareness in grader prompts. All still apply.
@@ -22,7 +22,7 @@ One line each. Mechanics: the official migration guide (https://platform.claude.
 | **Forced tool choice removed** (breaking) | `tool_choice: {type: "any"}` or `{type: "tool", name}` returns 400, on Messages, Batches, and token counting. Fix: `auto` plus an explicit instruction and `strict: true`, or JSON via `output_config.format`; when a call is genuinely required this turn, append a mid-conversation `role: "system"` message naming the tool. `none` still works. |
 | **Thinking blocks bound to the producing model** (breaking) | No earlier model reads 5.1's blocks, so a router switch, client retry, or safeguard fallback silently drops them (not billed). Beta header `thinking-binding-controls-2026-08-01` surfaces the drop as `model_binding_mismatch`. |
 | **Thinking blocks bound to the conversation prefix** (breaking) | Each block is valid only against the exact `system`, `tools`, and prior messages. Enforced for accounts created on or after 2026-08-31; opt-in earlier via `thinking.block_binding.prefix_mismatch_behavior`. **Claude Code, claude.ai, Managed Agents, and the Agent SDK keep the prefix intact, so only hand-built message arrays are exposed.** Fixes are all append-only: turn-scoped system messages instead of injected-then-removed reminders, mid-conversation system messages instead of rebuilding `system` or `tools`, client compaction as one summary message plus a new user turn. Mythos 5.1 skips this check. |
-| **Per-message effort** (beta `mid-conversation-output-config-2026-07-01`) | A `role: "system"` message with empty content and `output_config.effort` changes effort from the next user turn **while preserving the prompt cache**. On Fable 5.1, Mythos 5.1, and Opus 5; 400 on Fable 5. **Claude Code has not adopted it as of 2.1.257** (verified 2026-09-01): its cache is still keyed by effort, so `/effort` mid-session recomputes the whole request. |
+| **Per-message effort** (beta `mid-conversation-output-config-2026-07-01`) | A `role: "system"` message with empty content and `output_config.effort` changes effort from the next user turn **while preserving the prompt cache**. On Fable 5.1, Mythos 5.1, Opus 5.5, and Opus 5; 400 on Fable 5. **Claude Code keeps the cache across an effort change on Fable 5.1 from v2.1.260** (and on Opus 5.5) with an API key or a Claude subscription, but not on Amazon Bedrock, Google Cloud's Agent Platform, a Claude apps gateway, with `CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS`, or under HIPAA (re-verified 2026-09-24; as of 2.1.257 it had not adopted it). |
 | **Turn-scoped system messages** (beta `mid-conversation-system-clear-at-2026-08-21`) | `clear_at: "next_user_message"` delivers a per-turn instruction that clears itself, costs no input tokens once cleared, and edits no earlier turn. The delivery mechanism for several deltas below. |
 | **`thinking.display: "updates"`** (beta `thinking-display-updates-2026-08-18`) | Returns progress-update thinking blocks as renderable text. Default is still `"omitted"`, which is why an integration can see no narration at all. |
 | **`fallbacks: "default"`** (beta `server-side-fallback-2026-07-01`) | Retries a refused request on Anthropic's recommended model. Permitted targets for 5.1: Opus 4.8 and Opus 5. The fallback model does not receive 5.1's thinking blocks. |
@@ -197,7 +197,7 @@ System card: 5.1 is cheaper per task than Fable 5 at every effort level, roughly
 | Routine high-volume | **Opus 5, Sonnet, or Haiku** on the same routing as before, but **Fable 5.1 at `low` or `medium` now belongs in the cost-per-task comparison**, since per-task cost can land below Opus 5 at low to high effort |
 | Long written deliverables | **`high`**, not `xhigh` or `max` (2.10) |
 
-Cache safety remains the third axis, unchanged in kind: the Claude Code cache is keyed jointly by model and effort, so pins belong in subagent contexts. What changed is the dollar magnitude, since a 5.1 cache read costs a quarter of the Fable 5 rate. See `cache-and-token-efficiency.md`.
+Cache safety remains the third axis: the Claude Code cache is keyed by model and, on most routes, by effort, so pins belong in subagent contexts. Since v2.1.260 an effort change on Fable 5.1 keeps the cache on first-party auth (Part 1), but a model change never does. What changed is the dollar magnitude, since a 5.1 cache read costs a quarter of the Fable 5 rate. See `cache-and-token-efficiency.md`.
 
 ---
 
@@ -352,6 +352,8 @@ All read 2026-09-01.
 # Related References in This Skill
 
 - `claude-fable-5-compatibility.md`: the base this file extends; Parts 1 to 3 remain current
+- `claude-opus-5-5-compatibility.md`: the current Opus model; shares three of this file's API breaks
+- `model-compatibility-index.md`: current models and which compatibility file to load when
 - `claude-opus-5-compatibility.md`: Opus-tier guide; the bio fallback target and the ZDR-eligible alternative
 - `claude-opus-4-8-compatibility.md`: Core Rules rationale in Part 1; the cyber fallback target
 - `cache-and-token-efficiency.md`: the model and effort cache key, and 5.1 cache-read economics

@@ -2,9 +2,11 @@
 
 *Companion reference to the Model-Aware Instruction Authoring section in SKILL.md.*
 
-**Opus 5 released:** July 2026 (CC `opus` alias resolves to it as of 2026-07-25)
-**Last updated:** 2026-08-03
-**Pricing:** $5 / $25 per MTok — unchanged from Opus 4.8; half of Fable 5 (cache reads: Opus 5 $0.50/MTok versus Fable 5.1 $0.25, half the Opus rate; Fable 5 was $1). **Model ID:** `claude-opus-5`. **Claude Code alias:** `opus`.
+> **Status (2026-09-24):** Opus 5 is the previous Opus model. Opus 5.5 (`claude-opus-5-5`, released 2026-09-22) succeeded it, and the Claude Code `opus` alias resolves to Opus 5.5 from 2.1.280. This file remains the **base** that `claude-opus-5-5-compatibility.md` extends: Parts 1 to 3 below still apply on Opus 5.5 unless that file says otherwise. Route through `model-compatibility-index.md`.
+
+**Opus 5 released:** July 2026 (the CC `opus` alias resolved to it from 2.1.219 until 2.1.280)
+**Last updated:** 2026-09-24 (status note and Related References only; content unchanged from 2026-08-03)
+**Pricing:** $5 / $25 per MTok — unchanged from Opus 4.8; half of Fable 5 (cache reads: Opus 5 $0.50/MTok versus Fable 5.1 $0.25, half the Opus rate; Fable 5 was $1). Opus 5.5 is cheaper at $4 / $20 (cache reads $0.20). **Model ID:** `claude-opus-5`.
 
 Opus 5 is a **step-change Opus-tier release** (Anthropic's words), not an incremental one: the largest gains are deep reasoning, agentic/long-horizon coding, test-time compute scaling, and efficiency at lower effort. Tier map unchanged: Haiku (speed) → Sonnet (balance) → **Opus (hard problems, workhorse)** → Fable (frontier, long-horizon). 1M context (default AND maximum — no smaller variant), 128K max output.
 
@@ -148,3 +150,14 @@ Early-adopter findings from Every's team, useful as practitioner counterweight t
 - Anthropic, "Prompting Claude Opus 5" — platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5 (read 2026-08-03)
 - Anthropic, "What's new in Claude Opus 5" — platform.claude.com/docs/en/about-claude/models/whats-new-opus-5 (read 2026-08-03)
 - Every, "Taming Opus 5" — every.to/context-window/taming-opus-5 (read 2026-08-03)
+
+---
+
+# Related References in This Skill
+
+- `claude-opus-5-5-compatibility.md`: the current Opus model; a delta file layered on this one (checklist steps 10–15 continue this file's 1–9)
+- `model-compatibility-index.md`: current models, alias targets, and which compatibility file to load when
+- `claude-opus-4-8-compatibility.md`: Core Rules rationale in Part 1; steps 1–7 for pre-4.8 content
+- `claude-fable-5-compatibility.md`: origin of brevity-first and removal-first authoring
+- `cache-and-token-efficiency.md`: the model and effort cache key
+- `yaml-frontmatter-complete-guide.md`: `model:` and `effort:` field enums, including `max`

@@ -2,10 +2,10 @@
 
 *Companion reference to the Model-Aware Instruction Authoring section in SKILL.md.*
 
-> **Tier note (2026-06-10):** Opus 4.8 is now the **Opus-tier model below Fable 5** (released 2026-06-09 as a new tier above Opus) and remains the routine-traffic workhorse. For Fable 5 authoring/auditing — including the cross-model effort calculus and the reasoning-extraction refusal trap — see **`claude-fable-5-compatibility.md`**. Everything below remains correct for Opus-tier work.
+> **Tier note (2026-09-24):** Opus 4.8 is superseded at the Opus tier by Opus 5 (July 2026) and then Opus 5.5 (2026-09-22, the current `opus` alias). Migrate Opus-tier content through `claude-opus-5-compatibility.md` and then `claude-opus-5-5-compatibility.md`; for the Fable tier see `claude-fable-5-1-compatibility.md`. This file is retained for the Core Rules rationale (Part 1) and for steps 1–7 on pre-4.8 content. The effort advice below (for example `xhigh` for coding) is 4.8-specific and does not carry over. Routing: `model-compatibility-index.md`.
 
 **Opus 4.8 released:** 2026-05-28 (41 days after Opus 4.7)
-**Last updated:** 2026-06-10 (tier note only; content unchanged from 2026-05-30)
+**Last updated:** 2026-09-24 (tier note only; content unchanged from 2026-05-30)
 **Pricing:** unchanged from 4.7 ($5 / $25 per MTok). **Model ID:** `claude-opus-4-8`.
 
 Opus 4.8 builds directly on Opus 4.7 and **inherits its literal instruction-following — sharpened**. The 8 Core Rules in SKILL.md originated with 4.7 and apply **unchanged** to 4.8; this guide keeps them (Part 1) and adds the 4.8-specific deltas that change how you author and audit instructions (Parts 2–3). Load it when auditing existing CLAUDE.md / skill / agent / command content, or when you need the rationale behind a rule.
@@ -242,7 +242,7 @@ If a task needs depth consistently, set it in YAML frontmatter. Do not write "as
 
 # Research Sources
 
-**Opus 4.8 (current):**
+**Opus 4.8:**
 - Anthropic announcement: https://www.anthropic.com/news/claude-opus-4-8
 - What's new in Opus 4.8 (API docs): https://platform.claude.com/docs/en/about-claude/models/whats-new-claude-4-8
 - Migration guide (4.7 → 4.8 section): https://platform.claude.com/docs/en/about-claude/models/migration-guide#migrating-from-claude-opus-47

@@ -1,7 +1,7 @@
 # YAML Frontmatter Complete Guide
 
 **Comprehensive reference for all instruction file YAML frontmatter fields**
-**Updated: 2026-03-20 (Claude Code v2.1.80+)**
+**Updated: 2026-09-24 (Claude Code v2.1.280+; `model`/`effort` defaults, Opus 5.5)**
 
 ---
 
@@ -28,7 +28,7 @@ As of Claude Code v2.1.3, **skills and slash commands have been merged** under a
 ---
 name: agent-name                    # Required: kebab-case identifier
 description: Brief description...   # Required: specialization + when to use
-model: sonnet                       # Optional: use aliases (fable/opus/sonnet/haiku/inherit)
+model: opus                         # Optional; recommended default for authored agents (aliases: opus/fable/sonnet/haiku/inherit)
 tools: Read, Grep, Glob, Bash       # Optional: tools agent can use (inherits all if omitted)
 disallowedTools: Write, Edit        # Optional: tools to explicitly deny
 permissionMode: default             # Optional: default|acceptEdits|dontAsk|bypassPermissions|plan
@@ -70,26 +70,28 @@ hooks:                              # Optional: lifecycle hooks scoped to agent
 #### `model` (Optional)
 - **Format:** Model alias or full ID
 - **Purpose:** Specifies Claude model for agent execution
-- **Values:** `fable`, `opus`, `sonnet`, `haiku`, `inherit` (from parent)
-- **Default:** `sonnet` if not specified
+- **Values:** `opus`, `fable`, `sonnet`, `haiku`, a full model ID such as `claude-opus-5-5`, or `inherit` (the main conversation's model)
+- **Harness default (when omitted):** the subagent model order below ends at the **main conversation's model**; there is no fixed `sonnet` default
+- **Recommended default for authored agents:** `model: opus` (tracks the current Opus, Opus 5.5 from CC 2.1.280). Deviate deliberately: `sonnet`/`haiku` for clearly mechanical high-volume work, `fable` only for work that needs frontier capability
+- **Alias inheritance:** when the main conversation is already in the alias's family, `opus` resolves to the main model's exact ID, including any `[1m]` suffix
 - **Best Practice:** Use aliases for automatic version updates
 
-**Priority Order:**
-1. Task tool `model` parameter (explicit override)
-2. Agent YAML `model` field
-3. `inherit` from parent conversation
-4. System default (sonnet)
+**Priority Order (code.claude.com/docs/en/sub-agents, verified 2026-09-24):**
+1. Per-invocation `model` parameter (explicit override)
+2. Agent YAML `model` field (`inherit` = main conversation's model)
+3. `CLAUDE_CODE_SUBAGENT_MODEL` env var, when set
+4. Main conversation's model
 
 **Cache note:** agents execute as subagents with their own conversation and own cache (5m TTL) — a `model`/`effort` pin here never disturbs the main conversation's prompt cache. This makes agents the natural home for pinned model/effort work, unlike skill/command pins (see those sections). Detail: `cache-and-token-efficiency.md`.
 
 #### `effort` (Optional)
 - **Format:** String enum
 - **Purpose:** Override model effort level during agent execution
-- **Values:** `low` (○), `medium` (◐), `high` (●), `xhigh` (◉ — Fable 5.x / Opus 5 / Opus 4.8/4.7 / Sonnet 5), `max` (◎ — Fable 5.x / Opus 5 / Opus 4.8/4.7/4.6 / Sonnet 5/4.6; effort values are model-relative, see SKILL.md Model × Effort)
-- **Default:** Inherits session effort level
+- **Values:** `low` (○), `medium` (◐), `high` (●), `xhigh` (◉ — Fable 5.x / Opus 5.5 / Opus 5 / Opus 4.8/4.7 / Sonnet 5), `max` (◎ — Fable 5.x / Opus 5.5 / Opus 5 / Opus 4.8/4.7/4.6 / Sonnet 5/4.6; effort values are model-relative, see `model-compatibility-index.md`)
+- **Default:** Inherits session effort level (on Opus 5.5 the session default is `medium`; pin only when a specific level is needed)
 - **Behaviour:** Overrides session effort while agent is active; reverts when complete
 - **Note:** Cannot override `CLAUDE_CODE_EFFORT_LEVEL` env var
-- **Priority:** env var > frontmatter > session `/effort` > model default
+- **Priority:** env var > frontmatter > session `/effort` > settings (`modelSettings`; a top-level user `effortLevel` is ignored for Opus 5.5) > model default
 
 #### `tools` (Optional)
 - **Format:** Comma-separated string or YAML list
@@ -162,7 +164,7 @@ hooks:                              # Optional: lifecycle hooks scoped to agent
 name: skill-name                    # Required: kebab-case identifier
 description: This skill should...   # Required: third-person usage description
 allowed-tools: Read, Grep, Glob     # Optional: tools Claude can use without permission
-model: sonnet                       # Optional: model override for skill execution
+model: opus                         # Optional: model override; pair with context: fork (cache rule)
 context: fork                       # Optional: run in isolated sub-agent context
 agent: Explore                      # Optional: agent type when context: fork (requires context: fork)
 user-invocable: true                # Optional: show in /menu (default: true)
@@ -210,18 +212,19 @@ hooks:                              # Optional: lifecycle hooks scoped to skill
 #### `model` (Optional)
 - **Format:** Model alias or full ID
 - **Purpose:** Override model when skill is active
-- **Values:** `fable`, `opus`, `sonnet`, `haiku`
+- **Values:** same as `/model` (`opus`, `fable`, `sonnet`, `haiku`, a full model ID), or `inherit` to keep the active model
+- **Default when omitted:** the session model (main thread) or, with `context: fork`, the subagent model order
 - **Scope:** applies to the MAIN conversation for the rest of the current turn; the session model resumes on the next user prompt
 - **⚠️ Cache:** the CC prompt cache is keyed by (model, effort) — a main-thread pin forces a full uncached re-read of the conversation at activation plus a partial re-read at revert (double cache-bust). **Always pair a skill model pin with `context: fork` (+ `agent:`) so it runs as a subagent.** Detail: `cache-and-token-efficiency.md`
 
 #### `effort` (Optional)
 - **Format:** String enum
 - **Purpose:** Override model effort level when skill is invoked
-- **Values:** `low` (○), `medium` (◐), `high` (●), `xhigh` (◉ — Fable 5.x / Opus 5 / Opus 4.8/4.7 / Sonnet 5), `max` (◎ — Fable 5.x / Opus 5 / Opus 4.8/4.7/4.6 / Sonnet 5/4.6; effort values are model-relative, see SKILL.md Model × Effort)
-- **Default:** Inherits session effort level
+- **Values:** `low` (○), `medium` (◐), `high` (●), `xhigh` (◉ — Fable 5.x / Opus 5.5 / Opus 5 / Opus 4.8/4.7 / Sonnet 5), `max` (◎ — Fable 5.x / Opus 5.5 / Opus 5 / Opus 4.8/4.7/4.6 / Sonnet 5/4.6; effort values are model-relative, see `model-compatibility-index.md`)
+- **Default:** Inherits session effort level (on Opus 5.5 the session default is `medium`; pin only when a specific level is needed)
 - **Behaviour:** Overrides session effort while skill is active; reverts when complete
 - **Note:** Cannot override `CLAUDE_CODE_EFFORT_LEVEL` env var
-- **⚠️ Cache:** same (model, effort) cache-key rule as `model` — a main-thread effort pin double cache-busts the session, with the entry re-read billed at the active model's rate. Pin only with `context: fork`; a pin equal to the already-active level keeps the cache. Detail: `cache-and-token-efficiency.md`
+- **⚠️ Cache:** on most models the same (model, effort) cache-key rule as `model` — a main-thread effort pin double cache-busts the session, with the entry re-read billed at the active model's rate. On Opus 5.5 and Fable 5.1 with an API key or subscription an effort change keeps the cache (not on Bedrock, Agent Platform, a Claude apps gateway, disabled experimental betas, or HIPAA). Pin only with `context: fork` so the skill stays safe on every model and route; a pin equal to the already-active level keeps the cache. Detail: `cache-and-token-efficiency.md`
 
 #### `context` (Optional)
 - **Format:** String
@@ -239,9 +242,9 @@ hooks:                              # Optional: lifecycle hooks scoped to skill
 - **Purpose:** Specify which agent type to use when `context: fork` is set
 - **Requirement:** Only works when `context: fork` is also set
 - **Values:**
-  - `Explore` - Fast read-only analysis (Haiku)
-  - `Plan` - Research and planning (Sonnet)
-  - `general-purpose` - Full capability (Sonnet)
+  - `Explore` - Fast read-only analysis (inherits the main model, capped at Opus on the Claude API; Haiku before v2.1.198)
+  - `Plan` - Research and planning (inherits the main model)
+  - `general-purpose` - Full capability (`CLAUDE_CODE_SUBAGENT_MODEL` if set, else the main model)
   - Custom agent name from `~/.claude/agents/`
 - **Default:** `general-purpose` if not specified
 
@@ -288,7 +291,7 @@ hooks:                              # Optional: lifecycle hooks scoped to skill
 description: Brief command purpose      # Optional: command description
 allowed-tools: Bash(git:*), Read        # Optional: restrict tool access
 argument-hint: [pr-number] [priority]   # Optional: guide expected parameters
-model: sonnet                           # Optional: specific model
+model: opus                             # Optional: model override; pair with context: fork
 context: fork                           # Optional: run in forked sub-agent context
 agent: Explore                          # Optional: agent type when context: fork
 disable-model-invocation: false         # Optional: prevent Skill tool from calling
@@ -330,16 +333,16 @@ hooks:                                  # Optional: lifecycle hooks
 #### `model` (Optional)
 - **Format:** Model alias or full ID
 - **Purpose:** Override default model for command
-- **Values:** `fable`, `opus`, `sonnet`, `haiku`
+- **Values:** same as the skill `model` field (`opus`, `fable`, `sonnet`, `haiku`, a full ID, or `inherit`)
 - **⚠️ Cache:** commands share the skill rule — a main-thread pin double cache-busts the session ((model, effort) cache key). Always pair a pin with `context: fork`. Detail: `cache-and-token-efficiency.md`
 
 #### `effort` (Optional)
 - **Format:** String enum
 - **Purpose:** Override model effort level when command is invoked
-- **Values:** `low` (○), `medium` (◐), `high` (●), `xhigh` (◉ — Fable 5.x / Opus 5 / Opus 4.8/4.7 / Sonnet 5), `max` (◎ — Fable 5.x / Opus 5 / Opus 4.8/4.7/4.6 / Sonnet 5/4.6; effort values are model-relative, see SKILL.md Model × Effort)
-- **Default:** Inherits session effort level
+- **Values:** `low` (○), `medium` (◐), `high` (●), `xhigh` (◉ — Fable 5.x / Opus 5.5 / Opus 5 / Opus 4.8/4.7 / Sonnet 5), `max` (◎ — Fable 5.x / Opus 5.5 / Opus 5 / Opus 4.8/4.7/4.6 / Sonnet 5/4.6; effort values are model-relative, see `model-compatibility-index.md`)
+- **Default:** Inherits session effort level (on Opus 5.5 the session default is `medium`; pin only when a specific level is needed)
 - **Behaviour:** Overrides session effort while command is active; reverts when complete
-- **⚠️ Cache:** same rule as the command `model` field — main-thread pins double cache-bust; pin only with `context: fork`. Detail: `cache-and-token-efficiency.md`
+- **⚠️ Cache:** same rule as the skill `effort` field — main-thread pins double cache-bust on most models (the Opus 5.5 / Fable 5.1 effort exception aside); pin only with `context: fork`. Detail: `cache-and-token-efficiency.md`
 
 #### `context` (Optional)
 - **Format:** String
@@ -462,7 +465,7 @@ token_estimate: ~4000               # Approximate token count
 ```
 Is your skill/command doing complex work?
 ├─ YES: Use context: fork
-│   ├─ Read-only analysis? → agent: Explore (fast, Haiku)
+│   ├─ Read-only analysis? → agent: Explore (read-only; inherits the main model, capped at Opus)
 │   ├─ Complex with edits? → agent: general-purpose (full capability)
 │   └─ Specialized domain? → agent: your-custom-agent
 │
@@ -487,8 +490,8 @@ Is your skill/command doing complex work?
 |-------|----------|---------|-------------|
 | `name` | Yes | - | kebab-case identifier |
 | `description` | Yes | - | Specialization + "Use PROACTIVELY" |
-| `model` | No | `sonnet` | fable/opus/sonnet/haiku/inherit |
-| `effort` | No | Inherit | low/medium/high/xhigh effort override |
+| `model` | No | Main conversation's model (recommended: `opus`) | opus/fable/sonnet/haiku/full ID/inherit |
+| `effort` | No | Inherit | low/medium/high/xhigh/max effort override |
 | `tools` | No | All | Tools agent can use |
 | `disallowedTools` | No | None | Tools to deny |
 | `permissionMode` | No | `default` | Permission behavior |
@@ -502,8 +505,8 @@ Is your skill/command doing complex work?
 | `name` | Yes | - | kebab-case identifier |
 | `description` | Yes | - | Third-person usage description |
 | `allowed-tools` | No | None | Tools without permission |
-| `model` | No | Inherit | Model override |
-| `effort` | No | Inherit | low/medium/high/xhigh effort override |
+| `model` | No | Session model | Model override (pin only with `context: fork`) |
+| `effort` | No | Inherit | low/medium/high/xhigh/max effort override |
 | `context` | No | None | `fork` for isolation (fresh subagent — NOT a conversation fork) |
 | `agent` | No | `general-purpose` | Agent type (requires context: fork) |
 | `background` | No | `true` | `false` blocks the invoking turn (requires context: fork, v2.1.218+) |
@@ -518,8 +521,8 @@ Is your skill/command doing complex work?
 | `description` | No | - | Command description |
 | `allowed-tools` | No | All | Tool restrictions |
 | `argument-hint` | No | - | Expected parameters |
-| `model` | No | Inherit | Model override |
-| `effort` | No | Inherit | low/medium/high/xhigh effort override |
+| `model` | No | Session model | Model override (pin only with `context: fork`) |
+| `effort` | No | Inherit | low/medium/high/xhigh/max effort override |
 | `context` | No | None | `fork` for isolation (fresh subagent — NOT a conversation fork) |
 | `agent` | No | `general-purpose` | Agent type (requires context: fork) |
 | `background` | No | `true` | `false` blocks the invoking turn (requires context: fork, v2.1.218+) |
@@ -533,7 +536,7 @@ Is your skill/command doing complex work?
 **For Agents:**
 - [ ] `name`: kebab-case, matches filename
 - [ ] `description`: includes specialization + "Use PROACTIVELY" + triggers
-- [ ] `model`: Use aliases (opus/sonnet/haiku) not version numbers
+- [ ] `model`: `opus` by default; aliases (opus/fable/sonnet/haiku) not version numbers
 
 **For Skills:**
 - [ ] `name`: kebab-case, matches directory name
@@ -551,5 +554,5 @@ Is your skill/command doing complex work?
 
 ---
 
-**Last Updated:** 2026-03-20
-**Claude Code Version:** 2.1.80+
+**Last Updated:** 2026-09-24
+**Claude Code Version:** 2.1.280+
