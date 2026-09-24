@@ -96,9 +96,9 @@ Create environment-specific configs at user level for reuse across projects:
 
 ## Deployment
 \`\`\`bash
-CLOUDFLARE_API_TOKEN=$(op read "op://<vault>/<item>/API Token" --account <your-account>.1password.com) \
+CLOUDFLARE_API_TOKEN="op://<vault>/<item>/API Token" \
 CLOUDFLARE_ACCOUNT_ID="<your-cloudflare-account-id>" \
-pnpm run deploy
+op run --account <your-account>.1password.com -- pnpm run deploy
 \`\`\`
 ```
 
