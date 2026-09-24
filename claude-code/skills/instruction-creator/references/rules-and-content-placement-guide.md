@@ -117,7 +117,7 @@ skill-name/
 
 ### Agents
 
-**Behavior:** Load via Task tool or auto-trigger from "Use PROACTIVELY" in description
+**Behavior:** Load via the Agent tool or auto-trigger from "Use PROACTIVELY" in description
 
 **Best For:**
 - Autonomous operations requiring delegation
