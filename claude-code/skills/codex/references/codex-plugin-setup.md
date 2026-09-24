@@ -1,6 +1,6 @@
 # Codex Plugin Setup (Claude Code)
 
-Setup guide for the official **OpenAI Codex plugin for Claude Code**, which routes GPT-5.6 (Sol/Terra/Luna) work to the Codex app-server runtime. Current on this setup: `codex@openai-codex` v1.0.6, user scope, Codex CLI 0.153.4.
+Setup guide for the official **OpenAI Codex plugin for Claude Code**, which routes GPT-6 (Astra/Sol/Luna) work to the Codex app-server runtime. Current on this setup: `codex@openai-codex` v1.0.6, user scope, Codex CLI 0.156.1.
 
 ## Prerequisites
 
@@ -35,9 +35,9 @@ mkdir -p ~/.codex
 cat > ~/.codex/config.toml << 'EOF'
 sandbox_mode           = "workspace-write"
 approval_policy        = "never"
-model                  = "gpt-5.6-sol"   # gpt-6-astra (frontier) | gpt-5.6-sol (this config's default) | gpt-5.6-terra | gpt-5.6-luna
+model                  = "gpt-6-sol"     # gpt-6-astra (frontier) | gpt-6-sol (this config's default) | gpt-6-luna
 model_reasoning_effort = "xhigh"          # none | minimal | low | medium | high | xhigh
-service_tier           = "default"        # "default" = standard processing; "fast" = priority routing (~1.5x speed, 2.5x ChatGPT-plan usage on GPT-5.6)
+service_tier           = "default"        # "default" = standard processing; "fast" = priority routing (catalogue: Astra 2x speed with increased usage; GPT-6 Sol/Luna 1.5x speed)
 
 [features]
 web_search_request = true
@@ -53,7 +53,7 @@ Keys used by the plugin path:
 |-----|--------|
 | `model` | Model when a call omits `--model` |
 | `model_reasoning_effort` | Effort when a call omits `--effort`; the companion accepts `none`/`minimal`/`low`/`medium`/`high`/`xhigh` and rejects `max`/`ultra`, which the model catalogue lists but this path cannot request |
-| `service_tier` | **Config-global** — the plugin exposes no per-call tier flag, so switching between standard and priority routing means editing this value. Fast is not free on ChatGPT-plan auth: 2.5x plan usage for ~1.5x speed on GPT-5.6 (API-key auth ignores the key). The Desktop app keeps its own `[desktop] default-service-tier` (`priority` = Fast) — leave it to the app |
+| `service_tier` | **Config-global** — the plugin exposes no per-call tier flag, so switching between standard and priority routing means editing this value. Fast is not free on ChatGPT-plan auth: the catalogue lists "2x speed, increased usage" on Astra and "1.5x speed" on GPT-6 Sol and Luna (API-key auth ignores the key). The Desktop app keeps its own `[desktop] default-service-tier` (`priority` = Fast) — leave it to the app |
 
 These config values apply only when a call omits the flag. `/codex` and the `codex-relay` agent both pass `--model` and `--effort` explicitly, so the skill default (`gpt-6-astra` at `medium`) holds regardless of what `model` and `model_reasoning_effort` say here.
 
@@ -79,7 +79,7 @@ In a Claude Code session, run `/codex:setup`, or from a shell:
 Then a live round-trip:
 
 ```bash
-~/scripts/codex-companion task --model gpt-5.6-luna --effort low "Reply with exactly: plugin ok"
+~/scripts/codex-companion task --model gpt-6-luna --effort low "Reply with exactly: plugin ok"
 ```
 
 ## Plugin Root Resolution
