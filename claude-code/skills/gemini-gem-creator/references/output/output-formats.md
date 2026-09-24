@@ -13,7 +13,7 @@ Standard formats for gem deliverables in both Create and Convert modes.
 *Created for: [Team/Purpose]*
 *Domain: [Category]*
 *Created: [Date]*
-*Recommended Model: [e.g. Pro / Deep Think for analysis; 3.5 Flash for speed]*
+*Recommended Model: [e.g. Pro / Deep Think for analysis; 3.6 Flash for speed]*
 
 ---
 
@@ -107,7 +107,7 @@ FORMAT:
 *Source: [CC skill/agent path]*
 *Domain: [Category]*
 *Converted: [Date]*
-*Recommended Model: [e.g. Pro / Deep Think for analysis; 3.5 Flash for speed]*
+*Recommended Model: [e.g. Pro / Deep Think for analysis; 3.6 Flash for speed]*
 
 ---
 

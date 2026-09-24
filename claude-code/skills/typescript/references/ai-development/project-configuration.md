@@ -11,13 +11,15 @@ Claude Code loads configuration in this order (highest to lowest priority):
 | Priority | Location | Scope | Git Status |
 |----------|----------|-------|------------|
 | 1 | Enterprise policy | Org-wide | N/A |
-| 2 | `./CLAUDE.md` | Project | Tracked |
+| 2 | `./AGENTS.md`, loaded through the `./CLAUDE.md` import shim | Project | Tracked |
 | 3 | `./.claude/rules/*.md` | Project | Tracked |
 | 4 | `~/.claude/CLAUDE.md` | User | N/A |
 | 5 | `~/.claude/rules/*.md` | User | N/A |
 | 6 | `./CLAUDE.local.md` | Project local | **Auto-ignored** |
 
 **Key principle:** Higher priority items override lower. Project rules override user rules.
+
+**Directory instruction files:** write project instructions in `AGENTS.md`, the canonical file every coding agent reads. Make `CLAUDE.md` a shim whose first line is `@AGENTS.md`, with only Claude-only addenda below it. Use the import, not a prose pointer (which loads nothing) or a symlink.
 
 ---
 
@@ -27,7 +29,8 @@ Claude Code loads configuration in this order (highest to lowest priority):
 
 ```
 my-project/
-├── CLAUDE.md                    # Shared project docs (git-tracked)
+├── AGENTS.md                    # Shared project instructions, canonical (git-tracked)
+├── CLAUDE.md                    # Import shim: first line `@AGENTS.md` (git-tracked)
 ├── .claude/
 │   ├── CLAUDE.local.md          # Environment-specific (AUTO-GITIGNORED)
 │   ├── CLAUDE.local.md.example  # Template for new clones (git-tracked)
@@ -40,7 +43,7 @@ my-project/
 
 ### Content Split
 
-**CLAUDE.md (git-tracked):**
+**AGENTS.md (git-tracked; `CLAUDE.md` imports it):**
 - Project overview, tech stack
 - Architecture, patterns
 - Development commands (generic)
@@ -111,17 +114,16 @@ Import environment configs into project-local files:
 @~/.claude/rules/environments/cloudflare-personal.md
 ```
 
-### In CLAUDE.md (for always-on imports)
+### In CLAUDE.md, below the shim line (Claude-only, always-on imports)
 
 ```markdown
-# Project Documentation
-
-## Overview
-...
+@AGENTS.md
 
 ## Environment Setup
 @~/.claude/rules/environments/cloudflare-personal.md
 ```
+
+Keep user-level imports out of `AGENTS.md`: other agents read it and cannot resolve `@~/.claude/...` paths.
 
 ### Import Rules
 
@@ -209,7 +211,8 @@ git push work main
 
 ```
 my-project/
-├── CLAUDE.md                    # Shared (git-tracked, pushed to both)
+├── AGENTS.md                    # Shared instructions (git-tracked, pushed to both)
+├── CLAUDE.md                    # `@AGENTS.md` import shim (git-tracked)
 ├── .claude/
 │   ├── CLAUDE.local.md          # Environment-specific (auto-gitignored)
 │   ├── CLAUDE.local.md.example  # Template (git-tracked)
@@ -255,7 +258,7 @@ ln -s ~/.claude/rules/environments/cloudflare-personal.md \
 
 | What | Where | Git Status |
 |------|-------|------------|
-| Shared project docs | `./CLAUDE.md` | Tracked |
+| Shared project instructions | `./AGENTS.md` (imported by the `./CLAUDE.md` shim) | Tracked |
 | Shared project rules | `./.claude/rules/*.md` | Tracked |
 | Environment secrets | `./.claude/CLAUDE.local.md` | **Auto-ignored** |
 | Setup template | `./.claude/CLAUDE.local.md.example` | Tracked |
@@ -265,4 +268,4 @@ ln -s ~/.claude/rules/environments/cloudflare-personal.md \
 ---
 
 *Patterns for TypeScript/Cloudflare Workers projects with multi-environment support.*
-*Last updated: 2026-01-10*
+*Last updated: 2026-09-24*

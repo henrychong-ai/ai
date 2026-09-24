@@ -21,17 +21,9 @@ Comprehensive version upgrade orchestration for Node.js, TypeScript, and framewo
 - Multi-repository version standardization
 - Security-critical production application upgrades
 
-## CRITICAL: Production Safety Warning
+## Production Safety
 
-**This skill handles upgrades for live production applications involving financial transactions and cryptocurrency operations.**
-
-### Mandatory Safety Requirements
-
-1. **NEVER skip testing phases** - Every upgrade must pass full test suite
-2. **ALWAYS create rollback plan** before any changes
-3. **REQUIRE explicit user approval** before committing changes
-4. **VALIDATE no behavior changes** in business-critical logic
-5. **CHECK CI/CD pipelines** pass before considering upgrade complete
+These upgrades run against live production applications, including financial transactions and cryptocurrency operations. Scope every change to what the version upgrade requires: keep business logic and function signatures unchanged unless the new version forces a change, keep every test and the coverage baseline, write the rollback plan before the first change, and commit only after the validation gates and CI/CD pipelines pass and the user approves.
 
 ## Operation Modes
 
@@ -279,24 +271,9 @@ head -50 dist/index.js
 |------|------------|
 | Hallucinated APIs | Verify every API call against official docs |
 | Context limit issues | Process files individually, not bulk |
-| Business logic drift | Assert "no behavior change" explicitly |
+| Business logic drift | Compare test results against the pre-upgrade baseline |
 | Missing edge cases | Review test coverage before/after |
 | Optimistic transformations | Conservative approach, minimal changes |
-
-### Prohibited Actions
-
-1. **NEVER** refactor business logic during version upgrade
-2. **NEVER** change function signatures unless required by upgrade
-3. **NEVER** remove tests or reduce coverage
-4. **NEVER** skip failing tests with comments
-5. **NEVER** commit without user approval
-
-### Required Assertions
-
-Before any code change, state explicitly:
-- "This change is required for [version] compatibility because [reason]"
-- "This change does NOT modify business logic"
-- "Existing tests cover this change"
 
 ## Reference Files
 
@@ -359,15 +336,6 @@ Load as needed based on upgrade type:
 | **Wide browser support** | ES2020 | 93%+ global coverage |
 | **Legacy Node 16** | ES2021 | EOL but sometimes required |
 
-### Node.js to ES Mapping
-| Node | Target | TypeScript Required |
-|------|--------|---------------------|
-| 24.x | ES2024 | 5.6+ |
-| 22.x | ES2023 | 5.5+ |
-| 20.x | ES2023 | 5.5+ |
-| 18.x | ES2022 | 5.0+ |
-| 16.x | ES2021 | 4.x+ |
-
 ### React
 | From Version | Target | Migration Complexity |
 |--------------|--------|---------------------|
@@ -398,7 +366,3 @@ Use typescript-version-upgrade skill to execute the planned Node.js upgrade with
 - References `/typescript` skill patterns for code conventions
 - Uses TodoWrite for tracking multi-step upgrade progress
 - Creates backup branch before any modifications
-
----
-
-**Remember: Financial applications require zero tolerance for upgrade-induced bugs. When in doubt, do less and verify more.**

@@ -1,7 +1,8 @@
 # Project Instructions - Code Quality
 
 <!--
-USAGE: Copy this file to your project root as CLAUDE.md
+USAGE: Copy this file to your project root as AGENTS.md (canonical for every coding agent),
+then create CLAUDE.md whose first line is `@AGENTS.md` so Claude Code imports it.
 IMPORTANT: Delete all sections that don't apply to your project to save tokens.
 Claude Code reads this file every session - keep it minimal.
 -->

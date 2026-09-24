@@ -168,17 +168,16 @@ FORMAT:
 
 A gem runs on whichever model the user selects in the Gemini app — **a gem cannot pin its own model**. Write gem instructions to be model-portable, and recommend a runtime model in the gem doc.
 
-**Current model selector (verify against [Gemini release notes](https://gemini.google/release-notes/)):**
+**Current model selector (checked 2026-09-24 against the [Gemini release notes](https://gemini.google/release-notes/); recheck quarterly):**
 
 | Model / mode | Recommend for |
 |--------------|---------------|
-| **Gemini 3.5 Flash** (app default) | Fast, high-volume, agentic tasks |
+| **Gemini 3.6 Flash** (released 2026-07-21; "3.6 Flash" in the selector) | Fast, high-volume, agentic tasks |
 | **Gemini 3.1 Pro** (shown as "Pro") | Complex reasoning, deep analysis, hardest problems |
-| **Gemini 3.5 Pro** (rolling out ~2026-06) | Successor flagship — recheck availability |
-| **Deep Think** (mode) | Deepest multi-step reasoning |
+| **Deep Think** (mode; Google AI Ultra only) | Deepest multi-step reasoning |
 | **Deep Research** (mode) | Multi-source research gems (e.g. dossier-style) |
 
-Add a **Recommended Model** line to every gem, e.g. "Recommended Model: select *Pro* or *Deep Think* for deep analysis; *3.5 Flash* for quick drafts."
+Add a **Recommended Model** line to every gem, e.g. "Recommended Model: select *Pro* or *Deep Think* for deep analysis; *3.6 Flash* for quick drafts."
 
 **Gemini 3.x instruction style (differs from older models — [Google guide](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/start/gemini-3-prompting-guide)):**
 - Be concise and direct — Gemini 3 over-analyses verbose, legacy prompt-engineering scaffolding.
@@ -282,19 +281,3 @@ Gemini's gem builder has a **magic wand** icon at the bottom of the Instructions
 | `examples/production-gems.md` | Real gems: Harvey AI, Gem Creator |
 | `examples/domain-examples.md` | Sukuk, Newsletter, Regulatory |
 | `output/output-formats.md` | Creation + Conversion output templates |
-
-## Activation Triggers
-
-**Create Mode:**
-- "create a gem", "build a gem", "new gem"
-- "I need a gem that...", "help me create"
-- "gem for [domain]"
-
-**Convert Mode:**
-- "convert to gemini", "gemini version"
-- "transform agent to gem", "CC to gem"
-- "make gem from agent"
-
-**Optimization:**
-- "optimize gem", "improve gem"
-- "my gem isn't working", "gem inconsistent"

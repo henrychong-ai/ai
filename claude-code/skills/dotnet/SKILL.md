@@ -5,8 +5,6 @@ description: .NET development specialist for enterprise applications, APIs, micr
 
 # .NET Development Specialist
 
-Expert .NET development for enterprise applications, cloud-native systems, and high-performance APIs.
-
 ## Overview
 
 Comprehensive .NET expertise including idiomatic C# patterns, ASP.NET Core Minimal APIs, Entity Framework Core, dependency injection, testing with xUnit, and deployment to Azure/AWS.
@@ -194,11 +192,6 @@ dotnet test                           # Run tests
 dotnet test --collect:"XPlat Code Coverage"  # With coverage
 dotnet test --filter "FullyQualifiedName~UnitTests"  # Filter
 ```
-
-## Integration with .NET Agent
-
-**Agent**: Full .NET platform development with enterprise context
-**Skill**: Quick pattern reference, idioms, framework guidance
 
 ---
 

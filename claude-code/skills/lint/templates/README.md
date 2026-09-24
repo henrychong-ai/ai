@@ -76,19 +76,20 @@ pnpm add -D husky lint-staged
 pnpm exec husky init
 ```
 
-### Claude Code Project Instructions
+### Project Instructions (AGENTS.md + CLAUDE.md shim)
 
 ```bash
-cp CLAUDE.md.template /your/project/CLAUDE.md
+cp AGENTS.md.template /your/project/AGENTS.md
+printf '@AGENTS.md\n' > /your/project/CLAUDE.md   # import shim for Claude Code
 ```
 
-**Important:** Edit CLAUDE.md and delete unused sections to save tokens.
+**Important:** Edit AGENTS.md and delete unused sections to save tokens.
 
 ## Template List
 
 | File | Ecosystem | Purpose |
 |------|-----------|---------|
-| `CLAUDE.md.template` | All | Project instructions for Claude Code |
+| `AGENTS.md.template` | All | Project instructions (`AGENTS.md`, imported by a `CLAUDE.md` `@AGENTS.md` shim) |
 | `eslint.config.mjs` | TS/JS | ESLint flat config with plugins |
 | `tsconfig.json` | TS/JS | Strict TypeScript compiler options |
 | `.prettierrc` | TS/JS | Prettier formatting rules |

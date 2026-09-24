@@ -558,7 +558,7 @@ Both templates include:
 
 | File | Content |
 |------|---------|
-| `templates/CLAUDE.md.template` | Project instructions snippet for Claude Code (delete unused sections!) |
+| `templates/AGENTS.md.template` | Project instructions snippet: copy as `AGENTS.md` plus a one-line `@AGENTS.md` `CLAUDE.md` shim (delete unused sections!) |
 | `templates/eslint.config.mjs` | Full ESLint flat config (core + conditional sections) |
 | `templates/tsconfig.json` | Strict TypeScript config |
 | `templates/.prettierrc` | Prettier config |

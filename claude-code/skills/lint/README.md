@@ -65,7 +65,7 @@ lint/
 │   └── dotnet-roslyn.md
 └── templates/            # Ready-to-copy config files
     ├── README.md         # Template selection guide
-    ├── CLAUDE.md.template
+    ├── AGENTS.md.template
     ├── eslint.config.mjs
     ├── tsconfig.json
     └── ... (14 templates total)
