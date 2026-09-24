@@ -9,7 +9,7 @@
 **Use Agent** when you need:
 - Autonomous delegation with "Use PROACTIVELY" pattern
 - Complex autonomous decision-making
-- TodoWrite for multi-step task tracking
+- Its own context window for long multi-step work
 - Business context integration
 - Continuous domain specialist operation
 
@@ -35,11 +35,11 @@
 
 **Characteristics:**
 - Location: `~/.claude/agents/*.md`
-- Invocation: Automatic via triggers in description, or explicit via Task tool
+- Invocation: Automatic via triggers in description, or explicit via the Agent tool
 - Format: YAML frontmatter (name, description, model) + markdown content
 - Complexity: Complex autonomous workflows
 - Integration: References project-instructions.md for business context
-- Tools: TodoWrite capability required for task tracking
+- Tools: inherits all unless `tools:` / `disallowedTools:` restrict them; leaf workers bar `Agent`/`Task` (no nested fan-out)
 
 **Best For:**
 - Domain specialists (compliance-officer, things, typescript)
@@ -90,10 +90,10 @@ A single skill (`~/.claude/skills/instruction-creator/SKILL.md`) handles both:
   - Quick reference for YAML frontmatter and templates
   - Proactive architectural review and creation
   - System-wide instruction optimisation
-  - Complex multi-file creation (can spin up Task tool subagents for parallelised work)
+  - Complex multi-file creation (can spin up subagents with the Agent tool for parallelised work)
   - Progressive disclosure to bundled reference materials
 
-**Note:** A separate agent is unnecessary when the skill runs in main thread context with full tool access. The skill can delegate to subagents via the Task tool for heavy parallel work.
+**Note:** A separate agent is unnecessary when the skill runs in main thread context with full tool access. The skill can delegate to subagents via the Agent tool for heavy parallel work.
 
 **Key Principle:** Skills answer "what/how" questions; Agents execute "do this" requests.
 
@@ -112,7 +112,7 @@ Need instruction capability?
 │  ├─ YES → Skill (or Agent + Skill if also need delegation)
 │  └─ NO → Continue
 │
-├─ Need complex autonomous decision-making with TodoWrite?
+├─ Need complex autonomous work in its own context window?
 │  ├─ YES → Agent
 │  └─ NO → Continue
 │
@@ -153,7 +153,7 @@ Forks are runtime-only — there is nothing to author on disk — so their place
 - Proactive review when compliance-related code detected
 - Business context integration critical
 - Complex decision-making with escalation
-- TodoWrite for tracking multi-step reviews
+- Own context window for long multi-step reviews
 
 ### Scenario 3: Travel Planning
 **Decision: Skill**
@@ -184,7 +184,7 @@ Forks are runtime-only — there is nothing to author on disk — so their place
 When skill usage shows need for proactive operation:
 1. Create agent referencing skill for resources
 2. Add YAML frontmatter with proactive triggers
-3. Add TodoWrite capability
+3. Add the operating contract: inputs, approval boundary, report returned to the caller
 4. Add business context integration
 5. Keep skill for explicit invocation option
 
@@ -213,7 +213,6 @@ When both patterns provide value:
 | **Explicit Invocation** | ✅ | ✅ | ✅ |
 | **Bundled Resources** | ❌ | ✅ | ✅ |
 | **Progressive Disclosure** | ❌ | ✅ | ✅ |
-| **TodoWrite Capability** | ✅ | ❌ | ✅ |
 | **Business Context** | ✅ | ❌ | ✅ |
 | **Token Efficiency** | ⚠️ | ✅ | ✅ |
 | **Complexity** | High | Medium | Highest |
@@ -223,6 +222,7 @@ When both patterns provide value:
 - Both skills and agents auto-trigger via semantic description matching
 - Agents add autonomous delegation via "Use PROACTIVELY" in description
 - Commands require manual invocation (/command-name)
+- Task tracking is not a differentiator: main-thread skills and commands can use the session's task tools (`TaskCreate`/`TaskGet`/`TaskList`/`TaskUpdate`; `TodoWrite` is disabled by default), and on current models those tools are off unless the user opts in (code.claude.com/docs/en/tools-reference, checked 2026-09-24)
 
 ---
 
@@ -290,5 +290,5 @@ When creating skills for cross-platform sharing:
 
 ---
 
-**Last Updated:** 2026-08-14 (conversation forks section added)
+**Last Updated:** 2026-09-24 (TodoWrite references replaced; task tracking dropped as a differentiator)
 **Use Case:** Decision guidance for instruction file type selection

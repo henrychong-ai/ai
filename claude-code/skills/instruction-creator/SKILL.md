@@ -7,7 +7,7 @@ description: "Architect for Claude instruction ecosystems (agents, skills, slash
 
 This skill provides complete guidance for creating and reviewing Claude instruction files across the entire instruction ecosystem.
 
-**Updated:** 2026-09-24 — Opus 5.5 (rel. 2026-09-22, now the `opus` alias) delta pass: `references/claude-opus-5-5-compatibility.md` added (API breaks, effort recalibration to a `medium` default, thinking-line removal, unattended early stops, Claude Code harness split); new `references/model-compatibility-index.md` takes the model catalogue, delta chain, per-model headline deltas, and routing out of SKILL.md; effort-change cache exception on Opus 5.5 / Fable 5.1; recommended `model: opus` default for agents and forked skills, stated separately from the harness default; built-in agent model tables corrected. 2026-09-14 — Instruction size limits by surface: the account-level Claude Desktop / claude.ai "Instructions for Claude" field is capped at 32,768 Unicode code points and *blocks* the whole instruction set when exceeded (server-side, undocumented; observed on Desktop 1.52386.6). New limits table + paste-field derivation rule (SKILL.md § Platform Considerations; conversion guide § "Instruction Size Limits by Surface"). 2026-09-01 — Fable 5.1 (rel. 2026-09-01) delta pass: `references/claude-fable-5-1-compatibility.md` added (9 behavioural deltas, harness-injected vs author-owned rule, effort/cost calculus, safeguards/fallback, system-card authoring findings); models table, effort ladder (`max` added), cache math, and checklists refreshed. 2026-08-14 — Fork subagents: "Forking — Two Distinct Mechanisms" disambiguation (conversation forks `subagent_type: "fork"`/`/subtask` vs `context: fork` frontmatter), fork delegation calculus (forks cannot be model/effort-pinned), `background:` frontmatter field, cache-reference correction (`context: fork` skills receive NO conversation history), Fable 5 fork-economics delta, CC→Codex fork mapping. 2026-08-03 — Opus 5 compatibility reference added (`references/claude-opus-5-compatibility.md`): removal-first reaches the Opus tier (verification scaffolds, self-correction nudges, review severity pre-filters now hurt), effort↮length decoupling, thinking-on-by-default mechanics, behavioural A/B prompt-debt audit. 2026-06-16 — CC→Codex conversion guide added (`references/cc-to-codex-conversion-guide.md` + `templates/cc-to-codex-assessment-template.md`): mechanic map, T1/T2/T3 tiers, Tier-A/B distribution decision, data + harness-tool gates. 2026-06-10 — Fable 5 (released 2026-06-09; **new tier above Opus**, not an Opus replacement) multi-model restructure; per-model deltas now live in `references/claude-<model>-compatibility.md` (supersedes the single-model 4.8 pass, 2026-05-30). Same day: cache-safety & token-efficiency rules — the CC prompt cache is keyed by (model, effort), so model/effort pins belong in subagent contexts only (`references/cache-and-token-efficiency.md`).
+**Updated:** 2026-09-24b — Agent template now matches Model Configuration (`model: opus`, `effort` omitted, leaf-worker `disallowedTools`) with a lean role + contract body; TodoWrite references corrected to the Task* tools (off by default on current models) and dropped as an agent-vs-skill differentiator; example Codex model name updated to `gpt-6-astra`. 2026-09-24 — Opus 5.5 (rel. 2026-09-22, now the `opus` alias) delta pass: `references/claude-opus-5-5-compatibility.md` added (API breaks, effort recalibration to a `medium` default, thinking-line removal, unattended early stops, Claude Code harness split); new `references/model-compatibility-index.md` takes the model catalogue, delta chain, per-model headline deltas, and routing out of SKILL.md; effort-change cache exception on Opus 5.5 / Fable 5.1; recommended `model: opus` default for agents and forked skills, stated separately from the harness default; built-in agent model tables corrected. 2026-09-14 — Instruction size limits by surface: the account-level Claude Desktop / claude.ai "Instructions for Claude" field is capped at 32,768 Unicode code points and *blocks* the whole instruction set when exceeded (server-side, undocumented; observed on Desktop 1.52386.6). New limits table + paste-field derivation rule (SKILL.md § Platform Considerations; conversion guide § "Instruction Size Limits by Surface"). 2026-09-01 — Fable 5.1 (rel. 2026-09-01) delta pass: `references/claude-fable-5-1-compatibility.md` added (9 behavioural deltas, harness-injected vs author-owned rule, effort/cost calculus, safeguards/fallback, system-card authoring findings); models table, effort ladder (`max` added), cache math, and checklists refreshed. 2026-08-14 — Fork subagents: "Forking — Two Distinct Mechanisms" disambiguation (conversation forks `subagent_type: "fork"`/`/subtask` vs `context: fork` frontmatter), fork delegation calculus (forks cannot be model/effort-pinned), `background:` frontmatter field, cache-reference correction (`context: fork` skills receive NO conversation history), Fable 5 fork-economics delta, CC→Codex fork mapping. 2026-08-03 — Opus 5 compatibility reference added (`references/claude-opus-5-compatibility.md`): removal-first reaches the Opus tier (verification scaffolds, self-correction nudges, review severity pre-filters now hurt), effort↮length decoupling, thinking-on-by-default mechanics, behavioural A/B prompt-debt audit. 2026-06-16 — CC→Codex conversion guide added (`references/cc-to-codex-conversion-guide.md` + `templates/cc-to-codex-assessment-template.md`): mechanic map, T1/T2/T3 tiers, Tier-A/B distribution decision, data + harness-tool gates. 2026-06-10 — Fable 5 (released 2026-06-09; **new tier above Opus**, not an Opus replacement) multi-model restructure; per-model deltas now live in `references/claude-<model>-compatibility.md` (supersedes the single-model 4.8 pass, 2026-05-30). Same day: cache-safety & token-efficiency rules — the CC prompt cache is keyed by (model, effort), so model/effort pins belong in subagent contexts only (`references/cache-and-token-efficiency.md`).
 
 ## ⚠️ Model-Aware Instruction Authoring (MANDATORY)
 
@@ -61,7 +61,7 @@ Unpinned skills and agents inherit the session level, which on Opus 5.5 now defa
 |------|----------|---------|---------|
 | **CLAUDE.md** | `~/.claude/` or `./` | User preferences, identity | Always (auto) |
 | **Rules** | `~/.claude/rules/` or `./.claude/rules/` | Focused config, patterns | Always (auto) |
-| **Agents** | `~/.claude/agents/*.md` | Autonomous domain specialists | On trigger/Task tool |
+| **Agents** | `~/.claude/agents/*.md` | Autonomous domain specialists | On trigger/Agent tool |
 | **Skills** | `~/.claude/skills/*/SKILL.md` | Bundled knowledge packages | On `/skill-name` or Skill tool |
 | **Run skills (repo-scoped)** | `<repo>/.claude/skills/run-*/` | Build/launch/**drive** one app | Auto-match by description, or `/run`; authored via `/run-skill-generator` |
 | **Commands** | `~/.claude/commands/*.md` | Natural language prompts | On `/command-name` |
@@ -181,24 +181,22 @@ Rules for any pin:
 ```markdown
 ---
 name: agent-name
-description: [Specialization]. [Capabilities]. Use PROACTIVELY for [triggers].
+description: [Specialisation]. [Capabilities]. Use PROACTIVELY for [triggers].
+model: opus                     # recommended default (Model Configuration above)
+# effort: omitted, so the agent inherits the session level; pin only when a specific level is needed
+disallowedTools: Agent, Task    # leaf worker: no nested fan-out (or list an explicit `tools:` allowlist)
 ---
 
-# **AGENT NAME: SPECIALIZED PURPOSE**
+[One paragraph: the agent's role, the domain it owns, and the outcome it is accountable for.]
 
-[Agent identity and mission]
-
-## AUTO-ACTIVATION SEQUENCE
-1. Load Context: Reference project-instructions.md if applicable
-2. Tool Readiness: Prepare TodoWrite and MCP strategies
-3. Success Metrics: Define execution excellence standards
-
-## DOMAIN EXPERTISE
-[Specialized knowledge and capabilities]
-
-## OPERATIONAL PROTOCOLS
-[Workflows, tool usage, MCP token strategies]
+## Contract
+- **Inputs:** [what the caller's brief supplies; on a blocking ambiguity, state the assumption and proceed]
+- **Does:** [the work, the tools and references it uses, the checks it runs before returning]
+- **Boundary:** [destructive, outward-facing, or approval-gated actions it stops and reports instead of performing]
+- **Returns:** [the report to the caller: results, what was verified and how, failures, decisions needed]
 ```
+
+Write the return for the **caller**, not the user: a backgrounded subagent's narration is invisible, so only its final result reaches anyone. For leaf workers, bar `Agent` and `Task` (two names for one spawn tool) with `disallowedTools`, or give a `tools:` allowlist that omits them; nested spawning multiplies token spend. Add domain sections below the contract only when the agent needs knowledge it cannot load from a skill.
 
 ## Creating Skills
 
@@ -462,7 +460,7 @@ hooks:
 **Use Agent When:**
 - Proactive operation with auto-triggering needed
 - Complex autonomous decision-making required
-- Multi-step workflows requiring TodoWrite
+- Long multi-step work that benefits from its own context window
 - Domain specialist needing continuous operation
 
 **Use Skill When:**
@@ -498,10 +496,11 @@ hooks:
 |---------|-------|-------|---------|
 | **Auto-Trigger** | Yes | Yes | No |
 | **Bundled Resources** | No | Yes | No |
-| **TodoWrite** | Yes | No | No |
 | **context: fork** | N/A | Yes | Yes |
 | **Token Efficiency** | Lower | Higher | Highest |
 | **File Structure** | Single | Multi-file | Single |
+
+**Task tracking is not a differentiator.** Main-thread skills and commands run in the session and can use its task-tracking tools as much as an agent can. Those tools are `TaskCreate`, `TaskGet`, `TaskList`, and `TaskUpdate`; `TodoWrite` is disabled by default in their favour. On current models they are off unless the user opts in (`CLAUDE_CODE_ENABLE_TODO_TOOLS=1`), so write instructions that work without them. Source: code.claude.com/docs/en/tools-reference, checked 2026-09-24.
 
 ## YAML Frontmatter Quick Reference
 
@@ -513,7 +512,8 @@ Agent / Skill / Command frontmatter blocks are documented inline under each "Cre
 - [ ] YAML: name, description; `model: opus` unless a smaller or larger tier is clearly warranted; omit `effort` unless a specific level is needed
 - [ ] Description includes "Use PROACTIVELY" if appropriate
 - [ ] any model/effort pin uses an alias; main-thread skills/commands carry no pin (or set `context: fork`)
-- [ ] TodoWrite capability for complex operations
+- [ ] Body is a role paragraph plus a contract: inputs, approval boundary, and the report returned to the caller
+- [ ] Leaf workers bar `Agent`/`Task` (`disallowedTools`) or list an explicit `tools:` allowlist
 - [ ] MCP token limit strategies defined
 
 ### For Skills
@@ -605,7 +605,7 @@ This skill runs in the **main thread context** with full access to all tools (Re
 - Can read, create, and modify instruction files inline
 - No context isolation overhead for interactive workflows
 
-For complex multi-file operations (e.g., creating an entire instruction ecosystem), this skill can spin up Task tool subagents as needed for parallelised work.
+For complex multi-file operations (e.g., creating an entire instruction ecosystem), this skill can spin up subagents with the Agent tool as needed for parallelised work.
 
 ## References
 

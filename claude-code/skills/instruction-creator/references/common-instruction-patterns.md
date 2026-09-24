@@ -9,33 +9,26 @@
 ### Domain Specialist Pattern
 **Use When:** Creating expert agent for specific technical domain
 
-**Structure:**
+**Structure:** the SKILL.md "Agent Template Structure" (frontmatter, one role paragraph, contract), plus the domain knowledge the agent cannot load from a skill:
 ```markdown
-# **AGENT NAME: DOMAIN SPECIALIST**
+---
+name: agent-name
+description: [Domain] specialist. [Capabilities]. Use PROACTIVELY for [triggers].
+model: opus
+# effort: omitted; pin only when a specific level is needed
+disallowedTools: Agent, Task    # leaf worker: no nested fan-out
+---
 
-Expert in [domain] with [key capabilities]. Specialized for [specific use cases].
+[One paragraph: role, domain owned, outcome it is accountable for.]
 
-## 🎯 **AUTO-ACTIVATION SEQUENCE**
-1. **Load Context**: [Context requirements]
-2. **Tool Readiness**: [Tool preparation]
-3. **Success Metrics**: [Excellence standards]
+## Contract
+- **Inputs:** [what the brief supplies]
+- **Does:** [work, tools, checks before returning]
+- **Boundary:** [actions it stops and reports instead of performing]
+- **Returns:** [report to the caller: results, verification, failures, decisions needed]
 
-## 📚 **DOMAIN EXPERTISE**
-### [Subtopic 1]
-[Specialized knowledge]
-
-### [Subtopic 2]
-[Specialized knowledge]
-
-## ⚙️ **OPERATIONAL PROTOCOLS**
-### [Workflow 1]
-[Step-by-step procedures]
-
-### [Workflow 2]
-[Step-by-step procedures]
-
-## 🏆 **SUCCESS METRICS**
-[Measurement criteria]
+## Domain Knowledge
+[Only what the agent cannot load from a skill or reference]
 ```
 
 **Examples:** typescript, python, rust, sql agents
@@ -45,28 +38,13 @@ Expert in [domain] with [key capabilities]. Specialized for [specific use cases]
 ### Business Context Pattern
 **Use When:** Agent needs company/domain business integration
 
-**Structure:**
+**Structure:** the Domain Specialist structure above, with the business context named as an input the agent loads rather than pasted into its body:
 ```markdown
-# **AGENT NAME: BUSINESS SPECIALIST**
-
-[Business domain] expert with [strategic focus]. Integrates [business context] for [outcome optimization].
-
-## 🎯 **AUTO-ACTIVATION SEQUENCE**
-1. **Load Context**: Reference project-instructions.md for business priorities
-2. **Business Assessment**: [KPIs, metrics, strategic alignment]
-3. **Tool Readiness**: [Business-aware tool preparation]
-
-## 🏢 **BUSINESS CONTEXT**
-[Company overview, strategic priorities, revenue optimization]
-
-## 💼 **DOMAIN EXPERTISE**
-[Business-specific knowledge and frameworks]
-
-## ⚙️ **OPERATIONAL PROTOCOLS**
-[Business-first workflows]
-
-## 📊 **SUCCESS METRICS & KPIs**
-[Business outcome measurements]
+## Contract
+- **Inputs:** the brief, plus [project instructions / domain skill] for business priorities and escalation thresholds
+- **Does:** [business-first workflow]
+- **Boundary:** [decisions above the escalation threshold go back to the caller]
+- **Returns:** [recommendation, the context it relied on, open decisions]
 ```
 
 **Examples:** compliance-officer, business-domain agents
@@ -296,12 +274,8 @@ Coordinate [multi-step process] to achieve [outcome].
 
 **Pattern:**
 ```markdown
-## 🎯 **AUTO-ACTIVATION SEQUENCE**
-1. **Load Context**: Reference project-instructions.md for:
-   - Business priorities and strategic goals
-   - Revenue optimization frameworks
-   - Escalation criteria and thresholds
-2. **Business Assessment**: [Use context for decisions]
+## Contract
+- **Inputs:** the brief, plus project-instructions.md for business priorities, strategic goals, and escalation thresholds
 ```
 
 **Integration:**
@@ -346,11 +320,9 @@ When user requests [operation]:
 
 **Agent:**
 ```markdown
-## 🎯 **AUTO-ACTIVATION SEQUENCE**
-1. **Load Skill Context**: Reference [skill-name] skill for:
-   - Bundled resources and references
-   - Detailed procedures and patterns
-2. **Proactive Operation**: [Auto-trigger behavior]
+## Contract
+- **Inputs:** the brief, plus the [skill-name] skill for bundled references and detailed procedures
+- **Does:** [proactive operation the agent owns]
 ```
 
 **Skill:**
@@ -378,13 +350,10 @@ For manual control, use "use skill [name]".
 - `[source]`: Data source or system
 - `[outcome]`: Desired result or goal
 
-### Section Headers
-- **🎯 AUTO-ACTIVATION SEQUENCE**: Agent startup
-- **📚 DOMAIN EXPERTISE**: Knowledge areas
-- **⚙️ OPERATIONAL PROTOCOLS**: Workflows
-- **🏆 SUCCESS METRICS**: Measurements
-- **🏢 BUSINESS CONTEXT**: Company info
-- **📊 SUCCESS METRICS & KPIS**: Business measurements
+### Agent Body Sections
+- **Role paragraph**: role, domain owned, accountable outcome
+- **Contract**: inputs, what it does, approval boundary, report returned to the caller
+- **Domain Knowledge** (optional): only what cannot be loaded from a skill
 
 ---
 
@@ -408,8 +377,8 @@ description: TypeScript specialist with advanced type system mastery. Use PROACT
 ```
 **✅ Clear Integration**
 ```markdown
-## AUTO-ACTIVATION SEQUENCE
-1. **Load Context**: Reference project-instructions.md for business priorities
+## Contract
+- **Inputs:** the brief, plus project-instructions.md for business priorities
 ```
 
 ---
@@ -445,10 +414,10 @@ references/guide-to-x.md: [Detailed guide loaded as needed]
 ### Quick Validation Checklist
 ```markdown
 Agent Validation:
-- ✅ YAML front matter complete
-- ✅ "Use PROACTIVELY" in description
-- ✅ Auto-activation sequence defined
-- ✅ Success metrics clear
+- ✅ YAML front matter complete (`model: opus` unless another tier is warranted; `effort` omitted unless needed)
+- ✅ "Use PROACTIVELY" in description where auto-delegation is wanted
+- ✅ Contract defined: inputs, approval boundary, report returned to the caller
+- ✅ Leaf workers bar `Agent`/`Task` or list an explicit `tools:` allowlist
 
 Skill Validation:
 - ✅ YAML front matter complete
@@ -465,5 +434,5 @@ Command Validation:
 
 ---
 
-**Last Updated:** 2025-10-28
+**Last Updated:** 2026-09-24 (agent patterns moved to the lean role + contract template)
 **Use Case:** Reference templates and patterns for instruction file creation

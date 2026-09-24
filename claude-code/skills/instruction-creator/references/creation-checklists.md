@@ -2,7 +2,7 @@
 
 Comprehensive checklists for file type selection, integration requirements, model selection, skill directory behaviour mapping, and sanitisation.
 
-**Updated:** 2026-09-24 (Model × Effort section: Opus 5.5, harness vs recommended default, built-in agent models)
+**Updated:** 2026-09-24b (agent MUST list: contract + leaf-worker spawn bar replace TodoWrite). 2026-09-24 (Model × Effort section: Opus 5.5, harness vs recommended default, built-in agent models)
 
 ---
 
@@ -44,7 +44,8 @@ Detailed guidance for choosing where content belongs. Each entry shows what SHOU
 
 ### All Agents MUST:
 - [ ] Reference appropriate project-instructions.md for business context
-- [ ] Include TodoWrite capability for complex operations
+- [ ] State the operating contract: inputs, approval boundary, and the report returned to the caller
+- [ ] Leaf workers: bar `Agent`/`Task` via `disallowedTools`, or list an explicit `tools:` allowlist
 - [ ] Specify MCP token limit strategies
 - [ ] Define escalation criteria for human review
 
