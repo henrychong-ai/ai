@@ -364,5 +364,5 @@ Use typescript-version-upgrade skill to execute the planned Node.js upgrade with
 
 - Works with `/lint` skill for post-upgrade linting setup
 - References `/typescript` skill patterns for code conventions
-- Uses TodoWrite for tracking multi-step upgrade progress
+- Tracks multi-step upgrade progress as a checklist in the upgrade plan, marking each step as it completes
 - Creates backup branch before any modifications

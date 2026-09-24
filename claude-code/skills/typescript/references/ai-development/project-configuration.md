@@ -15,11 +15,13 @@ Claude Code loads configuration in this order (highest to lowest priority):
 | 3 | `./.claude/rules/*.md` | Project | Tracked |
 | 4 | `~/.claude/CLAUDE.md` | User | N/A |
 | 5 | `~/.claude/rules/*.md` | User | N/A |
-| 6 | `./CLAUDE.local.md` | Project local | **Auto-ignored** |
+| 6 | `./CLAUDE.local.md` | Project local (personal) | **Gitignored** |
 
 **Key principle:** Higher priority items override lower. Project rules override user rules.
 
 **Directory instruction files:** write project instructions in `AGENTS.md`, the canonical file every coding agent reads. Make `CLAUDE.md` a shim whose first line is `@AGENTS.md`, with only Claude-only addenda below it. Use the import, not a prose pointer (which loads nothing) or a symlink.
+
+**CLAUDE.local.md:** Claude Code loads it from the project root. Keep it personal and gitignored (add `CLAUDE.local.md` to `.gitignore`). Its presence disables Claude Code's native `AGENTS.md` fallback, so keep the `@AGENTS.md` import shim in `CLAUDE.md` whenever a project uses `CLAUDE.local.md`.
 
 ---
 
@@ -31,9 +33,9 @@ Claude Code loads configuration in this order (highest to lowest priority):
 my-project/
 ├── AGENTS.md                    # Shared project instructions, canonical (git-tracked)
 ├── CLAUDE.md                    # Import shim: first line `@AGENTS.md` (git-tracked)
+├── CLAUDE.local.md              # Personal, environment-specific (gitignored)
+├── CLAUDE.local.md.example      # Template for new clones (git-tracked)
 ├── .claude/
-│   ├── CLAUDE.local.md          # Environment-specific (AUTO-GITIGNORED)
-│   ├── CLAUDE.local.md.example  # Template for new clones (git-tracked)
 │   └── rules/
 │       ├── architecture.md      # Shared rules (git-tracked)
 │       ├── api-patterns.md
@@ -49,10 +51,10 @@ my-project/
 - Development commands (generic)
 - Code structure documentation
 
-**CLAUDE.local.md (auto-gitignored):**
+**CLAUDE.local.md (project root, personal, gitignored):**
 - Account IDs, API endpoints
 - 1Password paths
-- Environment-specific secrets
+- Environment-specific settings (secret values stay in 1Password; store only `op://` references)
 - Local deployment commands
 
 ---
@@ -213,16 +215,16 @@ git push work main
 my-project/
 ├── AGENTS.md                    # Shared instructions (git-tracked, pushed to both)
 ├── CLAUDE.md                    # `@AGENTS.md` import shim (git-tracked)
+├── CLAUDE.local.md              # Personal, environment-specific (gitignored)
+├── CLAUDE.local.md.example      # Template (git-tracked)
 ├── .claude/
-│   ├── CLAUDE.local.md          # Environment-specific (auto-gitignored)
-│   ├── CLAUDE.local.md.example  # Template (git-tracked)
 │   └── rules/                   # Shared rules (git-tracked)
 ```
 
 ### Workflow
 
-1. **Personal clone:** Create `.claude/CLAUDE.local.md` with personal config
-2. **Work clone:** Create `.claude/CLAUDE.local.md` with work config
+1. **Personal clone:** Create `CLAUDE.local.md` in the project root with personal config
+2. **Work clone:** Create `CLAUDE.local.md` in the project root with work config
 3. **Both use @import:** `@~/.claude/rules/environments/[appropriate-env].md`
 
 ---
@@ -260,8 +262,8 @@ ln -s ~/.claude/rules/environments/cloudflare-personal.md \
 |------|-------|------------|
 | Shared project instructions | `./AGENTS.md` (imported by the `./CLAUDE.md` shim) | Tracked |
 | Shared project rules | `./.claude/rules/*.md` | Tracked |
-| Environment secrets | `./.claude/CLAUDE.local.md` | **Auto-ignored** |
-| Setup template | `./.claude/CLAUDE.local.md.example` | Tracked |
+| Personal environment config | `./CLAUDE.local.md` | **Gitignored** |
+| Setup template | `./CLAUDE.local.md.example` | Tracked |
 | User defaults | `~/.claude/rules/*.md` | N/A |
 | Environment configs | `~/.claude/rules/environments/*.md` | N/A |
 
