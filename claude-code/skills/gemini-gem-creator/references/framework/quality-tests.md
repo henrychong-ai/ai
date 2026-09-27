@@ -78,7 +78,7 @@ The 5-quality-test framework for validating Gemini gems before distribution.
 
 ### Test 4: Usability Test
 
-**Question:** Can you describe concrete scenarios where Fusang/Portcullis team would use this?
+**Question:** Can you describe concrete scenarios where the target team would use this?
 
 **Pass Criteria:**
 - Clear use cases evident from TASK
@@ -148,21 +148,21 @@ The 5-quality-test framework for validating Gemini gems before distribution.
 **CC Syntax Eliminated:**
 - [ ] No YAML frontmatter
 - [ ] No tool references (Read, Write, WebSearch, Grep, Glob, Edit, Bash)
-- [ ] No MCP references (mcp__kg__, mcp__yggdrasil__, mcp__perplexity__)
-- [ ] No file paths (/Users/..., ~/.claude/..., ~/[vault]/...)
+- [ ] No MCP references (any `mcp__<server>__<tool>` pattern)
+- [ ] No file paths (absolute user-home paths, ~/.claude/..., ~/[vault]/...)
 - [ ] No TodoWrite tracking
 - [ ] No agent/skill cross-references
 
 **Individual Content Sanitized:**
 - [ ] No personal names (e.g., [personal-name], [username])
 - [ ] No custom framework triggers (e.g., personal productivity systems)
-- [ ] No personal KG entity references
+- [ ] No personal knowledge-graph or memory entity references
 - [ ] No session-specific context
 
 **Business Context Preserved:**
-- [ ] Fusang digital securities context (if relevant)
-- [ ] Portcullis wealth management context (if relevant)
-- [ ] Regulatory frameworks (MAS, SFC, Labuan FSA)
+- [ ] Organisation operations and positioning (if relevant)
+- [ ] Service lines and audience context (if relevant)
+- [ ] Regulatory frameworks named in the source
 - [ ] Industry terminology intact
 
 ---

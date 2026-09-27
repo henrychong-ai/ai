@@ -1,6 +1,6 @@
 ---
 name: typescript
-description: "TypeScript development — type-safe JavaScript, fintech platforms, TypeScript compiler, React/Node.js, type system, async patterns, testing (Vitest), Cloudflare Workers, NestJS core, Astro content sites, Obsidian plugins. Owns an opinionated back-to-front ironclad stack (recommended default for back-end/services/internal tools): the Option-B @hono/zod-openapi single-source pattern where ONE createRoute() drives request+response validation, the generated OpenAPI doc, dashboard client types, and MCP tool schemas (API Shield parity/freshness guards + migration gotchas in api-patterns.md). Also covers API development (Hono, tRPC, REST, GraphQL) and the front-to-back Next.js full-stack boundary for when not to use it. Use for TypeScript code, type definitions, framework development, picking an API/stack architecture, and fintech applications."
+description: "TypeScript development — type-safe JavaScript, fintech platforms, TypeScript compiler, React/Node.js, type system, async patterns, testing (Vitest), Cloudflare Workers. Owns an opinionated back-to-front ironclad stack (recommended default for back-end/services/internal tools): the Option-B @hono/zod-openapi single-source pattern where ONE createRoute() drives request+response validation, the generated OpenAPI doc, dashboard client types, and MCP tool schemas (API Shield parity/freshness guards + gotchas in api-patterns.md). Also covers API development (Hono, tRPC, REST, GraphQL) and the front-to-back Next.js full-stack boundary for when not to use it. Use for TypeScript code, type definitions, framework development, picking an API/stack architecture, and fintech applications."
 ---
 
 # TypeScript Development Specialist
@@ -31,9 +31,9 @@ Load as needed based on the task at hand:
 ### Implementation Patterns
 - `references/patterns/error-handling.md` - Result/Either patterns, Zod, error boundaries
 - `references/patterns/async-patterns.md` - Concurrency, cancellation, retries
-- `references/patterns/api-patterns.md` - Hono, tRPC, REST/GraphQL **and the `@hono/zod-openapi` single-source pattern — the recommended DEFAULT for back-end / back-to-front projects** (one `createRoute()` drives request+response validation, the OpenAPI doc, dashboard client types, and MCP tool schemas; API Shield parity, auth-before-validation ordering, and the migration gotchas — proven in production)
+- `references/patterns/api-patterns.md` - Hono, tRPC, REST/GraphQL **and the `@hono/zod-openapi` single-source pattern — the recommended DEFAULT for back-end / back-to-front projects** (one `createRoute()` drives request+response validation, the OpenAPI doc, dashboard client types, and MCP tool schemas; API Shield parity, auth-before-validation ordering, and the migration gotchas)
 - `references/patterns/security-patterns.md` - Input depth limiting, DoS prevention, CVE mitigations
-- `references/patterns/nestjs-patterns.md` - **Core NestJS** (modules, DI, the request lifecycle order, guards/interceptors/pipes/filters, custom param decorators, config, testing) — *not part of the ironclad stack; for existing or inherited NestJS codebases; core framework only*
+- `references/patterns/nestjs-patterns.md` - **Core NestJS** (modules, DI, the request lifecycle order, guards/interceptors/pipes/filters, custom param decorators, config, testing) — *not part of the ironclad stack; for existing or inherited NestJS codebases; core only — codebase-specific conventions live in that repository's `AGENTS.md`*
 
 ### Testing
 - `references/testing/vitest-patterns.md` - Vitest config, mocking, coverage
@@ -47,9 +47,12 @@ Load as needed based on the task at hand:
 - `references/tech-stack/typescript-ironclad-stack.md` - Core tech stack decisions, incl. **the Option-B back-to-front pattern (recommended default)** + the back-to-front vs front-to-back boundary (when not to use it)
 - `references/tech-stack/typescript-ironclad-infra.md` - Deployment infrastructure
 - `references/tech-stack/cloudflare.md` - Cloudflare Workers/D1/KV complete reference
-- `references/tech-stack/when-to-use-astro.md` - When Astro is (and is not) the right choice
-- `references/tech-stack/astro-content-site-stack.md` - Astro content-site stack on Cloudflare (optional Payload CMS)
-- `references/tech-stack/obsidian.md` - Obsidian plugin development stack
+- `references/tech-stack/when-to-use-astro.md` - Decision guide: when a content-driven site should use Astro
+- `references/tech-stack/astro-content-site-stack.md` - Astro 5 content-site stack on Cloudflare (optional Payload CMS)
+- `references/tech-stack/obsidian.md` - Obsidian plugin development stack (official sample-plugin template)
+
+### Debugging
+- `references/debug/debug-statements.md` - Unconditional debug output in production code: symptoms, levelled-logger fix, detection greps
 
 ### Frontend Resources
 - https://www.builtatlightspeed.com - Frontend themes, templates, and UI kits
@@ -69,7 +72,7 @@ Load as needed based on the task at hand:
 - **React**: Hooks, context, performance optimization
 - **Node.js**: Async patterns, streams
 - **GraphQL**: Type-safe queries with generated types
-- **NestJS** (core): modules, DI, guards/interceptors/pipes/filters, custom decorators — see `references/patterns/nestjs-patterns.md` (non-ironclad; for existing NestJS codebases)
+- **NestJS** (core): modules, DI, guards/interceptors/pipes/filters, custom decorators — see `references/patterns/nestjs-patterns.md` (non-ironclad; for existing or inherited NestJS codebases)
 
 ### 3. Cloudflare Workers
 - Edge-first API development
@@ -140,7 +143,11 @@ pnpm test:ui           # Visual UI
 #### Templates
 - `templates/testing/vitest.config.ts` - Base config with 80% coverage
 - `templates/testing/setup.ts` - Global test setup
+- `templates/testing/vitest.config.react.ts` - React/DOM (jsdom) Vitest config
+- `templates/testing/setup.react.ts` - React Testing Library setup
+- `templates/testing/vitest.workspace.ts` - Monorepo Vitest workspace config
 - `templates/testing/jest.config.ts` - Legacy Jest config
+- `templates/testing/jest.setup.ts` - Legacy Jest global setup
 
 ## Quick Reference
 

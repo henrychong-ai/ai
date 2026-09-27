@@ -43,7 +43,7 @@ Pre-commit hooks enforce standards automatically. Strict TypeScript catches erro
 | **Pre-commit**       | Husky + lint-staged      | Enforce standards automatically            |
 | **Styling**          | Tailwind CSS + shadcn/ui | Utility-first, copy-paste components       |
 
-> **Recommended back-end / back-to-front default:** for a Worker/API that owns the contract with a dashboard and/or MCP consuming its types, use the **Option-B single-source pattern** (`@hono/zod-openapi`: ONE `createRoute()` → request+response validation + generated OpenAPI doc + dashboard client types + MCP tool schemas). Canonical definition: "The Option-B Back-to-Front Pattern (Recommended Default)" below. Proven in production.
+> **Back-end / back-to-front default:** for a Worker/API that owns the contract with a dashboard and/or MCP consuming its types, use the **Option-B single-source pattern** (`@hono/zod-openapi`: ONE `createRoute()` → request+response validation + generated OpenAPI doc + dashboard client types + MCP tool schemas). Canonical definition: "The Option-B Back-to-Front Pattern (Recommended Default)" below.
 
 ---
 
@@ -1283,7 +1283,7 @@ The Ironclad Stack's key advantage: single source of truth flowing through every
 
 ## The Option-B Back-to-Front Pattern (Recommended Default) — CANONICAL
 
-> **This section is the canonical definition of the back-to-front ironclad pattern.** Other docs and skills should point here rather than duplicate it. Proven in production: a pnpm workspace monorepo edge router on Cloudflare Workers, fully migrated to this pattern with a four-figure test suite green.
+> **This section is the canonical definition of the back-to-front ironclad pattern.** Other references point here; do not duplicate it. Keep project-specific adoption records (which tools use it, migration milestones) in your own project documentation.
 
 For back-end and back-to-front projects (a Worker/API that owns the contract, with a dashboard and/or MCP server consuming its types), this is the **default architecture**. The boundary for when *not* to use it is in "Back-to-Front vs Front-to-Back" below.
 
@@ -1310,27 +1310,27 @@ Using `@hono/zod-openapi`, ONE `createRoute()` + `.openapi()` definition single-
 
 ### Why `@hono/zod-openapi` (not a rewrite)
 
-`OpenAPIHono` **extends `Hono`** — `.route()`, `.use()`, `.onError()`, and `.request()` all behave identically. Adoption is therefore an **incremental, strangler-safe, per-router conversion**: converted `.openapi()` routers mount alongside plain Hono routers on the same instance, so you migrate one router at a time without a big-bang rewrite. A typical migration converts one router group at a time (e.g. feedback → analytics → admin → storage → system), each shipping independently.
+`OpenAPIHono` **extends `Hono`** — `.route()`, `.use()`, `.onError()`, and `.request()` all behave identically. Adoption is therefore an **incremental, strangler-safe, per-router conversion**: converted `.openapi()` routers mount alongside plain Hono routers on the same instance, so you migrate one router at a time without a big-bang rewrite. Convert routers in a deliberate sequence (typically lowest-risk, fewest-consumer routers first; auth-heavy and storage/opaque-content routers last), shipping each conversion independently behind the full test suite.
 
-### Stack (reference as-built)
+### Reference stack
 
-pnpm workspace monorepo:
+The standard shape for this pattern — a pnpm workspace monorepo (workspace directory names are illustrative; a nested `packages/*` layout works well for new projects):
 
 | Workspace | Role |
 |-----------|------|
-| **root Worker** | Hono + `@hono/zod-openapi` + Zod 4 — owns routes, generates the OpenAPI doc |
-| **`shared/`** | The single-source-of-truth package: Zod schemas, inferred types, error catalog, the `apiSuccess` response envelope |
-| **`admin/`** | React 19 + Vite + Tailwind + shadcn dashboard — imports types from `shared/` |
-| **`mcp/`** | stdio MCP server — tool input schemas source `shared/` schema `.shape` |
+| **API / Worker** | Hono + `@hono/zod-openapi` + Zod 4 — owns routes, generates the OpenAPI doc |
+| **`shared/`** | The single-source-of-truth package: Zod schemas, inferred types, error catalog, the shared success/error response envelope |
+| **dashboard** | React 19 + Vite + Tailwind + shadcn dashboard — imports types from `shared/` |
+| **MCP** *(optional)* | stdio MCP server — tool input schemas source `shared/` schema `.shape` |
 
-Supporting: Stytch B2B auth + RBAC; Cloudflare KV / D1 / R2; Drizzle (+ drizzle-zod where DB types feed the chain); Biome (format) + Oxlint (lint, `--max-warnings=0`) + Vitest (Cloudflare Workers pool); CI pipeline (`lint → format:check → typecheck-all-workspaces → test-all-workspaces`, then deploy: `develop`→dev, `main`→prod).
+Supporting (typical for a Workers deployment): Stytch B2B auth + RBAC (or your own auth setup); Cloudflare KV / D1 / R2 as the tool needs; Drizzle (+ drizzle-zod where DB types feed the chain); Biome (format) + Oxlint (lint, `--max-warnings=0`) + Vitest (Cloudflare Workers pool); CI (`lint → format:check → typecheck-all-workspaces → test-all-workspaces`, then deploy: `develop`→dev, `main`→prod).
 
 ### API Shield integration (Cloudflare)
 
 The *generated* OpenAPI doc feeds **Cloudflare API Shield** schema validation in **BLOCK mode** on the zone. Two consequences make the freshness machinery non-negotiable:
 
 - **A path absent from the uploaded spec 403s ALL traffic to it.** Dropping a path from the generated doc is a production outage, not a docs nit.
-- The upload runs **only on the prod deploy step** (gated).
+- Gate the spec upload inside each environment's deploy step, uploading the schema for **that environment's host**, then sync the schema's operations into **Endpoint Management** — API Shield validates only managed operations, so a schema upload alone leaves unmanaged paths silently unvalidated.
 
 Two guards protect this (both detailed in `patterns/api-patterns.md`):
 
@@ -1345,7 +1345,7 @@ Two guards protect this (both detailed in `patterns/api-patterns.md`):
 | Types flow | OUT from the Worker → dashboard + MCP | Co-located in the framework (server actions / RSC / route handlers) |
 | Shape | Worker + SPA dashboard + MCP, split workspaces | One Next.js full-stack app |
 | Choose when | The project is fundamentally an **API + SPA (+ MCP)** split — a service, internal tool, or platform API | The project is fundamentally a **Next.js web app**, not an API+SPA split |
-| Reference | Worker + `shared/` + `admin/` + `mcp/` monorepo (above) | `Full-Stack Web App` config below |
+| Reference | This section + `patterns/api-patterns.md` | `Full-Stack Web App` config below |
 
 **Default to back-to-front** for services, APIs, and internal tools. Use front-to-back (Next.js full-stack — server actions, RSC, route handlers, types co-located) only when the project genuinely *is* a Next.js web app. tRPC remains the right internal-API choice when there is no external/MCP consumer and both ends live in one TypeScript monorepo (see `tRPC` above).
 
@@ -1702,7 +1702,7 @@ Expose Verdaccio securely within Tailscale network:
 # Serve on tailnet only (no public internet)
 tailscale serve --bg 4873
 
-# Access at https://npm.<your-tailnet-domain>/
+# Access at https://npm.<tailnet>.ts.net/
 ```
 
 **For persistent HTTPS serve:**
@@ -1712,17 +1712,17 @@ tailscale serve reset   # Clear config
 tailscale serve --bg --https=443 http://localhost:4873
 ```
 
-Access at: `https://npm.<your-tailnet-domain>/`
+Access at: `https://npm.<tailnet>.ts.net/`
 
 ### Client Configuration
 
 **.npmrc (project or user level):**
 ```ini
 # Use Verdaccio for @myorg scoped packages
-@myorg:registry=https://npm.<your-tailnet-domain>/
+@myorg:registry=https://npm.<tailnet>.ts.net/
 
-# Auth token (generate via: pnpm login --registry=https://npm.<your-tailnet-domain>/)
-//npm.<your-tailnet-domain>/:_authToken=${VERDACCIO_TOKEN}
+# Auth token (generate via: pnpm login --registry=https://npm.<tailnet>.ts.net/)
+//npm.<tailnet>.ts.net/:_authToken=${VERDACCIO_TOKEN}
 
 # Public packages still come from npm
 registry=https://registry.npmjs.org/
@@ -1732,10 +1732,10 @@ registry=https://registry.npmjs.org/
 
 ```bash
 # Login once
-pnpm login --registry=https://npm.<your-tailnet-domain>/
+pnpm login --registry=https://npm.<tailnet>.ts.net/
 
 # Publish (package.json must have @myorg scope)
-pnpm publish --registry=https://npm.<your-tailnet-domain>/
+pnpm publish --registry=https://npm.<tailnet>.ts.net/
 ```
 
 **package.json for private package:**
@@ -1745,7 +1745,7 @@ pnpm publish --registry=https://npm.<your-tailnet-domain>/
   "version": "1.0.0",
   "private": false,
   "publishConfig": {
-    "registry": "https://npm.<your-tailnet-domain>/"
+    "registry": "https://npm.<tailnet>.ts.net/"
   }
 }
 ```
@@ -1852,4 +1852,4 @@ Framework:          Varies by project type
 
 ---
 
-*Last updated: 2026-06-05 (Option-B back-to-front single-source pattern added as recommended default — `@hono/zod-openapi`, proven in production; Zod 4 default for new projects; pnpm 10.28.2 latest stable)*
+*Last updated: 2026-06-05 (Option-B back-to-front single-source pattern added as recommended default — `@hono/zod-openapi`; Zod 4 default for new projects; pnpm 10.28.2 latest stable; de-repo pass 2026-09-28)*

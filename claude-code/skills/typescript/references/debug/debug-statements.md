@@ -9,7 +9,7 @@ Unconditional `process.stderr.write('[DEBUG]...')` or `console.log('[DEBUG]...')
 3. **CI/CD Timeouts**: Log buffers fill, causing pipeline failures or excessive log storage costs
 4. **Silent Production Noise**: Debug output in production logs obscures real errors
 
-## Real-World Case: an MCP Server Package
+## Case Study: a Node MCP server test suite (anonymised)
 
 ### Symptoms
 - iTerm memory usage spiking during `npm test`
@@ -27,9 +27,9 @@ process.stderr.write(`[DEBUG] Entity: ${JSON.stringify(entity)}\n`);
 ```
 
 Key files with violations:
-- `addObservations.ts` - 9 debug statements
-- `callToolHandler.ts` - 21+ debug statements
-- `logger.ts` - no log level control
+- a data-write handler — 9 debug statements
+- the tool-call dispatch handler — 21+ debug statements
+- the logger module — no log level control
 
 ### The Fix
 
@@ -124,7 +124,7 @@ grep -rn "\[DEBUG\]" src/
 - **Test Isolation**: Tests should have minimal stdout/stderr side effects
 - **Pre-commit Hooks**: Add grep patterns to block debug statements
 
-## Reference
+## Lesson
 
-- **Case**: stray unconditional debug writes in a Node.js MCP server package (December 2025)
-- **Severity**: P0 - caused terminal crashes
+- **Severity when it bites**: P0 — unconditional debug output in a hot path crashed the developer's terminal during routine test runs.
+- **Standard**: no unconditional debug writes in production code; route all diagnostics through a levelled logger that is silent under `NODE_ENV=test` unless `LOG_LEVEL`/`DEBUG` is set.

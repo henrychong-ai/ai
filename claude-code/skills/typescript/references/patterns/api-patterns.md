@@ -203,7 +203,7 @@ app.get('*', async (c) => {
 });
 ```
 
-**Background:** Responses returned by the `ASSETS` binding have immutable headers; mutating them directly throws at runtime. Always clone into a new `Response` before setting headers (observed in production, February 2026).
+**Rule:** treat every `ASSETS.fetch()` response as immutable. Any middleware that sets headers after `await next()` (e.g. `secureHeaders()`, CORS, custom headers) must receive a mutable copy (`new Response(body, { headers: new Headers(...) })`), or the header change fails silently or throws at runtime.
 
 ### Error Handling
 
@@ -499,7 +499,7 @@ app.use('/api/*', async (c, next) => {
 
 ## @hono/zod-openapi Single-Source Pattern (Recommended Default)
 
-The recommended API approach for back-end / back-to-front projects. **One** shared Zod route definition (`createRoute()` + `.openapi()`) is the single source of truth for **all four** of: request+response validation, the generated OpenAPI doc, the dashboard/client types, and the MCP tool input schemas. Proven in production on a Cloudflare Workers monorepo (full migration with a four-figure test suite green). Architectural rationale + the back-to-front vs front-to-back boundary: `tech-stack/typescript-ironclad-stack.md`.
+The recommended API approach for back-end / back-to-front projects. **One** shared Zod route definition (`createRoute()` + `.openapi()`) is the single source of truth for **all four** of: request+response validation, the generated OpenAPI doc, the dashboard/client types, and the MCP tool input schemas. Architectural rationale + the back-to-front vs front-to-back boundary: `tech-stack/typescript-ironclad-stack.md`.
 
 `OpenAPIHono` **extends `Hono`** — adoption is an incremental, strangler-safe per-router conversion. Converted `.openapi()` routers mount alongside plain Hono routers on the same instance; `.route()` / `.use()` / `.onError()` / `.request()` all behave identically.
 
@@ -559,7 +559,7 @@ The dashboard infers `z.input<typeof UserSchema>` (pre-default form shapes); Wor
 
 ### Hard-Won Gotchas (codify — these bite without warning)
 
-These were paid for during a full production migration. Preserve each deliberately.
+These surface during real per-router migrations to `@hono/zod-openapi`. Preserve each deliberately.
 
 - **Funnel validation failures with `defaultHook`.** Request-validation failures otherwise return the library's raw 400 shape, not your error envelope. Set a `defaultHook` on the `OpenAPIHono` instance to convert them into your standard envelope. For a router with a bespoke legacy error body, the `defaultHook` can **return that exact `c.json(...)` body** to preserve it.
 
@@ -602,7 +602,7 @@ These were paid for during a full production migration. Preserve each deliberate
 The *generated* OpenAPI doc feeds **Cloudflare API Shield** schema validation in **BLOCK mode** on the zone. This makes spec freshness a production concern, not a docs nicety:
 
 - **A path absent from the uploaded spec 403s ALL traffic to it.** Dropping a path from the generated doc is an outage. (This is why opaque-content-type routes must still be `registerPath()`-documented.)
-- The spec upload runs **only on the prod deploy step** (gated).
+- Gate the spec upload inside each environment's deploy step, uploading the schema for **that environment's host**, then sync the schema's operations into **Endpoint Management** — API Shield validates only managed operations, so a schema upload alone leaves unmanaged paths silently unvalidated.
 
 Two guards protect this:
 
@@ -725,4 +725,4 @@ async function validateResponse<T>(
 
 *Companion to: error-handling.md, async-patterns.md*
 *See also: tech-stack/cloudflare.md for Hono/Workers setup; tech-stack/typescript-ironclad-stack.md for the Option-B back-to-front canonical definition*
-*Last updated: 2026-06-05 (@hono/zod-openapi single-source promoted to recommended default; API Shield guards + production migration gotchas added)*
+*Last updated: 2026-06-05 (@hono/zod-openapi single-source promoted to recommended default; API Shield guards + migration gotchas added; de-repo pass 2026-09-28)*

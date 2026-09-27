@@ -1,6 +1,6 @@
 ---
 name: gemini-gem-creator
-description: Creates and converts Gemini Custom Gems using the 4-component framework (Persona/Task/Context/Format) — create from requirements via interactive discovery, convert Claude Code agents/skills to team-shareable gems, or optimise existing gems. Use for Fusang/Portcullis Google Workspace gem distribution.
+description: Creates and converts Gemini Custom Gems using the 4-component framework (Persona/Task/Context/Format) — create from requirements via interactive discovery, convert Claude Code agents/skills to team-shareable gems, or optimise existing gems. Use when building gems to share with a team via Google Workspace.
 allowed-tools: Read, Glob, Write
 ---
 
@@ -73,7 +73,7 @@ You are a [role] with expertise in [domains]. You have deep knowledge of [framew
 
 **CONTEXT:**
 ```
-[Company operations and positioning]
+[Organisation operations and positioning]
 [Regulatory frameworks]
 [Audience characteristics]
 [Key constraints]
@@ -154,15 +154,15 @@ FORMAT:
 ### For Create Mode
 - Ask discovery questions one at a time
 - Push for specificity when answers are vague
-- Use domain templates for Fusang/Portcullis contexts
+- Use domain templates for common business contexts (compliance, HR, content, legal, finance)
 - Validate against 5-quality-test framework
 
 ### For Convert Mode
 - **NEVER modify or delete source CC file**
-- **Gem Name = title-cased mirror of the source skill/agent `name:`** — `portcullis` → "Portcullis", `legal-harvey-ai` → "Legal Harvey AI", `trust-officer` → "Trust Officer". Never invent a descriptive title (no "Wealth Advisor", "Strategy Assistant" embellishments); descriptive text belongs ONLY in the Description field. When one skill splits into multiple gems, suffix the mirror: "Compliance — Baxian"
+- **Gem Name = title-cased mirror of the source skill/agent `name:`** — `compliance-review` → "Compliance Review", `contract-analyzer` → "Contract Analyzer", `hr-policy-ai` → "HR Policy AI". Never invent a descriptive title (no "Compliance Advisor", "Strategy Assistant" embellishments); descriptive text belongs ONLY in the Description field. When one skill splits into multiple gems, suffix the mirror: "Compliance Review — Europe"
 - Remove ALL CC-specific syntax (YAML, tools, MCP, paths)
 - Remove ALL individual-specific content (personal names, custom framework triggers)
-- PRESERVE business context (Fusang, Portcullis, regulatory frameworks)
+- PRESERVE the source's shared business context (organisation operations, regulatory frameworks, domain terminology) — strip only individual-specific and harness-specific content
 
 ## Model-Aware Gem Design (Gemini 3.x)
 
@@ -207,7 +207,7 @@ Add a **Recommended Model** line to every gem, e.g. "Recommended Model: select *
 **CRITICAL: Markdown (`.md`) is NOT an accepted Gem-Knowledge format** — the upload picker rejects it (verified 2026-06-02 against Google's list + a real-world upload failure). Put the Markdown **content** inside a **`.txt`** file (TXT is supported; Gemini still parses the `#`/list/table syntax). Never ship `.md` knowledge files. *(Do not confuse this with general Gemini **chat** uploads or the **file-generation** feature — those are broader; the Gem Knowledge picker is the narrow list above.)*
 
 **Planning Implications:**
-- With only 10 file slots, consolidate related content (e.g., combine SG/MY/HK clauses into one file)
+- With only 10 file slots, consolidate related content (e.g., combine per-jurisdiction clauses into one file)
 - 100 MB per file is generous — file count (10) is the real constraint, not size
 - Google Docs from Drive auto-update; local uploads are static snapshots
 - Context window on current Gemini 3.x models: ~1M input tokens — ample for embedded gem context
@@ -265,7 +265,7 @@ Gemini's gem builder has a **magic wand** icon at the bottom of the Instructions
 | File | Content |
 |------|---------|
 | `creation/discovery-workflow.md` | Interactive creation process |
-| `creation/domain-templates.md` | Regulatory, Islamic Finance, Content, Legal, Wealth Management |
+| `creation/domain-templates.md` | Regulatory/Compliance, HR/People, Content, Legal, Finance |
 | `creation/optimization-workflow.md` | Gem improvement process |
 
 ### Conversion Mode
@@ -273,11 +273,11 @@ Gemini's gem builder has a **magic wand** icon at the bottom of the Instructions
 |------|---------|
 | `conversion/removal-protocols.md` | CC syntax sanitization rules |
 | `conversion/transformation-mapping.md` | CC → Gem syntax table |
-| `conversion/conversion-edge-cases.md` | KG, personal frameworks, technical agents |
+| `conversion/conversion-edge-cases.md` | Knowledge graphs/memory, personal frameworks, technical agents |
 
 ### Examples & Output
 | File | Content |
 |------|---------|
-| `examples/production-gems.md` | Real gems: Harvey AI, Gem Creator |
-| `examples/domain-examples.md` | Sukuk, Newsletter, Regulatory |
+| `examples/production-gems.md` | Complete reference gems: Legal Research Assistant, Gem Creator |
+| `examples/domain-examples.md` | Regulatory, HR Policy, LinkedIn, Contract, Finance |
 | `output/output-formats.md` | Creation + Conversion output templates |

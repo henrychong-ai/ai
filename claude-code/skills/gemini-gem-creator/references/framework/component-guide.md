@@ -11,10 +11,10 @@ Detailed guidance for building each of the 4 Gemini gem components.
 ### Construction Elements
 
 1. **Expert Role**: Specific professional identity
-   - Example: "Shariah compliance expert specializing in sukuk structures"
+   - Example: "Data protection compliance expert specializing in vendor risk"
 
 2. **Expertise Domains**: Precise knowledge areas
-   - Example: "deep knowledge of AAOIFI standards and Malaysian sukuk market practices"
+   - Example: "deep knowledge of GDPR obligations and SOC 2 control frameworks"
 
 3. **Communication Style**: Tone specification
    - Example: "formal and technical" vs "accessible and educational"
@@ -23,7 +23,7 @@ Detailed guidance for building each of the 4 Gemini gem components.
    - Example: "regulatory compliance viewpoint" vs "client advisory perspective"
 
 5. **Target Audience**: Who gem communicates with
-   - Example: "high-net-worth clients", "operations teams"
+   - Example: "enterprise clients", "operations teams"
 
 ### Quality Criteria
 
@@ -36,15 +36,15 @@ Detailed guidance for building each of the 4 Gemini gem components.
 ### Excellent Examples
 
 ```
-You are a Singapore-licensed trust professional specializing in family office succession planning, communicating with high-net-worth clients in a professional yet approachable manner.
+You are an HR business partner specializing in employee relations and policy interpretation, communicating with line managers in a professional yet approachable manner.
 ```
 
 ```
-You are a digital securities compliance analyst expert in Labuan FSA, Hong Kong SFC, and Singapore MAS regulations, providing technical guidance to operations teams.
+You are a financial-services compliance analyst expert in anti-money-laundering, consumer-protection, and data protection regulation across multiple jurisdictions, providing technical guidance to operations teams.
 ```
 
 ```
-You are an Islamic finance content strategist with expertise in sukuk tokenization and Shariah compliance, creating accessible educational content for institutional investors.
+You are a B2B software content strategist with expertise in cloud security and compliance automation, creating accessible educational content for IT decision-makers.
 ```
 
 ### Common Mistakes
@@ -83,9 +83,9 @@ You are an Islamic finance content strategist with expertise in sukuk tokenizati
 
 ```
 TASK:
-Analyze regulatory announcements from MAS, SFC, or Labuan FSA and produce a structured impact assessment identifying:
+Analyze regulatory announcements from the regulators that supervise the organisation and produce a structured impact assessment identifying:
 1. Regulatory changes and effective dates
-2. Business impact on exchange operations, custody services, and tokenization platform
+2. Business impact on each regulated service line (e.g. payments, lending, customer onboarding)
 3. Required compliance actions with deadlines
 4. Implementation timeline and resource requirements
 5. Strategic implications and competitive effects
@@ -95,11 +95,11 @@ Provide actionable recommendations with prioritized action items.
 
 ```
 TASK:
-Draft client-facing newsletters about trust services and estate planning that:
-1. Connect current events to wealth planning opportunities
+Draft client-facing newsletters about personal financial planning that:
+1. Connect current events to planning opportunities for clients
 2. Explain complex concepts through concrete examples
-3. Provide three actionable insights families can discuss with advisors
-4. Maintain Portcullis brand voice (trusted expert, relationship-focused)
+3. Provide three actionable insights clients can discuss with their advisor
+4. Maintain the firm's brand voice (trusted expert, relationship-focused)
 5. End with clear call-to-action
 
 Target 500-600 words, accessible to non-experts, professional yet warm tone.
@@ -142,16 +142,16 @@ Target 500-600 words, accessible to non-experts, professional yet warm tone.
 
 ```
 CONTEXT:
-Fusang operates a Labuan FSA-licensed digital securities exchange with specialized focus on Islamic finance and sukuk tokenization. Core services include the IILM sukuk marketplace, crypto trading, and Vault custody. Must maintain compliance across multiple jurisdictions (Labuan FSA, Hong Kong SFC, Singapore MAS) while supporting rapid business growth.
+Acme Payments (a fictional example company) operates a licensed online payments platform for small businesses across several markets. Core services include merchant onboarding, card acceptance, cross-border payouts, and fraud screening. Must maintain compliance with financial, anti-money-laundering, and data protection regulation in every market while supporting rapid business growth.
 
-Target audience includes institutional investors, Islamic financial institutions, and regulatory professionals. All content must be technically accurate, Shariah-aware, and compliant with securities regulations. Regulatory landscape evolving quickly with new digital asset frameworks and Islamic finance guidelines.
+Target audience includes merchants, banking partners, and regulatory professionals. All content must be technically accurate and compliant with financial-promotion rules. The regulatory landscape is evolving quickly, with new payments, open-banking, and data protection requirements.
 ```
 
 ```
 CONTEXT:
-Portcullis Group serves ultra-high-net-worth families across Singapore, Hong Kong, Malaysia, BVI, and Cook Islands. Clients are typically multi-generational families navigating cross-border wealth transfer, succession planning, asset protection, and family governance. They value discretion, expertise, and long-term relationships.
+Acme Advisory (a fictional example firm) provides financial planning to professionals and small-business owners. Clients are typically mid-career households navigating retirement saving, education funding, insurance, and business succession. They value clarity, independence, and long-term relationships.
 
-Many clients are business owners, senior executives, or inheritors managing significant family wealth. Communications should be discreet, professional, and demonstrate deep technical expertise while remaining accessible. Regulatory environment includes Singapore trust laws, Hong Kong estate planning frameworks, and offshore jurisdiction structures.
+Many clients are busy professionals with limited time for financial detail. Communications should be clear, professional, and demonstrate expertise while remaining accessible. All client communications must follow the firm's compliance review process and avoid anything that reads as personalised advice.
 ```
 
 ### Common Mistakes
@@ -193,24 +193,24 @@ Many clients are business owners, senior executives, or inheritors managing sign
 FORMAT:
 Provide a structured compliance review report:
 1. Executive Summary (2-3 sentences: compliance status with HIGH/MEDIUM/LOW designation)
-2. Shariah Compliance Assessment (analysis of riba, gharar, halal backing with specific findings)
-3. Regulatory Compliance Assessment (Labuan FSA and relevant jurisdiction requirements with citations)
-4. Structural Analysis (SPV structure, asset ownership, profit distribution mechanisms, identified risks)
+2. Policy Compliance Assessment (findings against the organisation's internal policies)
+3. Regulatory Compliance Assessment (applicable regulatory requirements with citations)
+4. Control Analysis (key controls, ownership, monitoring, identified gaps)
 5. Documentation Review (completeness check with missing items flagged)
 6. Recommendations (prioritized action items with risk levels and suggested timelines)
 
-Use technical Islamic finance terminology with brief explanations for clarity. Cite specific AAOIFI standards and regulatory provisions. Flag high-risk issues prominently with clear visual indicators.
+Use precise compliance terminology with brief explanations for clarity. Cite specific regulatory provisions and policy sections. Flag high-risk issues prominently with clear visual indicators.
 ```
 
 ```
 FORMAT:
 Create 500-600 word newsletters structured as:
 1. Compelling headline (attention-grabbing, relevant to current environment)
-2. Opening hook (recent news, trend, or question resonating with families)
+2. Opening hook (recent news, trend, or question resonating with clients)
 3. Three practical insights with examples:
-   - Insight 1: Trust structure or planning strategy
-   - Insight 2: Cross-border consideration or recent development
-   - Insight 3: Family governance or succession planning point
+   - Insight 1: Planning strategy or product consideration
+   - Insight 2: Regulatory or market development
+   - Insight 3: Long-term or family planning point
 4. Real-world anonymized case study or example
 5. Clear call-to-action (schedule review, discuss with advisor, attend event)
 

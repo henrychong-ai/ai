@@ -54,16 +54,16 @@ Examine configuration files to identify error patterns and system settings.
 
 | MCP Pattern | Action |
 |-------------|--------|
-| `mcp__kg__*` | Remove knowledge graph operations |
-| `mcp__yggdrasil__*` | Remove structured-reasoning references |
-| `mcp__perplexity__*` | Remove Perplexity integration |
-| `mcp__bifrost__*` | Remove edge router references |
-| `mcp__codex__*` | Remove Codex references |
+| `mcp__<memory-server>__*` | Remove knowledge graph / memory operations |
+| `mcp__<reasoning-server>__*` | Remove structured-reasoning references |
+| `mcp__<search-server>__*` | Remove web-research integrations |
+| `mcp__<internal-service>__*` | Remove internal service integrations (routers, databases, ticketing) |
+| Any other `mcp__<server>__<tool>` | Remove; describe the intent instead |
 
 **Example:**
 ```
 # Before (CC)
-Use mcp__kg__semantic_search to find related entities, then mcp__yggdrasil__sequential_thinking for analysis.
+Use mcp__memory__search_nodes to find related entities, then mcp__reasoning__think for analysis.
 
 # After (Gem)
 Search for related information and apply systematic analysis to understand connections.
@@ -77,7 +77,7 @@ Search for related information and apply systematic analysis to understand conne
 
 | Path Pattern | Action |
 |--------------|--------|
-| `/Users/...` | Remove absolute paths |
+| `/home/<user>/...`, other absolute paths | Remove absolute paths |
 | `~/.claude/...` | Remove Claude Code paths |
 | `~/[vault]/...` | Remove knowledge vault references |
 | `~/[app]/...` | Remove app-specific paths |
@@ -86,10 +86,10 @@ Search for related information and apply systematic analysis to understand conne
 **Transform to conceptual descriptions:**
 ```
 # Before (CC)
-Reference ~/[vault]/_reference/regulations/MAS-guidelines.md for regulatory context.
+Reference ~/[vault]/_reference/regulations/data-protection-guidelines.md for regulatory context.
 
 # After (Gem)
-Reference MAS regulatory guidelines for compliance context.
+Reference the applicable data protection guidelines for compliance context.
 ```
 
 ---
@@ -108,10 +108,10 @@ Reference MAS regulatory guidelines for compliance context.
 **Transform to self-contained instructions:**
 ```
 # Before (CC)
-For compliance analysis, use the compliance-fusang skill with /compliance command.
+For compliance analysis, use the compliance-review skill with /compliance command.
 
 # After (Gem)
-For compliance analysis, apply regulatory assessment framework covering Labuan FSA, SFC, and MAS requirements.
+For compliance analysis, apply a regulatory assessment framework covering the licensing, AML/KYC, and data protection requirements that apply to the organisation.
 ```
 
 ---
@@ -166,21 +166,21 @@ Focus on raising quality standards while eliminating inefficiencies.
 
 ### Knowledge Graph Entities
 
-**Remove all KG entity references:**
+**Remove all knowledge-graph or memory entity references:**
 
 | Pattern | Action |
 |---------|--------|
 | Entity names in backticks | Remove or convert to descriptions |
-| KG domain prefixes | Remove |
+| Knowledge-graph domain prefixes | Remove |
 | Entity type references | Convert to plain descriptions |
 
 **Example:**
 ```
 # Before
-Reference `Fusang-Exchange` entity for company context and `MAS-Regulations` for compliance.
+Reference `Acme-Payments-Platform` entity for company context and `Payments-Regulations` for compliance.
 
 # After
-Reference Fusang Exchange operations and MAS regulatory requirements.
+Reference the organisation's payments platform operations and applicable payments regulatory requirements.
 ```
 
 ---
@@ -203,13 +203,13 @@ Reference Fusang Exchange operations and MAS regulatory requirements.
 
 ### What to Keep
 
-**Preserve company-relevant content:**
+**Preserve company-relevant content** (context the whole team shares, not one person's setup):
 
 | Element | Preserve |
 |---------|----------|
-| Fusang digital securities context | ✅ Keep |
-| Portcullis wealth management context | ✅ Keep |
-| Regulatory frameworks (MAS, SFC, Labuan FSA) | ✅ Keep |
+| Organisation operations and positioning | ✅ Keep |
+| Service lines, products, and audiences | ✅ Keep |
+| Regulatory frameworks named in the source | ✅ Keep |
 | Industry terminology | ✅ Keep |
 | Domain expertise | ✅ Keep |
 | Business processes | ✅ Keep (generalized) |
@@ -239,10 +239,10 @@ Apply [service] expertise for [domain] across [jurisdictions].
 **Regulatory Context:**
 ```
 # Before (CC)
-Use compliance-fusang skill with mcp__kg__search_nodes("MAS") for regulatory lookup.
+Use compliance-review skill with mcp__memory__search_nodes("regulator") for regulatory lookup.
 
 # After (Gem)
-Reference MAS regulatory requirements for Singapore operations, including licensing, AML/KYC, and reporting obligations.
+Reference the regulatory requirements for each market the organisation operates in, including licensing, AML/KYC, and reporting obligations.
 ```
 
 ---
@@ -254,22 +254,22 @@ Before finalizing any converted gem:
 ### CC Syntax
 - [ ] YAML frontmatter removed
 - [ ] All tool references removed (Read, Write, Edit, Grep, Glob, Bash, etc.)
-- [ ] All MCP references removed (mcp__kg__, mcp__yggdrasil__, etc.)
-- [ ] All file paths removed (/Users/, ~/.claude/, ~/[vault]/, etc.)
+- [ ] All MCP references removed (any `mcp__<server>__<tool>` pattern)
+- [ ] All file paths removed (absolute user-home paths, ~/.claude/, ~/[vault]/, etc.)
 - [ ] All agent/skill cross-references removed
 - [ ] All TodoWrite patterns removed
 
 ### Personal Content
 - [ ] Personal names removed (e.g., [personal-name], [username])
 - [ ] Custom framework references removed (personal productivity systems)
-- [ ] Personal KG entity references removed
+- [ ] Personal knowledge-graph or memory entity references removed
 - [ ] Session-specific context removed
 - [ ] Personal email/phone/addresses removed
 
 ### Business Context
-- [ ] Fusang context preserved (if relevant)
-- [ ] Portcullis context preserved (if relevant)
-- [ ] Regulatory frameworks preserved (MAS, SFC, Labuan FSA)
+- [ ] Organisation context preserved (if relevant)
+- [ ] Service-line and audience context preserved (if relevant)
+- [ ] Regulatory frameworks from the source preserved
 - [ ] Industry terminology intact
 - [ ] Domain expertise maintained
 

@@ -13,7 +13,7 @@ PERSONA: You are an expert assistant.
 
 **Fix:**
 ```
-PERSONA: You are an Islamic finance compliance officer specializing in sukuk structures, with expertise in AAOIFI standards and Labuan FSA regulations. You communicate with technical precision for compliance professionals while ensuring clarity for non-specialists.
+PERSONA: You are a data protection compliance officer specializing in customer-data processing, with expertise in GDPR obligations and privacy-by-design practices. You communicate with technical precision for compliance professionals while ensuring clarity for non-specialists.
 ```
 
 **Key elements:**
@@ -35,11 +35,11 @@ TASK: Help with analysis.
 
 **Fix:**
 ```
-TASK: Analyze sukuk structures to assess:
-1. Shariah compliance (riba, gharar, halal backing)
-2. Regulatory adherence (Labuan FSA, SC Malaysia)
-3. Structural risks (SPV, ownership, profit distribution)
-4. Documentation completeness
+TASK: Analyze new data-processing activities to assess:
+1. Lawful basis for processing (consent, contract, legitimate interest)
+2. Regulatory adherence (GDPR and applicable local privacy law)
+3. Data risks (retention, cross-border transfers, third-party processors)
+4. Documentation completeness (records of processing, impact assessment)
 
 Provide risk ratings (HIGH/MEDIUM/LOW) for each area with supporting rationale.
 ```
@@ -64,7 +64,7 @@ CONTEXT: We do finance stuff.
 
 **Fix:**
 ```
-CONTEXT: Fusang operates a Labuan FSA-licensed digital securities exchange with sukuk tokenization, crypto trading, and Vault custody services. Operations must comply with Labuan FSA, Hong Kong SFC, and Singapore MAS. Target audience is compliance professionals and senior executives requiring analysis for regulatory submissions and board reporting.
+CONTEXT: Acme Payments (a fictional example company) operates a licensed online payments platform serving small businesses in several countries. Operations must comply with local financial regulation, anti-money-laundering rules, and data protection law in each market. Target audience is compliance professionals and senior executives requiring analysis for regulatory submissions and board reporting.
 ```
 
 **Key elements:**
@@ -167,13 +167,13 @@ PERSONA: You are a helpful assistant that knows about finance.
 
 **Fix:**
 ```
-PERSONA: You are a digital securities compliance analyst specializing in tokenized sukuk under Labuan FSA regulations, with expertise in AAOIFI accounting standards, IFSB prudential requirements, and cross-border Islamic finance structures. You communicate with technical precision suitable for regulatory submissions while providing actionable guidance for business teams.
+PERSONA: You are a payments compliance analyst specializing in anti-money-laundering (AML) controls for online payment platforms, with expertise in customer due diligence, transaction monitoring, and cross-border licensing requirements. You communicate with technical precision suitable for regulatory submissions while providing actionable guidance for business teams.
 ```
 
 **Specialization sources:**
-- Company-specific operations (Fusang exchange, Portcullis trusts)
+- Company-specific operations (products, services, markets served)
 - Regulatory expertise (specific jurisdictions, standards)
-- Industry terminology (sukuk, tokenization, UHNW families)
+- Industry terminology (e.g. KYC, chargebacks, SLAs, headcount planning)
 - Output formats (regulatory submissions, board reports)
 
 ---

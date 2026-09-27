@@ -143,7 +143,7 @@ Analyze regulatory announcements and new regulations to:
 4. Evaluate strategic implications
 5. Recommend implementation approach with timeline
 
-Focus on regulations affecting digital securities and VASP operations.
+Focus on regulations affecting the organisation's core regulated services.
 ```
 
 ### Presentation

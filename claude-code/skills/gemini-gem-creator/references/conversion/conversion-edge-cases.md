@@ -84,11 +84,11 @@ CC instructions heavily integrate multiple MCP tools in sophisticated patterns.
 
 **Example:**
 ```markdown
-1. mcp__kg__semantic_search("compliance requirements")
-2. mcp__yggdrasil__sequential_thinking for analysis planning
-3. mcp__perplexity__research for current regulations
-4. mcp__kg__create_entities for findings
-5. mcp__bifrost__create_route for results publication
+1. mcp__memory__search_nodes("compliance requirements")
+2. mcp__reasoning__think for analysis planning
+3. mcp__search__research for current regulations
+4. mcp__memory__create_entities for findings
+5. mcp__publisher__publish for results publication
 ```
 
 ### Resolution
@@ -103,7 +103,7 @@ TASK:
 5. Prepare results for appropriate distribution
 
 CONTEXT:
-[Embed the domain knowledge that would have come from KG searches]
+[Embed the domain knowledge that would have come from knowledge-graph or memory searches]
 Compliance requirements include... Current regulatory landscape shows...
 ```
 
@@ -118,7 +118,7 @@ CC instruction delegates to other agents or triggers subagent workflows.
 
 **Example:**
 ```markdown
-For compliance review, spawn compliance-fusang agent.
+For compliance review, spawn compliance-review agent.
 For security assessment, use Task tool with security-auditor.
 For content creation, delegate to content-marketer agent.
 ```
@@ -131,7 +131,7 @@ CONTEXT:
 This gem combines multiple domain expertise areas:
 
 Compliance Expertise:
-- Labuan FSA digital securities regulations
+- Licensing and conduct regulations for the organisation's services
 - AML/KYC requirements and monitoring
 - Regulatory reporting obligations
 
@@ -218,12 +218,12 @@ Present progress through your response as you complete each step.
 ## Domain Knowledge Gaps
 
 ### Scenario
-CC skill relies on extensive reference files or KG entities not available in gem.
+CC skill relies on extensive reference files or knowledge-graph entities not available in gem.
 
 **Example:**
 ```markdown
-Reference ~/[vault]/_reference/regulations/MAS-comprehensive-guide.md
-Use mcp__kg__open_nodes(["MAS-Guidelines-2024", "SFC-Requirements"])
+Reference ~/[vault]/_reference/regulations/data-protection-guide.md
+Use mcp__memory__open_nodes(["GDPR-Guidelines", "Local-Privacy-Law"])
 ```
 
 ### Resolution Options
@@ -231,19 +231,19 @@ Use mcp__kg__open_nodes(["MAS-Guidelines-2024", "SFC-Requirements"])
 **Option 1: Embed Critical Knowledge**
 ```markdown
 CONTEXT:
-MAS Regulatory Framework:
-- Payment Services Act requirements for digital payment tokens
-- Securities and Futures Act provisions for capital markets
-- Technology risk management guidelines (MAS TRM)
-- AML/CFT requirements under MAS Notice 626
+Data Protection Framework:
+- Lawful bases for processing personal data
+- Data subject rights (access, correction, erasure) and response deadlines
+- Breach notification requirements and timelines
+- Rules for cross-border data transfers and third-party processors
 ```
 
 **Option 2: Recommend Attachments**
 ```markdown
 ## Recommended Attachments
 For comprehensive regulatory analysis, attach:
-- Current MAS guidelines document
-- Relevant SFC circulars
+- Current regulator guidelines document
+- Relevant regulatory circulars
 - Company-specific compliance matrix
 ```
 
@@ -283,7 +283,7 @@ If user requests:
 ## Personal Workflow Integration
 
 ### Scenario
-CC skill deeply integrates with personal systems (Obsidian, Things, etc.)
+CC skill deeply integrates with personal systems (note-taking vault, task manager, etc.)
 
 **Example:**
 ```markdown

@@ -257,7 +257,7 @@ docker compose up -d
 tailscale serve --bg --https=443 http://localhost:3000
 
 # Access at:
-# https://<vps-hostname>.<your-tailnet-domain>
+# https://<host>.<tailnet>.ts.net
 ```
 
 **Benefits:**

@@ -8,7 +8,7 @@ Systematic mapping from Claude Code instruction patterns to Gemini gem component
 
 | CC Element | Gem Target | Transformation |
 |------------|------------|----------------|
-| `name:` | Gem Name | **Title-cased mirror of the skill name** (`portcullis` → "Portcullis", `legal-harvey-ai` → "Legal Harvey AI") — never invent a descriptive title; one skill → multiple gems uses "Name — Suffix" |
+| `name:` | Gem Name | **Title-cased mirror of the skill name** (`compliance-review` → "Compliance Review", `contract-analyzer` → "Contract Analyzer") — never invent a descriptive title; one skill → multiple gems uses "Name — Suffix" |
 | `description:` | PERSONA + Description field | Extract role and purpose; descriptive text lives here, not in the name |
 | `model:` | N/A | Remove (Gemini uses fixed model) |
 | `allowed-tools:` | TASK | Convert capabilities to actions |
@@ -19,15 +19,16 @@ Systematic mapping from Claude Code instruction patterns to Gemini gem component
 # CC Frontmatter
 ---
 name: compliance-analyzer
-description: Analyzes regulatory compliance for Fusang operations
+description: Analyzes regulatory compliance for payments operations
 model: opus
 allowed-tools: Read, Grep, WebSearch
-skills: compliance-fusang
+skills: compliance-review
 ---
 
 # Gem Mapping
-PERSONA: You are a regulatory compliance analyst specializing in digital securities...
-Description field: "Regulatory compliance analyzer for Fusang operations"
+Gem Name: "Compliance Analyzer"
+PERSONA: You are a regulatory compliance analyst specializing in payments regulation...
+Description field: "Regulatory compliance analyzer for payments operations"
 ```
 
 ---
@@ -44,10 +45,10 @@ Description field: "Regulatory compliance analyzer for Fusang operations"
 **Transformation:**
 ```markdown
 # CC Agent Identity
-You are the compliance-fusang agent, a Labuan FSA specialist with access to mcp__kg__ for regulatory lookups...
+You are the compliance-review agent, a payments-regulation specialist with access to mcp__memory__ for regulatory lookups...
 
 # Gem PERSONA
-You are a regulatory compliance analyst specializing in Labuan FSA regulations for digital securities exchanges. You have deep expertise in VASP licensing, AML/KYC requirements, and operational compliance. You communicate with technical precision suitable for compliance officers and senior executives.
+You are a regulatory compliance analyst specializing in payments regulation for online payment platforms. You have deep expertise in payment-services licensing, AML/KYC requirements, and operational compliance. You communicate with technical precision suitable for compliance officers and senior executives.
 ```
 
 ---
@@ -84,19 +85,19 @@ You are a regulatory compliance analyst specializing in Labuan FSA regulations f
 
 | MCP Pattern | CONTEXT Transformation |
 |-------------|------------------------|
-| `mcp__kg__` entities | Embed as domain knowledge |
-| `mcp__yggdrasil__` reasoning | Implicit in structured approach |
-| `mcp__perplexity__` | "Reference current information" |
+| `mcp__<memory-server>__` entities | Embed as domain knowledge |
+| `mcp__<reasoning-server>__` reasoning | Implicit in structured approach |
+| `mcp__<search-server>__` | "Reference current information" |
 | External APIs | Describe information needs |
 
 **Example:**
 ```markdown
 # CC MCP Usage
-Use mcp__kg__semantic_search("sukuk structures") to find relevant entities.
-Reference mcp__kg__open_nodes(["AAOIFI", "Labuan-FSA"]) for standards.
+Use mcp__memory__search_nodes("vendor risk") to find relevant entities.
+Reference mcp__memory__open_nodes(["SOC-2", "ISO-27001"]) for standards.
 
 # Gem CONTEXT
-Sukuk structures must comply with AAOIFI accounting standards and Labuan FSA regulations. Key sukuk types include Ijara (lease-based), Mudaraba (profit-sharing), Musharaka (partnership), and Wakalah (agency). All structures require Shariah certification and proper asset backing.
+New vendors that process company data must be assessed against SOC 2 and ISO 27001 control expectations. Key assessment areas include access control, encryption, incident response, business continuity, and sub-processor management. All high-risk vendors require security sign-off and a data processing agreement before onboarding.
 ```
 
 ---
@@ -146,7 +147,7 @@ Maximum 800 words unless detailed analysis specifically requested.
 **Example:**
 ```markdown
 # CC Conditional
-If mcp__kg__search returns results, use them. Otherwise, use WebSearch.
+If mcp__memory__search_nodes returns results, use them. Otherwise, use WebSearch.
 
 # Gem Conditional
 When internal knowledge is available, apply it. When additional research is needed, indicate what information would be helpful.
@@ -205,13 +206,13 @@ If document cannot be fully analyzed, identify specific gaps and recommend how t
 **Assembly:**
 ```markdown
 # Gather from CC
-Agent: "compliance-fusang agent"
-Description: "Labuan FSA specialist for digital securities"
-Skills: "islamic-finance, security-auditor"
+Agent: "compliance-review agent"
+Description: "Payments-regulation specialist for online payment platforms"
+Skills: "data-protection, security-auditor"
 Model: opus (complex reasoning needed)
 
 # Synthesize PERSONA
-You are a regulatory compliance specialist for digital securities exchanges, with deep expertise in Labuan FSA regulations, Islamic finance principles, and security audit practices. You communicate with technical precision for compliance professionals while providing actionable guidance for business teams.
+You are a regulatory compliance specialist for online payment platforms, with deep expertise in payments regulation, data protection principles, and security audit practices. You communicate with technical precision for compliance professionals while providing actionable guidance for business teams.
 ```
 
 ---
@@ -253,12 +254,12 @@ Analyze regulatory requirements to:
 **Assembly:**
 ```markdown
 # Gather from CC
-MCP: mcp__kg__["Fusang-Exchange", "Labuan-FSA", "IILM-Sukuk"]
-Skills: compliance-fusang, islamic-finance
+MCP: mcp__memory__["Acme-Payments-Platform", "Payments-Licence", "Merchant-Onboarding"]
+Skills: compliance-review, data-protection
 Paths: ~/[vault]/_reference/regulations/
 
 # Synthesize CONTEXT
-Fusang operates a Labuan FSA-licensed digital securities exchange offering sukuk tokenization, crypto trading, and Vault custody services. Operations must comply with Labuan FSA, Hong Kong SFC (for VASP operations), and Singapore MAS (for regional expansion). The IILM Sukuk platform handles Islamic liquidity management instruments requiring both regulatory and Shariah compliance.
+Acme Payments (fictional) operates a licensed online payments platform offering merchant onboarding, card acceptance, and cross-border payouts. Operations must comply with payments licensing rules, AML/KYC requirements, and data protection law in each market. The merchant onboarding process handles customer due diligence requiring both regulatory and internal-policy compliance.
 ```
 
 ---
@@ -296,7 +297,7 @@ Use professional, precise language. Keep responses concise (under 800 words) unl
 
 | CC Element | Primary Gem Target | Notes |
 |------------|-------------------|-------|
-| YAML `name:` | Description field | Descriptive title |
+| YAML `name:` | Gem Name | Title-cased mirror (descriptive text goes in Description field) |
 | YAML `description:` | PERSONA + Description | Role extraction |
 | YAML `model:` | Remove | Not applicable |
 | YAML `allowed-tools:` | TASK | Convert to actions |
