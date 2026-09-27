@@ -42,7 +42,7 @@
 - Tools: inherits all unless `tools:` / `disallowedTools:` restrict them; leaf workers bar `Agent`/`Task` (no nested fan-out)
 
 **Best For:**
-- Domain specialists (compliance-officer, things, typescript)
+- Domain specialists (compliance-officer, task-manager, typescript)
 - Business-critical operations requiring context
 - Multi-step workflows with progress tracking
 - Operations requiring escalation criteria
@@ -50,7 +50,7 @@
 
 **Examples:**
 - **compliance-officer**: Autonomous compliance review with business context
-- **things**: Proactive task management and optimization
+- **task-manager**: Proactive task management and optimization
 - **typescript**: Automatic code review and TypeScript best practices
 - **security-auditor**: Continuous security scanning and vulnerability detection
 
@@ -74,7 +74,7 @@
 **Examples:**
 - **pdf**: PDF manipulation with scripts for rotation, merging
 - **xlsx**: Spreadsheet operations with formula handling
-- **travel**: Travel planning with dietary guidelines references
+- **travel**: Travel planning with traveller-preference references
 - **instruction-creator**: Comprehensive instruction file creation with templates and tooling
 
 ### Hybrid Approach (Agent + Skill)
@@ -157,9 +157,9 @@ Forks are runtime-only — there is nothing to author on disk — so their place
 
 ### Scenario 3: Travel Planning
 **Decision: Skill**
-- Bundled references for dietary guidelines, preferences
+- Bundled references for traveller preferences and constraints
 - Explicit invocation when planning travel
-- Progressive disclosure (only load dietary guidelines when needed)
+- Progressive disclosure (only load preference references when needed)
 - No need for continuous monitoring
 
 ### Scenario 4: Code Review System

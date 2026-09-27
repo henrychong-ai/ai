@@ -5,6 +5,7 @@ package example
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/mock"
@@ -235,6 +236,3 @@ func TestIntegrationSuite(t *testing.T) {
 	}
 	suite.Run(t, new(IntegrationSuite))
 }
-
-// errors import for demonstration
-import "errors"

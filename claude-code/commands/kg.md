@@ -1,13 +1,15 @@
 ---
 name: kg
-description: Token-Efficient Knowledge Graph Session Capture & Optimization. For use with mcp-knowledge-graph. System for AI-optimized knowledge storage and deduplication. Use PROACTIVELY for session capture.
+description: Token-Efficient Knowledge Graph Session Capture & Optimization. For use with a knowledge-graph MCP server (e.g. @henrychong-ai/mcp-neo4j-knowledge-graph) registered under the name `kg`. System for AI-optimized knowledge storage and deduplication. Use PROACTIVELY for session capture.
 ---
 
 # /kg - Token-Efficient Knowledge Graph Session Capture & Optimization
 
 ## 🧠 Token-Efficient Knowledge Graph Session Capture & Optimization Protocol
 
-**MISSION**: Transform this session'\''s knowledge into permanent intellectual capital through AI-optimized KG capture with maximum storage efficiency.
+**MISSION**: Transform this session's knowledge into permanent intellectual capital through AI-optimized KG capture with maximum storage efficiency.
+
+**PREREQUISITE**: A knowledge-graph MCP server registered as `kg`, so its tools appear as `mcp__kg__*` (for example `@henrychong-ai/mcp-neo4j-knowledge-graph`). If your server is registered under another name, substitute its tool prefix below.
 
 **EXECUTION FRAMEWORK**:
 
@@ -43,7 +45,7 @@ For each identified item, determine optimal entity type:
 **Entity Naming**: Use consistent, searchable formats:
 - Technologies: `docker-3.4`, `typescript-5.0`, `claude-sonnet-4`
 - Projects: `main-api`, `user-dashboard`, `workflow-automation`
-- Processes: `compliance-workflow`, `kg-optimization`, `rpm-methodology`
+- Processes: `compliance-workflow`, `kg-optimization`, `release-process`
 
 ### 4. KG INTEGRATION PROTOCOL
 Execute in this exact sequence:

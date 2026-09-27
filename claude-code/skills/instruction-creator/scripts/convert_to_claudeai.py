@@ -492,7 +492,7 @@ Skills uploaded to any Claude.ai platform will sync to all others automatically.
         "--team",
         action="store_true",
         help="Enable the team-distribution secret/personal-content scan "
-             "(use for every zip published to the org Skills folder)",
+             "(use for every zip shared with a team or organisation)",
     )
 
     args = parser.parse_args()

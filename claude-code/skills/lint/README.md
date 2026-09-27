@@ -44,6 +44,7 @@ lint/
 ├── references/           # Detailed configuration guides
 │   ├── typescript-oxlint-biome.md
 │   ├── typescript-residual-eslint.md
+│   ├── migration-eslint-prettier-to-oxlint-biome.md
 │   ├── python-ruff-mypy.md
 │   ├── go-golangci-lint.md
 │   └── dotnet-roslyn.md
@@ -54,7 +55,7 @@ lint/
     ├── biome.json
     ├── eslint.config.mjs (residual only)
     ├── tsconfig.json
-    └── ... (14 templates total)
+    └── ... (15 templates total)
 ```
 
 ## Quick Start
@@ -82,6 +83,7 @@ lint/
 |------|--------------|
 | `typescript-oxlint-biome.md` | Full Oxlint + Biome setup, plugin coverage, migration guide |
 | `typescript-residual-eslint.md` | Adding Vue, Astro, Tailwind, Playwright, Obsidian, Compat support |
+| `migration-eslint-prettier-to-oxlint-biome.md` | Migrating an existing ESLint + Prettier repo to Oxlint + Biome |
 | `python-ruff-mypy.md` | Python linting with Ruff + mypy |
 | `go-golangci-lint.md` | Go linting with golangci-lint v2 |
 | `dotnet-roslyn.md` | .NET/C# Roslyn analyzers setup |

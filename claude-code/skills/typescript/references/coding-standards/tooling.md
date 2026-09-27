@@ -4,7 +4,7 @@ TypeScript compiler configuration and editor integration.
 
 **For linting setup:** Use the `/lint` skill which is the single source of truth for ESLint flat config with 7 core plugins + framework-specific plugins, Prettier, Husky/lint-staged, and CI/CD pipelines.
 
-**Note:** The Ironclad Stack uses **ESLint + Prettier**, not Biome. See `typescript-ironclad-stack.md` for rationale.
+**Note:** The Ironclad Stack default is now **Oxlint + Biome** (see `typescript-ironclad-stack.md`). The ESLint + Prettier setup below remains valid for projects that still use it.
 
 ---
 

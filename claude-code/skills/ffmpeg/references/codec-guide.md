@@ -49,7 +49,7 @@ ffmpeg -i input.mp4 -c:v libvpx-vp9 -crf 30 -b:v 0 output.webm
 - **Pros:** Best compression (30% better than HEVC)
 - **Cons:** Very slow encode, limited playback support
 - **Use for:** Future-proofing, bandwidth-critical applications
-- **Note:** M3 Pro can decode AV1 but NOT encode
+- **Note:** Apple Silicon M3 and later can hardware-decode AV1, but VideoToolbox cannot encode it — use `libsvtav1` (software)
 
 ```bash
 # SVT-AV1 (faster than libaom)

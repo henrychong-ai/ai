@@ -725,4 +725,4 @@ async function validateResponse<T>(
 
 *Companion to: error-handling.md, async-patterns.md*
 *See also: tech-stack/cloudflare.md for Hono/Workers setup; tech-stack/typescript-ironclad-stack.md for the Option-B back-to-front canonical definition*
-*Last updated: 2026-06-05 (@hono/zod-openapi single-source promoted to recommended default; API Shield guards + migration gotchas added; de-repo pass 2026-09-28)*
+*Last updated: 2026-06-05 (@hono/zod-openapi single-source promoted to recommended default; API Shield guards + migration gotchas added)*

@@ -20,7 +20,7 @@ Checks (run on the FINAL staged file set, after exclusions):
   3. Large binary — any bundled binary (pdf/media/office) over 1 MB. WARNING
      (review whether it belongs in a skill at all).
 
-  TEAM MODE ONLY (--team; for zips published to the org Skills folder)
+  TEAM MODE ONLY (--team; for zips shared with a team or organisation)
   4. Secret / personal-content scan over text files:
        - real 1Password secret references (op:// URIs whose vault segment
          looks like a real vault — contains spaces; placeholders such as
@@ -28,10 +28,11 @@ Checks (run on the FINAL staged file set, after exclusions):
        - absolute personal home paths (/Users/<name>/, /home/<name>/)
        - private key material (BEGIN ... PRIVATE KEY)
        - AWS access key ids (AKIA...)
-     Plus any extra regexes from a MAINTAINER-LOCAL deny file at
+     Plus any extra regexes from an optional MAINTAINER-LOCAL deny file:
+     the path in the SKILL_PACKAGING_DENY_FILE environment variable, else
      ~/.claude/packaging-deny-patterns.txt (one regex per line, # comments).
-     The local file carries maintainer-specific landmines (personal repo
-     names, account ids, known account numbers) so this team-distributed
+     The local file carries maintainer-specific strings (personal repo
+     names, account ids, known account numbers) so this distributed
      script stays generic. All hits are ERRORs.
 
   POST-ZIP (call check_zip_size after the zip is written)
@@ -47,6 +48,7 @@ Usage from a packaging script:
     err = check_zip_size(zip_path)
 """
 
+import os
 import re
 from pathlib import Path
 
@@ -73,7 +75,7 @@ ZIP_HARD_CAP_BYTES = 30 * 1024 * 1024     # Claude Desktop upload limit
 # local deny file, never in this team-distributed script).
 TEAM_DENY_PATTERNS = [
     # Real op:// secret references: vault segment containing a space is a
-    # real vault name ("TEC - Dev"), not a placeholder/teaching example.
+    # real vault name ("Team Secrets"), not a placeholder/teaching example.
     # Vault segment must not cross backticks/quotes/parens — prose *about*
     # op:// (e.g. this guide) must not self-trigger; only URI-shaped refs do.
     (r"op://[^/\n<>`'\"()]*[ ][^/\n`'\"()]*/", "real 1Password op:// reference (use a prose pointer: vault -> item -> field)"),
@@ -86,7 +88,10 @@ TEAM_DENY_PATTERNS = [
     (r"\bAKIA[0-9A-Z]{16}\b", "AWS access key id"),
 ]
 
-LOCAL_DENY_FILE = Path.home() / ".claude" / "packaging-deny-patterns.txt"
+LOCAL_DENY_FILE = Path(
+    os.environ.get("SKILL_PACKAGING_DENY_FILE")
+    or Path.home() / ".claude" / "packaging-deny-patterns.txt"
+).expanduser()
 
 
 def load_local_deny_patterns() -> list[tuple[str, str]]:

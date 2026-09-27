@@ -174,7 +174,7 @@ Query [source] for [information] and return [result].
 - Handle empty results: [fallback]
 ```
 
-**Examples:** /kg, /things commands
+**Examples:** /search-notes, /list-tasks commands
 
 ---
 
@@ -212,7 +212,7 @@ Coordinate [multi-step process] to achieve [outcome].
 [How to determine workflow succeeded]
 ```
 
-**Examples:** /sync-config, /prd commands
+**Examples:** /release, /prd commands
 
 ---
 

@@ -202,6 +202,7 @@ mkdir -p /tmp/sl-dumps
 { sleep 8; printf 'hi\r'; sleep 24; } | script -q /tmp/sl-capture.txt gtimeout -s TERM 34 claude --settings /tmp/sl-override.json
 ```
 
+- `gtimeout` is GNU `timeout` from coreutils (`brew install coreutils` on macOS); on Linux use `timeout`.
 - `rate_limits` only populates **after a real API request** — hence the injected `hi` prompt.
 - Launching from inside a CC session: prefix `env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT`.
 - The same piped-keystrokes + `script` pseudo-TTY pattern drives TUI slash commands (e.g. `/usage`) for screen capture, and bare `script -q cap.txt gtimeout 15 claude` captures flash-then-vanish pre-TUI startup output.
@@ -371,7 +372,7 @@ CC's own persisted copy of the last `GET /api/oauth/usage` response — `{fetche
 ## Dependencies
 
 - **jq**: JSON processor (for parsing stdin JSON and cache files)
-- **ccusage**: Global binary at `~/.bun/bin/ccusage` (installed via bun, for daily/block costs)
+- **ccusage**: Global binary on PATH (`npm install -g ccusage` or `bun add -g ccusage`), for daily/block costs
 
 ## Error Prevention
 
@@ -413,7 +414,7 @@ time_left=" (${hrs}h ${mins}m)"
 
 ## Version History
 
-- **2026-07-16**: **Fable weekly segment.** Added `/ Fable: N%` to the 📊 usage block — server-side model-scoped rolling 7-day Fable window, read from CC's on-disk OAuth-usage cache (`~/.claude.json` → `.cachedUsageUtilization`) because the stdin `rate_limits` hard-codes only `five_hour`+`seven_day` (verified v2.1.211, empirically + in the binary). `*` suffix when cache >12h stale; segment self-removes if the bucket disappears. Also documented the stdin-dump debugging technique (`--settings` override + injected prompt). KG: "Claude Code Statusline Fable Usage (cachedUsageUtilization)".
+- **2026-07-16**: **Fable weekly segment.** Added `/ Fable: N%` to the 📊 usage block — server-side model-scoped rolling 7-day Fable window, read from CC's on-disk OAuth-usage cache (`~/.claude.json` → `.cachedUsageUtilization`) because the stdin `rate_limits` hard-codes only `five_hour`+`seven_day` (verified v2.1.211, empirically + in the binary). `*` suffix when cache >12h stale; segment self-removes if the bucket disappears. Also documented the stdin-dump debugging technique (`--settings` override + injected prompt).
 - **2026-06-10**: **Per-session effort fix.** Effort now reads `.effort.level` from CC JSON stdin (live per-session value, incl. mid-session `/effort` changes) instead of the static settings.json `.effortLevel` global default. Falls back to settings.json default → `auto` when the model has no effort param. Fixes stale-effort bug where a global default set in another session (e.g. Fable 5 / `xhigh`) showed in ALL windows regardless of the session's real effort. See [Effort Level](#effort-level-per-session).
 - **2026-03-20**: **Native `rate_limits` migration.** Replaced OAuth launchd daemon with CC's native `rate_limits` JSON stdin field (v2.1.80+). Eliminated: the OAuth polling daemon (script + launchd plist), `/tmp/claude-usage-cache.json`, `/tmp/claude-oauth-error`, `/tmp/claude-oauth-debug.log`, `/tmp/claude-oauth-launchd.log`, stale indicator (`!` suffix), OAuth cache reading, ISO timestamp parsing. Data source changed from file cache (300s stale) to CC stdin (always fresh). `resets_at` format changed from ISO timestamp to Unix epoch (simpler arithmetic). Sonnet display dropped (not in native field). ~20 lines removed from statusline command. GitHub issue #29604 resolved.
 - **2026-03-15**: Added effort level display. Reads `effortLevel` from settings.json, displays as `[effort]` after model name. Shows `[auto]` when unset.

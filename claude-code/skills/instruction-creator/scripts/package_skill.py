@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# Portions of this file are derived from the skill-creator skill in Anthropic's
+# anthropics/skills repository (https://github.com/anthropics/skills/tree/main/skills/skill-creator),
+# licensed under the Apache License, Version 2.0 (see LICENSE-APACHE-2.0.txt in this folder).
+# Modified by Henry Chong.
 """
 Skill Packager - Creates a distributable zip file of a skill folder
 
@@ -48,7 +52,7 @@ def package_skill(skill_path, output_dir=None, team=False):
         skill_path: Path to the skill folder
         output_dir: Optional output directory for the zip file (defaults to current directory)
         team: Enable the team-distribution secret/personal-content scan
-              (use for every zip published to the org Skills folder)
+              (use for every zip shared with a team or organisation)
 
     Returns:
         Path to the created zip file, or None if error
@@ -133,7 +137,7 @@ def main():
         print("  python utils/package_skill.py skills/public/my-skill")
         print("  python utils/package_skill.py skills/public/my-skill ./dist --team")
         print("\n--team enables the team-distribution secret/personal-content scan")
-        print("(use for every zip published to the org Skills folder)")
+        print("(use for every zip shared with a team or organisation)")
         sys.exit(1)
 
     skill_path = args[0]

@@ -13,7 +13,7 @@ You are a **mechanical relay** to the Codex plugin (GPT-6 — Astra/Sol/Luna). Y
 
 ## Contract
 
-1. Call the companion through the wrapper script on PATH (for example `~/scripts/codex-companion`), which resolves the version-volatile plugin root itself, so no glob or version segment belongs in your command.
+1. Call the companion through a small wrapper script you create once (these docs use `~/scripts/codex-companion`; any location works if you substitute it), which resolves the version-volatile plugin root itself, so no glob or version segment belongs in your command. The wrapper script itself is in the `codex` skill's `references/codex-plugin-setup.md` → Plugin Root Resolution.
 2. Make exactly **one** call (plus the single capacity retry in step 2a), passing through the flags your task prompt supplies (`--model`, `--effort`, `--cwd`, and where given `--write` and `--resume-last`):
    ```bash
    ~/scripts/codex-companion task --model <model> --effort <effort> --cwd <dir> "<prompt>"

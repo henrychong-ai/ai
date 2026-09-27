@@ -38,7 +38,7 @@ Line 2: 💰 $21.13 today / $21.13 block (4h 25m) | 📊 5h: 25% / 7d: 21% / Fab
 ## Requirements
 
 ### Platform
-- **macOS only** - Uses macOS Keychain and BSD utilities (`stat -f`)
+- **macOS only** - Uses BSD utilities (`stat -f`)
 
 ### Dependencies
 
@@ -46,7 +46,6 @@ Line 2: 💰 $21.13 today / $21.13 block (4h 25m) | 📊 5h: 25% / 7d: 21% / Fab
 |------------|---------|---------|
 | `jq` | JSON parsing | `brew install jq` |
 | `ccusage` | Cost tracking | `npm install -g ccusage` |
-| `curl` | API calls | Pre-installed |
 
 ### Authentication
 - **Claude Max subscription** with OAuth login required for rate limit metrics
@@ -172,7 +171,7 @@ jq 'del(.statusLine)' ~/.claude/settings.json > tmp.json && mv tmp.json ~/.claud
 The statusline logs usage data to `/tmp/claude-usage-log.csv`. Use the included script to analyse how much 5-hour capacity you consume per 1% of 7-day utilisation:
 
 ```bash
-python3 plugins/statusline/scripts/calc_usage_ratio.py
+python3 claude-code/plugins/statusline/scripts/calc_usage_ratio.py
 ```
 
 **Output:**

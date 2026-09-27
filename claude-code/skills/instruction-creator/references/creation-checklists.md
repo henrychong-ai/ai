@@ -232,7 +232,7 @@ For transforming personal/proprietary instruction files into team-ready versions
 
 # Paths
 "/Users/username/..." → [Remove or convert to generic example]
-"mb: {documentation directory}" → "mb: {project documentation directory}"
+"docs: {my notes directory}" → "docs: {project documentation directory}"
 
 # Methodology
 "Custom auto-activation sequence" → "Professional auto-activation sequence"

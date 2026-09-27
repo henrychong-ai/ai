@@ -84,7 +84,7 @@ Roslynator 5.0 is a new major version; check its release notes for renamed or re
 
 ## Configuration (.editorconfig)
 
-One `.editorconfig` at the solution root with `root = true`. Nested `.editorconfig` files (without `root = true`, so they inherit the rest) are only for scoped overrides such as CA2007 in libraries. The condensed config below matches `/dotnet` `tooling.md`; take the full template from there.
+One `.editorconfig` at the solution root with `root = true`. Nested `.editorconfig` files (without `root = true`, so they inherit the rest) are only for scoped overrides such as CA2007 in libraries. The condensed config below matches `/dotnet` `tooling.md`; where that skill is installed, take the full template from there.
 
 ```ini
 root = true

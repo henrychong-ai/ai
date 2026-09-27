@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# Portions of this file are derived from the skill-creator skill in Anthropic's
+# anthropics/skills repository (https://github.com/anthropics/skills/tree/main/skills/skill-creator),
+# licensed under the Apache License, Version 2.0 (see LICENSE-APACHE-2.0.txt in this folder).
+# Modified by Henry Chong.
 """
 Skill Initializer - Creates a new skill from template
 

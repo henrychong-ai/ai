@@ -44,14 +44,14 @@ Claude skills exist in two separate ecosystems:
 
 The only conversion needed is: **Claude Code → Claude.ai**
 
-### Two Distribution Mechanisms (CD-S vs CD-P)
+### Two Distribution Mechanisms (Skill Zip vs Linked Project)
 
-| Type | Label | Method | Scope | Storage |
-|------|-------|--------|-------|---------|
-| **Skill `.zip`** | CD-S | Upload `.zip` to Settings → Capabilities → Skills | Auto-activates on trigger phrases across every Claude.ai conversation; bundled files reach every consumer surface (Desktop, web, iOS, Android) via `/mnt/skills/user/<skill>/` | `~/.claude/skills-claude-desktop/<skill>.zip` |
-| **Project Custom Instructions** (linked-skill only) | CD-P | Paste contents into a specific Claude Desktop Project → Custom Instructions field | Scoped to that Project; carries per-surface capability matrix; the skill's `references/cd-project-recipe.md` is emitted to the .md by `/instruction-creator` per `cd-project-bundle-guide.md` | `~/.claude/skills-claude-desktop/<skill>-project-instructions.md` (single file, side-by-side with `<skill>.zip`) |
+| Type | Method | Scope | Storage |
+|------|--------|-------|---------|
+| **Skill `.zip`** | Upload `.zip` to Settings → Capabilities → Skills | Auto-activates on trigger phrases across every Claude.ai conversation; bundled files reach every consumer surface (Desktop, web, iOS, Android) via `/mnt/skills/user/<skill>/` | `<output-dir>/<skill>.zip` (your packaging output directory; see `claude-desktop-packaging-guide.md`) |
+| **Project Custom Instructions** (linked-skill only) | Paste contents into a specific Claude Desktop Project → Custom Instructions field | Scoped to that Project; carries per-surface capability matrix; the skill's `references/cd-project-recipe.md` is emitted to the .md by `/instruction-creator` per `cd-project-bundle-guide.md` | `<output-dir>/<skill>-project-instructions.md` (single file, side-by-side with `<skill>.zip`) |
 
-**CD-S applies to every distributable skill.** **CD-P applies only to "linked skills"** — those with a paired Claude Desktop Project. Standalone skills need only CD-S. CD-only Projects (Claude Desktop Projects without a backing CC skill) are managed in the Claude Desktop GUI only and need no /instruction-creator artifacts.
+**The skill zip applies to every distributable skill.** **Project Custom Instructions apply only to "linked skills"** — those with a paired Claude Desktop Project. Standalone skills need only the zip. Desktop-only Projects (Claude Desktop Projects without a backing CC skill) are managed in the Claude Desktop GUI only and need no /instruction-creator artifacts.
 
 ### DXT/MCPB Extensions (Separate System)
 
@@ -128,7 +128,7 @@ Skills that **require local tool execution**:
 
 **Characteristics:**
 - Uses Bash commands (git, ffmpeg, python, etc.)
-- Requires MCP servers (KG, Things, DayOne, Obsidian)
+- Requires MCP servers (e.g. a knowledge graph, task manager, journal, or note-taking app)
 - Depends on filesystem operations
 - Executes Python/Node scripts locally
 - References local paths that won't exist on Claude.ai
@@ -281,12 +281,12 @@ Calculate the financial ratios using the formulas below:
 **Include in zip:**
 - `SKILL.md` (required, converted)
 - `references/*.md` files (knowledge content)
-- `references/*.pdf` files (insurance docs, guides — Claude can read PDFs)
+- `references/*.pdf` files (manuals, guides — Claude can read PDFs)
 - `templates/*.md` files (document templates)
 - `templates/*.csv`, `*.json` (structured templates)
+- `scripts/` when the skill needs them — Claude.ai runs bundled scripts in its code-execution sandbox (`convert_to_claudeai.py` keeps `scripts/`); leave out any script that depends on local-only tools, paths or credentials
 
 **Exclude from zip (non-portable artifacts):**
-- `scripts/` directory (Python/shell — won't execute on Claude.ai)
 - `.DS_Store` (macOS Finder metadata)
 - `__pycache__/`, `*.pyc` (Python bytecode cache)
 - Credentials or sensitive data
@@ -296,8 +296,8 @@ Calculate the financial ratios using the formulas below:
 - **Individual file limit:** 30MB per file
 - **Recommended total:** < 10MB for fast loading
 - **Tested sizes:** 25MB and 52MB zips have been created successfully — upload acceptance varies
-- **Very large skills (400MB+):** Use CD-P (Project) instead of CD-S (Skill zip)
-- **Large references:** Consider CD-P for skills with many large PDFs
+- **Very large skills (400MB+):** Use a Desktop Project instead of a skill zip
+- **Large references:** Consider a Desktop Project for skills with many large PDFs
 
 ### Bundling Decision Matrix
 
@@ -307,7 +307,7 @@ Calculate the financial ratios using the formulas below:
 | Templates (md/csv/json) | Yes | Output patterns |
 | PDFs (any size) | Yes | Claude can read PDFs in skills |
 | Images (jpg/png) | Yes | Claude can view images |
-| Python scripts | **No** | Won't execute — non-portable |
+| Python scripts | Yes, when needed | Run in Claude.ai's code-execution sandbox; must not depend on local-only tools, paths or credentials |
 | `.DS_Store` | **No** | macOS metadata — non-portable |
 | `__pycache__/` | **No** | Python cache — non-portable |
 | API keys/credentials | **Never** | Security risk |
@@ -321,7 +321,7 @@ Calculate the financial ratios using the formulas below:
 Faster, no dependencies, handles symlinked skills. Excludes non-portable artifacts automatically.
 
 ```bash
-OUTDIR="$HOME/.claude/skills-claude-desktop"
+OUTDIR="<output-dir>"   # your packaging output directory
 
 # Single skill (from parent directory to get wrapper folder)
 cd ~/.claude/skills && zip -r "$OUTDIR/<skill-name>.zip" <skill-name> \
@@ -351,27 +351,27 @@ Use when you need YAML field stripping (`allowed-tools` removal) and CC-specific
 # Single skill
 uv run --with pyyaml python ~/.claude/skills/instruction-creator/scripts/convert_to_claudeai.py \
     ~/.claude/skills/<skill-name> \
-    ~/.claude/skills-claude-desktop/
+    <output-dir>/
 
-# Options: --dry-run, --verbose, --keep-tools, --inline-refs
+# Options: --dry-run, --verbose, --keep-tools, --inline-refs, --team
 ```
 
-**Note:** The convert script transforms content (strips CC-specific fields) but does not currently exclude `scripts/`, `.DS_Store`, or `__pycache__/`. For pure knowledge skills that don't need content transformation, Method 1 is simpler.
+**Note:** The convert script transforms content (strips CC-specific fields), excludes `.DS_Store`, `__pycache__/`, `*.pyc`, and maintainer files (`TODO.md`, `README.md`, `CHANGELOG.md`), and keeps `scripts/` (Claude.ai mounts the full skill and its code-execution tool can run them). For pure knowledge skills that don't need content transformation, Method 1 is simpler.
 
 ---
 
-## Upload Process (CD-S Skills)
+## Upload Process (Skill Zips)
 
 ### Step 1: Generate Zip
 
-See "Conversion Methods" above. Zips output to `~/.claude/skills-claude-desktop/`.
+See "Conversion Methods" above. Zips output to `<output-dir>`.
 
 ### Step 2: Upload to Claude.ai
 
 1. Open Claude.ai (web) or Claude Desktop
 2. Go to **Settings** (gear icon)
 3. Navigate to **Custom Skills** section
-4. Click **Upload** or drag-drop the zip file from `~/.claude/skills-claude-desktop/`
+4. Click **Upload** or drag-drop the zip file from `<output-dir>`
 5. Verify skill appears in list
 
 ### Step 3: Verify Sync
@@ -384,7 +384,7 @@ Start a conversation and use a skill trigger phrase to verify activation.
 
 ---
 
-## Project Setup (CD-P Projects)
+## Project Setup (Linked Desktop Projects)
 
 For skills too large for zip upload or that benefit from scoped context.
 
@@ -399,9 +399,9 @@ Copy/adapt SKILL.md and reference files to a working directory of your choice.
 3. Add custom instructions (from SKILL.md content)
 4. Attach reference files
 
-### Step 3: Track in Manifest
+### Step 3: Track the Link
 
-Update distribution manifest with `CD-P: ✓` and project path.
+If you keep a distribution manifest, record that the skill now has a paired Desktop Project, and scaffold the skill's `references/cd-project-recipe.md` per `cd-project-bundle-guide.md`.
 
 ---
 
@@ -518,7 +518,7 @@ Before converting, verify:
 
 ## Appendix: Example Distribution Patterns
 
-### CD-S (Skill Zips) — typical sizing
+### Skill Zips — typical sizing
 
 | Skill type | Typical Zip Size | Notes |
 |-----------|------------------|-------|
@@ -527,11 +527,11 @@ Before converting, verify:
 | Skill with many reference PDFs (e.g. policies, statutes) | 10–25 MB | Approaching the 30 MB cap — audit before adding more |
 | Skill with very large PDF/media payload | > 30 MB | Cannot upload as a single .zip — see size-reduction strategies |
 
-### CD-P (Projects)
+### Desktop Projects
 
-CD-P is appropriate when a skill is too large for the 30 MB cap, when the user needs a scoped Project context, or when the skill backs a paired Claude Desktop Project that needs Custom Instructions text. See `cd-project-bundle-guide.md` for the v3 single-file recipe pattern.
+A linked Desktop Project is appropriate when a skill is too large for the 30 MB cap, when the user needs a scoped Project context, or when the skill backs a paired Claude Desktop Project that needs Custom Instructions text. See `cd-project-bundle-guide.md` for the v3 single-file recipe pattern.
 
-### Not Recommended for CD-S (Non-Portable)
+### Not Recommended for Skill Zips (Non-Portable)
 
 | Skill type | Reason |
 |------------|--------|
@@ -542,7 +542,7 @@ CD-P is appropriate when a skill is too large for the 30 MB cap, when the user n
 
 ### Distribution Tracking
 
-If you maintain a multi-repo distribution setup (e.g. local + team + public copies of skills), a manifest file in your `/git` skill can track CD-S / CD-T / CD-P status with stale-check on push.
+If you maintain a multi-repo distribution setup (e.g. local + team + public copies of skills), a manifest file can record, per skill, which targets it ships to (personal-plan zip, team-plan zip, linked Desktop Project) and whether each upload is current, with a stale check before you push.
 
 ---
 

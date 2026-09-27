@@ -223,6 +223,7 @@ pnpm add -D husky lint-staged
 pnpm exec husky init
 
 # Create pre-commit hook — copy the template (runs gitleaks secret-scan + lint-staged)
+# (paths assume the skill is installed at ~/.claude/skills/lint — adjust if installed elsewhere)
 cp ~/.claude/skills/lint/templates/.husky/pre-commit .husky/pre-commit
 # Drop the canonical gitleaks config at the repo root (blocks secrets + .env)
 cp ~/.claude/skills/lint/templates/.gitleaks.toml .gitleaks.toml

@@ -1,6 +1,6 @@
 # Codex Plugin Setup (Claude Code)
 
-Setup guide for the official **OpenAI Codex plugin for Claude Code**, which routes GPT-6 (Astra/Sol/Luna) work to the Codex app-server runtime. Current on this setup: `codex@openai-codex` v1.0.6, user scope, Codex CLI 0.156.1.
+Setup guide for the official **OpenAI Codex plugin for Claude Code**, which routes GPT-6 (Astra/Sol/Luna) work to the Codex app-server runtime. Last verified with `codex@openai-codex` v1.0.6 (user scope) and Codex CLI 0.156.1.
 
 ## Prerequisites
 
@@ -84,14 +84,23 @@ Then a live round-trip:
 
 ## Plugin Root Resolution
 
-The plugin unpacks to `~/.claude/plugins/cache/openai-codex/codex/<version>/`, and the version segment changes on every upgrade. Plugin-authored commands get `${CLAUDE_PLUGIN_ROOT}`; everything outside the plugin — this skill and the `codex-relay` agent — goes through a small wrapper script on PATH instead, so callers name one fixed path and a permission rule can allow it once. On this setup that wrapper is `~/scripts/codex-companion`: it resolves the newest plugin root, execs `node` on the companion with the arguments untouched, and exits 127 with an install hint when the plugin is absent. Reproduce it anywhere with the resolution it wraps:
+The plugin unpacks to `~/.claude/plugins/cache/openai-codex/codex/<version>/`, and the version segment changes on every upgrade. Plugin-authored commands get `${CLAUDE_PLUGIN_ROOT}`; everything outside the plugin — this skill and the `codex-relay` agent — goes through a small wrapper script on PATH instead, so callers name one fixed path and a permission rule can allow it once. These docs call that wrapper `~/scripts/codex-companion` (use any path you like and substitute it): it resolves the newest plugin root, execs `node` on the companion with the arguments untouched, and exits 127 with an install hint when the plugin is absent. Create it once:
 
 ```bash
-CODEX_COMPANION=$(ls -d ~/.claude/plugins/cache/openai-codex/codex/*/scripts/codex-companion.mjs | sort -V | tail -1)
-node "$CODEX_COMPANION" "$@"
+mkdir -p ~/scripts
+cat > ~/scripts/codex-companion << 'EOF'
+#!/usr/bin/env bash
+CODEX_COMPANION=$(ls -d ~/.claude/plugins/cache/openai-codex/codex/*/scripts/codex-companion.mjs 2>/dev/null | sort -V | tail -1)
+if [ -z "$CODEX_COMPANION" ]; then
+  echo "codex-companion: Codex plugin not found; run: claude plugin install codex@openai-codex" >&2
+  exit 127
+fi
+exec node "$CODEX_COMPANION" "$@"
+EOF
+chmod +x ~/scripts/codex-companion
 ```
 
-Anyone without the wrapper substitutes those two lines for every `~/scripts/codex-companion` call in these docs.
+`sort -V` needs GNU sort or a recent macOS `sort`. Anyone who prefers no wrapper substitutes the `CODEX_COMPANION=…` line plus `node "$CODEX_COMPANION"` for every `~/scripts/codex-companion` call in these docs. To avoid a permission prompt on every call, allow it once in Claude Code settings, e.g. `Bash(~/scripts/codex-companion:*)`.
 
 ## Runtime Model
 

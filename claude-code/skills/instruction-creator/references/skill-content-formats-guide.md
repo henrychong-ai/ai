@@ -143,23 +143,23 @@ When applying this pattern to a skill that currently has PDFs/images/etc. mixed 
    ```
 7. **Update SKILL.md** — replace any references to the binary filenames with the new `.md` filenames; add an archive-location pointer paragraph (pattern above).
 8. **Update any in-skill cross-references** (e.g. `insurance-overview.md` referencing other policy docs) — `sed -i.bak 's|\.pdf|\.md|g' <file>` or equivalent.
-9. **Rebuild the skill zip** (if CD-S / CD-T marked) — the new `.md` content should now be included (subject to 30 MB cap; see `claude-desktop-packaging-guide.md`).
-10. **Update the CD-P recipe** (if CD-P marked) — decide whether the new text content should join the Project bundle's File Manifest.
-11. **Update distribution manifest** — bump CD-S to `○` pending re-zip; same for CD-P if recipe changed.
+9. **Rebuild the skill zip** (if the skill ships as a Claude Desktop / Claude.ai skill zip) — the new `.md` content should now be included (subject to 30 MB cap; see `claude-desktop-packaging-guide.md`).
+10. **Update the Project recipe** (if the skill is a linked skill with a paired Desktop Project) — decide whether the new text content should join the recipe's File Manifest.
+11. **Update your distribution manifest** (if you keep one) — mark the zip, and the Project instructions if the recipe changed, as pending re-upload.
 
 Worked example: a personal-health skill's insurance extraction converted 12 PDFs + 1 JPG to 13 `.md` files inside `references/insurance/`, with originals moved to `<archive-root>/<skill-name>/references/insurance/` preserving subdir structure.
 
 ---
 
-## CD-S / CD-T / CD-P Compliance Implications
+## Distribution Implications
 
 When a skill goes through this conversion + archive workflow:
 
-| Marker | Implication |
+| Distribution target | Implication |
 |---|---|
-| **CD-S** | Skill zip size shrinks dramatically when bulky binaries leave the skill. Re-zip after migration — see `claude-desktop-packaging-guide.md` for size-reduction strategies if still over 30 MB. |
-| **CD-T** | Same as CD-S. Verify the extracted `.md` content does not contain personal data that would have been "protected" by being PDF-buried — if any sensitive content surfaced in extraction, re-sanitise before team-plan re-upload. |
-| **CD-P** (linked skill) | If the skill is marked CD-P `✓`/`○` in the manifest, decide whether the new `.md` extracts are reachable from the paired Claude Desktop Project (they are, automatically, if they're inside `references/` of the skill — the skill `.zip` auto-syncs to `/mnt/skills/user/<skill>/` on every Claude.ai surface). Add the new files to the recipe's File Manifest at `references/cd-project-recipe.md` so the manifest documents what's reachable. Re-emit the Project Custom Instructions `.md` to `~/.claude/skills-claude-desktop/<skill>-project-instructions.md` **only if** the Custom Instructions text itself references the new file by name (most won't — they reference categories, not individual files). |
+| **Personal-plan skill zip** | Skill zip size shrinks dramatically when bulky binaries leave the skill. Re-zip after migration — see `claude-desktop-packaging-guide.md` for size-reduction strategies if still over 30 MB. |
+| **Team-plan skill zip** | Same as the personal-plan zip. Verify the extracted `.md` content does not contain personal data that would have been "protected" by being PDF-buried — if any sensitive content surfaced in extraction, re-sanitise before the team re-upload. |
+| **Linked Desktop Project** | Decide whether the new `.md` extracts are reachable from the paired Claude Desktop Project (they are, automatically, if they're inside `references/` of the skill — the skill `.zip` auto-syncs to `/mnt/skills/user/<skill>/` on every Claude.ai surface). Add the new files to the recipe's File Manifest at `references/cd-project-recipe.md` so the manifest documents what's reachable. Re-emit the Project Custom Instructions `.md` to `<output-dir>/<skill>-project-instructions.md` **only if** the Custom Instructions text itself references the new file by name (most won't — they reference categories, not individual files). |
 
 ---
 

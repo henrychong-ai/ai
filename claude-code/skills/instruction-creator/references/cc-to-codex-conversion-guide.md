@@ -217,7 +217,7 @@ For a multi-skill reformat, run a **read-only assessment first**: read each skil
 - [ ] Frontmatter reduced to `name` + `description`.
 - [ ] Tier-A (verbatim/transform-clean) vs Tier-B (hand-author) decided; grep guard passes.
 - [ ] Verification table green; drift `--check` clean.
-- [ ] Allowlist entry added (Tier-A) or `~/.codex/skills/<name>` authored (Tier-B); manifest + provenance map updated.
+- [ ] Allowlist entry added (Tier-A) or `~/.codex/skills/<name>` authored (Tier-B); distribution manifest and provenance map updated, if you keep them.
 
 ---
 

@@ -197,7 +197,9 @@ Single: YYYYMMDD-original-name.target-ext
 Batch: YYYYMMDD-batch-conversion-001.target-ext
 ```
 
-## 🧠 **KNOWLEDGE GRAPH INTEGRATION**
+## 🧠 **KNOWLEDGE GRAPH INTEGRATION** (optional)
+
+Applies only when a knowledge-graph MCP server is available; skip this section otherwise.
 
 ### **Pattern Learning**
 - Track conversion success rates by format pair

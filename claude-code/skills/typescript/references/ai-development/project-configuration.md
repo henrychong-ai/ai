@@ -69,7 +69,7 @@ Create environment-specific configs at user level for reuse across projects:
 ~/.claude/
 ├── CLAUDE.md                          # Global preferences
 └── rules/
-    └── environments/
+    └── config/
         ├── cloudflare-personal.md     # Personal Cloudflare
         ├── cloudflare-work.md         # Work Cloudflare
         └── aws-personal.md            # Personal AWS

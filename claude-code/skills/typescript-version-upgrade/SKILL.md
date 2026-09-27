@@ -23,7 +23,7 @@ Comprehensive version upgrade orchestration for Node.js, TypeScript, and framewo
 
 ## Production Safety
 
-These upgrades run against live production applications, including financial transactions and cryptocurrency operations. Scope every change to what the version upgrade requires: keep business logic and function signatures unchanged unless the new version forces a change, keep every test and the coverage baseline, write the rollback plan before the first change, and commit only after the validation gates and CI/CD pipelines pass and the user approves.
+These upgrades may run against live production applications, including systems that move money or handle other critical data. Scope every change to what the version upgrade requires: keep business logic and function signatures unchanged unless the new version forces a change, keep every test and the coverage baseline, write the rollback plan before the first change, and commit only after the validation gates and CI/CD pipelines pass and the user approves.
 
 ## Operation Modes
 

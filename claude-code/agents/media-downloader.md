@@ -53,24 +53,23 @@ Default Path: ~/Downloads/
 yt-dlp -o "~/Downloads/%(title)s.%(ext)s" 'URL'
 
 # Pattern 2: Escape spaces with backslashes (if path has spaces)
-yt-dlp -o ~/Downloads/%(title)s.%(ext)s 'URL'
+yt-dlp -o ~/My\ Videos/%(title)s.%(ext)s 'URL'
 
-# Pattern 3: Use $HOME expansion (works in bash)
-yt-dlp -o "$HOME/Downloads/%(title)s.%(ext)s" 'URL'
+# Pattern 3: Use $HOME expansion (the shell expands it; safest)
+yt-dlp -o "$HOME/My Videos/%(title)s.%(ext)s" 'URL'
 ```
+
+**Note:** the shell does not expand `~` inside quotes, but yt-dlp expands a leading `~` in `-o` itself, so Pattern 1 works. Other tools do not do this — prefer `$HOME` (Pattern 3) for anything other than yt-dlp.
 
 **NEVER do this:**
 ```bash
-# WRONG - tilde expansion fails inside quotes
-yt-dlp -o "~/Library/Mobile Documents/..." 'URL'
-
 # WRONG - unquoted path with spaces
-yt-dlp -o ~/Library/Mobile Documents/... 'URL'
+yt-dlp -o ~/My Videos/... 'URL'
 ```
 
 ### Why This Matters
 Without proper quoting, yt-dlp interprets path segments after spaces as additional URLs, causing:
-- `ERROR: 'Documents/...' is not a valid URL`
+- `ERROR: 'Videos/...' is not a valid URL`
 - Exit code 1 even if download succeeds
 - Confusing error messages
 
@@ -189,7 +188,7 @@ Platform: [YouTube/Vimeo/etc.]
 ```
 
 ### Phase 4: Display Default Configuration
-**Read current config:**
+**Read current config (if present):**
 ```bash
 cat ~/.config/yt-dlp/config
 ```
@@ -308,8 +307,8 @@ Est Size: [X.X GB]
 | "Geo-blocked" | Region lock | VPN or alternative source |
 | "Unsupported URL" | Unknown platform | Try curl for direct download |
 | "HTTP 403/404" | Access denied | Check URL validity |
-| "Already downloaded" | In archive.txt | Confirm re-download with `--force-overwrites` |
-| **"'Documents/...' is not a valid URL"** | **Path with spaces not quoted** | **Use double quotes around -o path: `-o "/full/path/with spaces/..."`** |
+| "Already downloaded" / "has already been recorded in the archive" | In archive.txt | Confirm, then re-download with `--no-download-archive --force-overwrites` |
+| **"'Videos/...' is not a valid URL"** | **Path with spaces not quoted** | **Use double quotes around -o path: `-o "/full/path/with spaces/..."`** |
 | Exit code 1 but video downloaded | Spurious URL parsing error | Check for unquoted paths with spaces |
 
 **Tool not installed:**
@@ -506,7 +505,7 @@ SUBTITLE OPTIONS
 
 ## DEFAULT CONFIG REFERENCE
 
-**User's yt-dlp config at `~/.config/yt-dlp/config`:**
+**Suggested yt-dlp config at `~/.config/yt-dlp/config`** (the defaults this agent describes assume it; create it if absent):
 ```
 # Output to ~/Downloads/ (default location)
 -o ~/Downloads/%(title)s.%(ext)s
@@ -530,10 +529,10 @@ SUBTITLE OPTIONS
 --download-archive ~/.config/yt-dlp/archive.txt
 ```
 
-**⚠️ NOTE:** The config file uses `~` which works when yt-dlp reads it directly, but when passing `-o` on command line, use full path with proper quoting:
+**⚠️ NOTE:** The config file uses `~`, which yt-dlp expands itself. When passing `-o` on the command line, quote the whole template (yt-dlp still expands a leading `~`; `$HOME` is the shell-safe alternative):
 ```bash
 # Command line override (proper quoting required)
--o "~/Downloads/%(title)s.%(ext)s"
+-o "$HOME/Downloads/%(title)s.%(ext)s"
 ```
 
 **RECOMMENDED ADDITION TO CONFIG** (for automatic MAX HLS speed):
@@ -576,7 +575,7 @@ yt-dlp --concurrent-fragments 32 -f 'bestvideo[height<=1080]+bestaudio' -o "~/Do
 yt-dlp --cookies-from-browser chrome 'URL'
 
 # Ignore archive (re-download)
-yt-dlp --force-overwrites 'URL'
+yt-dlp --no-download-archive --force-overwrites 'URL'
 
 # Private Vimeo (use player URL)
 yt-dlp --concurrent-fragments 32 -o "~/Downloads/%(title)s.%(ext)s" 'https://player.vimeo.com/video/{VIDEO_ID}?h={PRIVACY_HASH}'

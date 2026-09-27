@@ -8,7 +8,7 @@ allowed-tools: Agent, Bash
 
 Second opinions, hard problems, and code review via GPT-6 Astra, Sol, or Luna. **Dispatch runs in the background via the Agent tool** — the main thread stays free while Codex thinks; the harness notifies on completion and Claude integrates the response then.
 
-**Transport (since 2026-09-09):** the official **Codex plugin for Claude Code** (`codex@openai-codex`, marketplace `openai/codex-plugin-cc`). Its companion CLI talks to the Codex **app-server** runtime, a shared local daemon started on demand, which inherits `~/.codex/config.toml` and the existing ChatGPT login. This replaces the stdio MCP server (`codex mcp-server`, deprecated in Codex CLI 0.149.1 and removed from this setup on 2026-09-09) — the tools `mcp__codex__codex` and `mcp__codex__codex-reply` no longer exist. Setup, upgrade, and troubleshooting: `references/codex-plugin-setup.md`.
+**Transport (since 2026-09-09):** the official **Codex plugin for Claude Code** (`codex@openai-codex`, marketplace `openai/codex-plugin-cc`). Its companion CLI talks to the Codex **app-server** runtime, a shared local daemon started on demand, which inherits `~/.codex/config.toml` and the existing ChatGPT login. This replaces the stdio MCP server (`codex mcp-server`, deprecated in Codex CLI 0.149.1 and dropped by this skill on 2026-09-09) — the tools `mcp__codex__codex` and `mcp__codex__codex-reply` no longer exist. Setup, upgrade, and troubleshooting: `references/codex-plugin-setup.md`.
 
 ## Quick Reference
 
@@ -54,13 +54,13 @@ The plugin ships slash commands of its own. Prefer them where they fit; use `/co
 
 ## Companion CLI Reference
 
-Call the companion through the wrapper on PATH (for example `~/scripts/codex-companion`), which resolves the version-volatile plugin root for you:
+Call the companion through a wrapper script you create once (these docs use `~/scripts/codex-companion`; substitute your own path), which resolves the version-volatile plugin root for you:
 
 ```bash
 ~/scripts/codex-companion task --model gpt-6-astra --effort medium --cwd "$PWD" "prepared prompt"
 ```
 
-Without the wrapper, resolve the plugin root inline instead — see `references/codex-plugin-setup.md`.
+The wrapper body, and the inline alternative without one, are in `references/codex-plugin-setup.md` → Plugin Root Resolution.
 
 | Subcommand | Flags | Notes |
 |------------|-------|-------|
@@ -105,7 +105,7 @@ After dispatch, reply with one short line (e.g. `Codex query dispatched; will su
 ```
 Agent({
   description: "Codex: [3-5 word topic]",
-  subagent_type: "codex-relay",   // dedicated leaf relay agent; its frontmatter pins model: sonnet + effort: medium. The Agent tool has no per-call effort param, so effort is pinned in the agent definition (~/.claude/agents/codex-relay.md). Verbatim relay at Sonnet cost; use a named agent rather than a fork, which pins the parent model. A newly created agent registers at session start.
+  subagent_type: "codex-relay",   // dedicated leaf relay agent; its frontmatter pins model: sonnet + effort: medium. The Agent tool has no per-call effort param, so effort is pinned in the agent definition (install claude-code/agents/codex-relay.md from this repo to ~/.claude/agents/). Verbatim relay at Sonnet cost; use a named agent rather than a fork, which pins the parent model. A newly created agent registers at session start.
   run_in_background: true,
   // Relay behaviour (verbatim pass-through, single Bash call, leaf-only) lives in the
   // agent's own system prompt — the task prompt carries only the call parameters:

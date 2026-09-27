@@ -199,7 +199,7 @@ Use when reviewing an existing CLAUDE.md, skill, agent, or command for 4.8 compa
 
 ### 6. Scan for untriggered effort expectations
 - [ ] Find: "think deeply", "reason carefully", "take your time", "do your best work" — these are no-ops; remove.
-- [ ] If the task genuinely needs depth, set `effort: high` / `xhigh` in YAML, or document an explicit reasoning trigger (e.g. a custom trigger token like "s1/s2/s3" wired to a sequential-thinking tool).
+- [ ] If the task genuinely needs depth, set `effort: high` / `xhigh` in YAML, or document an explicit reasoning trigger (e.g. a custom trigger word the user types, wired to a structured-reasoning tool).
 
 ### 7. Scan for now-redundant scaffolding (NEW on 4.8)
 - [ ] Cross-check every instruction against the Part 3 table — honesty nudges, tool-call reminders, forced progress summaries, manual bimodal-thinking control, unbounded subagent prompts.

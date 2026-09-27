@@ -1323,7 +1323,7 @@ The standard shape for this pattern — a pnpm workspace monorepo (workspace dir
 | **dashboard** | React 19 + Vite + Tailwind + shadcn dashboard — imports types from `shared/` |
 | **MCP** *(optional)* | stdio MCP server — tool input schemas source `shared/` schema `.shape` |
 
-Supporting (typical for a Workers deployment): Stytch B2B auth + RBAC (or your own auth setup); Cloudflare KV / D1 / R2 as the tool needs; Drizzle (+ drizzle-zod where DB types feed the chain); Biome (format) + Oxlint (lint, `--max-warnings=0`) + Vitest (Cloudflare Workers pool); CI (`lint → format:check → typecheck-all-workspaces → test-all-workspaces`, then deploy: `develop`→dev, `main`→prod).
+Supporting (typical for a Workers deployment): your chosen auth provider + RBAC; Cloudflare KV / D1 / R2 as the tool needs; Drizzle (+ drizzle-zod where DB types feed the chain); Biome (format) + Oxlint (lint, `--max-warnings=0`) + Vitest (Cloudflare Workers pool); CI (`lint → format:check → typecheck-all-workspaces → test-all-workspaces`, then deploy: `develop`→dev, `main`→prod).
 
 ### API Shield integration (Cloudflare)
 
@@ -1852,4 +1852,4 @@ Framework:          Varies by project type
 
 ---
 
-*Last updated: 2026-06-05 (Option-B back-to-front single-source pattern added as recommended default — `@hono/zod-openapi`; Zod 4 default for new projects; pnpm 10.28.2 latest stable; de-repo pass 2026-09-28)*
+*Last updated: 2026-06-05 (Option-B back-to-front single-source pattern added as recommended default — `@hono/zod-openapi`; Zod 4 default for new projects; pnpm 10.28.2 latest stable)*

@@ -461,7 +461,7 @@ const events = defineCollection({
     title: z.string(),
     slug: z.string(),
     date: z.coerce.date(),
-    eventType: z.enum(['annual-conference', 'catch-up-meeting', 'updating-session']),
+    eventType: z.enum(['conference', 'meetup', 'workshop']),
     description: z.any().optional(),  // Rich text
     featured: z.boolean().optional(),
     speakers: z.array(z.any()).optional(),
@@ -645,9 +645,9 @@ Tailwind 4 uses CSS-first configuration. No `tailwind.config.js` required.
 /* Theme customization */
 @theme {
   /* Colors */
-  --color-primary: #002147;
-  --color-primary-light: #0f4c81;
-  --color-accent: #8b0000;
+  --color-primary: #1e3a8a;
+  --color-primary-light: #2563eb;
+  --color-accent: #dc2626;
 
   /* Typography */
   --font-sans: 'Open Sans', system-ui, sans-serif;

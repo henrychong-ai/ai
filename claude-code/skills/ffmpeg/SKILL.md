@@ -57,7 +57,7 @@ brew install ffmpeg
 
 ## Hardware Acceleration (Apple Silicon)
 
-**M3 Pro VideoToolbox encoding is 7-10x faster with 90% less CPU.**
+**VideoToolbox encoding is typically 7-10x faster with ~90% less CPU (measured on an M3 Pro; varies by chip).**
 
 ### Decode Acceleration
 Always add before `-i`:

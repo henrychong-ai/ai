@@ -1,6 +1,6 @@
 # ffmpeg Hardware Acceleration on Apple Silicon
 
-Complete guide to VideoToolbox hardware acceleration on M3 Pro MacBook.
+Complete guide to VideoToolbox hardware acceleration on Apple Silicon Macs (figures below were measured on an M3 Pro; other chips differ).
 
 ## Overview
 
@@ -12,9 +12,9 @@ Complete guide to VideoToolbox hardware acceleration on M3 Pro MacBook.
 - **Power:** Minimal battery drain
 - **Heat:** Cool and quiet operation
 
-### M3 Pro Capabilities
-- **Hardware Encode:** H.264, H.265/HEVC, ProRes
-- **Hardware Decode:** H.264, H.265/HEVC, ProRes, AV1
+### Apple Silicon Capabilities
+- **Hardware Encode:** H.264, H.265/HEVC, ProRes (ProRes engine on Pro/Max/Ultra chips)
+- **Hardware Decode:** H.264, H.265/HEVC, ProRes, AV1 (AV1 on M3 and later)
 - **Note:** AV1 decode only, no encode support
 
 ## Basic Usage
@@ -210,7 +210,7 @@ ffmpeg -i input.mp4 -c:v libx265 -crf 28 -preset medium output.mp4
 
 ## Performance Comparison
 
-### M3 Pro Benchmarks (Typical)
+### Example Benchmarks (M3 Pro, Typical)
 
 | Task | Hardware | Software | Speedup |
 |------|----------|----------|---------|

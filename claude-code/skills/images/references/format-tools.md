@@ -201,7 +201,7 @@ for f in *.heic; do heif-convert -q 90 "$f" "${f%.heic}.jpg"; done
 
 # Convert and organize
 mkdir -p converted
-for f in *.HEIC *.heic 2>/dev/null; do
+for f in *.HEIC *.heic; do
   [ -f "$f" ] && heif-convert -q 90 "$f" "converted/${f%.*}.jpg"
 done
 ```

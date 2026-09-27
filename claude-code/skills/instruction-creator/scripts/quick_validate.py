@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# Portions of this file are derived from the skill-creator skill in Anthropic's
+# anthropics/skills repository (https://github.com/anthropics/skills/tree/main/skills/skill-creator),
+# licensed under the Apache License, Version 2.0 (see LICENSE-APACHE-2.0.txt in this folder).
+# Modified by Henry Chong.
 """
 Quick validation script for skills - minimal version.
 
@@ -75,8 +79,8 @@ def validate_skill(skill_path):
     if not body.strip():
         return False, ("SKILL.md body is EMPTY (frontmatter-only). A skill must have body "
                        "content. If you just edited the frontmatter, the body was likely "
-                       "wiped — restore it before committing. See the 2026-06-04 body-wipe "
-                       "post-mortem in references/skill-edit-safety.md.")
+                       "wiped — restore it from git before committing. See "
+                       "references/skill-edit-safety.md.")
 
     return True, "Skill is valid!"
 

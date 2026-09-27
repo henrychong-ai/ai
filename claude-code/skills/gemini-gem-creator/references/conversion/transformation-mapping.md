@@ -10,7 +10,7 @@ Systematic mapping from Claude Code instruction patterns to Gemini gem component
 |------------|------------|----------------|
 | `name:` | Gem Name | **Title-cased mirror of the skill name** (`compliance-review` → "Compliance Review", `contract-analyzer` → "Contract Analyzer") — never invent a descriptive title; one skill → multiple gems uses "Name — Suffix" |
 | `description:` | PERSONA + Description field | Extract role and purpose; descriptive text lives here, not in the name |
-| `model:` | N/A | Remove (Gemini uses fixed model) |
+| `model:` | Recommended Model note | Remove from instructions (a gem cannot pin its model); record a Recommended Model note instead |
 | `allowed-tools:` | TASK | Convert capabilities to actions |
 | `skills:` | CONTEXT | Inline relevant knowledge |
 

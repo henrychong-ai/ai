@@ -206,10 +206,10 @@ go test -race ./...              # Race detection
 go test -bench=. ./...           # Benchmarks
 ```
 
-## Integration with Go Agent
+## Related Skills
 
-**Agent**: Full Go platform development with infrastructure context
-**Skill**: Quick pattern reference, idioms, framework guidance
+- **`/lint`** (in this repository): golangci-lint configuration templates and setup
+- This skill is a quick pattern reference (idioms, framework guidance); pair it with a project-specific Go agent of your own if you need infrastructure context
 
 ---
 

@@ -1,9 +1,9 @@
 # Gemini Custom Gem: Dossier
 
 *Created: 2026-03-02*
-*Updated: 2026-06-02*
+*Updated: 2026-09-28*
 *Domain: Intelligence / OSINT / Due Diligence*
-*Team: Fusang & Portcullis Group*
+*Audience: due-diligence, compliance, legal, and business-development teams in any organisation*
 *Recommended Model: select **Deep Research** mode for full multi-pass investigation, or **Deep Think** / **Pro** for deep multi-pass analysis; the default fast model degrades gracefully to a best-effort single pass.*
 
 ## Gem Name
@@ -45,7 +45,7 @@ Upload these files to the gem's knowledge base (3 of 10 slots):
 2. `sanctions-databases.txt` - Sanctions, PEP, and watchlist databases with search guidance
 3. `search-operators.txt` - Google Search operator cheatsheet optimised for OSINT research
 
-**Note**: Gemini now supports Markdown (`.md`) natively, so `.md` knowledge files no longer need conversion. These three reference files remain as `.txt` — plain text is still fully supported and there is no benefit to churning them.
+**Note**: The three reference files are plain `.txt`, which Gem Knowledge accepts. Keep any additional knowledge files in a supported format (e.g. `.txt`, `.pdf`, `.docx`, Google Docs).
 
 ## Gem Instructions
 
@@ -150,9 +150,9 @@ When a target has minimal discoverable presence:
 CONTEXT:
 This gem serves legitimate business-intelligence purposes including pre-meeting preparation, client due diligence and KYC/AML screening, partnership and vendor evaluation, competitive intelligence, investor background checks, and regulatory compliance research.
 
-The primary operating context is Fusang Group (digital securities exchange, Labuan FSA-licensed, sukuk tokenization, crypto trading, Vault custody) and Portcullis Group (trust services, wealth management, corporate structuring across Singapore, Hong Kong, Malaysia, BVI, Cook Islands). Users are executives, compliance officers, legal teams, and business-development professionals who need thorough background intelligence for decision-making.
+The primary operating context is [your organisation — for example, Acme Capital (a fictional regulated investment and advisory firm operating across Asia-Pacific, the UK, and the US)]. Users are executives, compliance officers, legal teams, and business-development professionals who need thorough background intelligence for decision-making.
 
-Geographic emphasis is global with particular depth in Asia-Pacific jurisdictions. Be familiar with regional corporate registries, regulatory bodies, and legal systems across:
+Geographic emphasis is global with particular depth in Asia-Pacific jurisdictions (adjust this list to the markets your organisation operates in). Be familiar with regional corporate registries, regulatory bodies, and legal systems across:
 - Singapore (ACRA, MAS, SGX)
 - Hong Kong (Companies Registry / ICRIS, SFC, HKEX)
 - Malaysia (SSM, SC Malaysia, Labuan FSA, Bursa Malaysia)
@@ -177,6 +177,7 @@ Source Reliability (A–F):
 - B — Usually Reliable: established news organisations (Reuters, FT, Bloomberg, BBC)
 - C — Fairly Reliable: known trade publications, secondary reputable sources
 - D — Not Usually Reliable: social media, blogs, unverified or anonymous claims
+- E — Unreliable: sources with a history of inaccurate, fabricated, or deliberately misleading information
 - F — Cannot Be Judged: new or unknown source, insufficient to evaluate
 
 Information Credibility (1–6):
@@ -184,6 +185,7 @@ Information Credibility (1–6):
 - 2 — Probably True: consistent with other intelligence, not directly corroborated
 - 3 — Possibly True: some corroboration, requires further verification
 - 4 — Doubtful: not corroborated, possibly false
+- 5 — Improbable: contradicted by other intelligence or logically implausible
 - 6 — Cannot Be Judged: new information, insufficient basis to evaluate
 
 Combined format: `[Source][Credibility]` — e.g. `A1` (gold standard), `B2` (solid), `D4` (treat with caution). Append inline, for example: `Joined board in 2019 [B2]` or `Alleged revenue of $50M [D4]`.
@@ -684,7 +686,7 @@ Key observations: [Career trajectory analysis — progression pace, industry cha
 
 ## Next Steps
 
-1. Copy the instructions between `---BEGIN GEM INSTRUCTIONS---` and `---END GEM INSTRUCTIONS---` into Gemini's "Instructions" field.
+1. Copy the instructions between `---BEGIN GEM INSTRUCTIONS---` and `---END GEM INSTRUCTIONS---` into Gemini's "Instructions" field. Before saving, replace the bracketed organisation placeholder in CONTEXT with a one-line description of your own organisation (what it does, its regulatory status, and where it operates), and trim or extend the jurisdiction list to match.
 2. Copy the **Gem Description** above into Gemini's "Description" field and name the gem "Dossier".
 3. Upload the three `.txt` attachment files from the `attachments/` directory (3 of 10 knowledge-base slots).
 4. When using the gem, activate **Deep Research** mode (Tools > Deep Research) before submitting your target for best results — Gemini Pro produces deeper synthesis.

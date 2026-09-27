@@ -12,7 +12,7 @@ DATABASE_URL=op://Work/Database/connection-string
 ### DON'T: Store Plaintext Secrets
 ```bash
 # NEVER commit this
-API_KEY=sk-1234567890abcdef
+API_KEY=sk-1234567890abcdef  # gitleaks:allow (deliberately fake example)
 DATABASE_URL=postgres://user:password@host:5432/db
 ```
 
