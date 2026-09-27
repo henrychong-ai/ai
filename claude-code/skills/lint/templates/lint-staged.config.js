@@ -1,42 +1,34 @@
 // lint-staged.config.js
+// Oxlint + Biome stack
 // For complex lint-staged configurations
 // Simple configs can use package.json "lint-staged" field instead
 
 export default {
   // TypeScript/JavaScript
-  '*.{ts,tsx}': [
-    'eslint --fix --max-warnings=0',
-    'prettier --write',
-  ],
-  '*.{js,jsx,mjs,cjs}': [
-    'eslint --fix --max-warnings=0',
-    'prettier --write',
+  '*.{ts,tsx,js,jsx,mjs,cjs}': [
+    'oxlint --fix --max-warnings=0',
+    'biome format --write',
   ],
 
   // Vue
   '*.vue': [
-    'eslint --fix --max-warnings=0',
-    'prettier --write',
+    'oxlint --fix --max-warnings=0',
+    'biome format --write',
   ],
 
-  // Styles
-  '*.{css,scss,sass,less}': [
-    'prettier --write',
+  // Styles (Biome formats CSS only, not SCSS/Less)
+  '*.css': [
+    'biome format --write',
   ],
 
-  // Data/Config files
-  '*.{json,yaml,yml}': [
-    'prettier --write',
-  ],
-
-  // Markdown
-  '*.md': [
-    'prettier --write',
+  // Data/Config files (Biome formats JSON and Markdown, NOT YAML)
+  '*.{json,md}': [
+    'biome format --write',
   ],
 
   // HTML
   '*.html': [
-    'prettier --write',
+    'biome format --write',
   ],
 
   // Python (uncomment if using Python)
@@ -52,9 +44,11 @@ export default {
   // ],
 
   // Solidity (uncomment if using Solidity)
+  // Foundry projects: use forge fmt
+  // Hardhat projects: use prettier --write as fallback
   // '*.sol': [
   //   'solhint --fix',
-  //   'prettier --write',
+  //   'forge fmt',
   // ],
 
   // .NET/C# (uncomment if using .NET)

@@ -9,17 +9,17 @@ Claude Code reads this file every session - keep it minimal.
 
 ## Linting Stack
 
-- **Linter**: ESLint with typescript-eslint (strictTypeChecked)
-- **Formatter**: Prettier
+- **Linter**: Oxlint (primary) + residual ESLint (gap plugins only)
+- **Formatter**: Biome (linter disabled)
 - **Type Checker**: TypeScript
 
 ## Commands
 
 ```bash
-pnpm lint          # Check for errors
-pnpm lint:fix      # Auto-fix errors
-pnpm format        # Format with Prettier
-pnpm format:check  # Check formatting (CI)
+pnpm lint          # Oxlint check (+ residual ESLint if configured)
+pnpm lint:fix      # Oxlint auto-fix (+ residual ESLint if configured)
+pnpm format        # Biome format
+pnpm format:check  # Biome format check (CI)
 pnpm typecheck     # TypeScript check
 pnpm check         # All checks combined
 ```
@@ -44,17 +44,15 @@ Use `/lint` skill for:
 <!-- Uncomment relevant section -->
 
 <!-- React/Next.js:
-- JSX accessibility rules enabled (jsx-a11y)
-- React Hooks rules enforced
-- Prop-types disabled (TypeScript handles this)
+- Oxlint react + jsx-a11y + nextjs plugins enabled (built-in, no npm deps)
+- React Hooks rules enforced via oxlint react plugin
 -->
 
 <!-- Vue:
-- Vue-specific rules via eslint-plugin-vue
-- Single-file component linting enabled
+- Oxlint handles <script> linting
+- Residual ESLint with eslint-plugin-vue for <template> linting
 -->
 
 <!-- Node.js:
-- Node.js-specific rules via eslint-plugin-n
-- No missing imports (TypeScript handles this)
+- Oxlint node plugin enabled (built-in)
 -->

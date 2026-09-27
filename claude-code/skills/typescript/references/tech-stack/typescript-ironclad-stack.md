@@ -38,10 +38,12 @@ Pre-commit hooks enforce standards automatically. Strict TypeScript catches erro
 | **Build (backend)**  | tsup                     | Fast, DTS generation, sensible defaults    |
 | **Build (frontend)** | Vite                     | HMR, ESM-native, fast                      |
 | **Testing**          | Vitest + Playwright      | Jest-compatible, fast, full ecosystem      |
-| **Linting**          | ESLint 9 (flat config)   | Plugin ecosystem, maximum CC training data |
-| **Formatting**       | Prettier                 | Consistent style                           |
+| **Linting**          | Oxlint (primary) + residual ESLint (gap plugins) | 50-100x faster, 668 built-in rules, zero npm deps for most projects |
+| **Formatting**       | Biome (linter disabled)  | 25x faster than Prettier, handles JS/TS/CSS/JSON/MD |
 | **Pre-commit**       | Husky + lint-staged      | Enforce standards automatically            |
 | **Styling**          | Tailwind CSS + shadcn/ui | Utility-first, copy-paste components       |
+
+> **Recommended back-end / back-to-front default:** for a Worker/API that owns the contract with a dashboard and/or MCP consuming its types, use the **Option-B single-source pattern** (`@hono/zod-openapi`: ONE `createRoute()` → request+response validation + generated OpenAPI doc + dashboard client types + MCP tool schemas). Canonical definition: "The Option-B Back-to-Front Pattern (Recommended Default)" below. Proven in production.
 
 ---
 
@@ -49,14 +51,16 @@ Pre-commit hooks enforce standards automatically. Strict TypeScript catches erro
 
 ### Version Requirements
 
-| Context | Version | Rationale |
-|---------|---------|-----------|
-| **New projects** | Node 24.13.0+ | Latest Active LTS with security patches |
-| **Minimum supported** | Node 22.22.0+ | Security baseline (see below) |
+**Always use the latest patch release within the target major version.** Minimum floors below are CVE-driven.
 
-### Current LTS Schedule (as of 2026-01-14)
+| Context | Target Major | CVE Minimum Floor | Rationale |
+|---------|-------------|-------------------|-----------|
+| **New projects** | Node 24 | 24.13.0+ | Latest Active LTS; floor due to CVE-2025-59466 |
+| **Minimum supported** | Node 22 | 22.22.0+ | Security baseline; floor due to CVE-2025-59466 |
 
-| Version | Status | Minimum Secure Version | End of Life |
+### Current LTS Schedule
+
+| Version | Status | CVE Minimum Floor | End of Life |
 |---------|--------|------------------------|-------------|
 | 24.x | Active LTS | **24.13.0** | April 2028 |
 | 22.x | Active LTS | **22.22.0** | April 2027 |
@@ -89,17 +93,17 @@ See `references/patterns/security-patterns.md` for defensive coding patterns.
 
 ### Version Pinning
 
-**`.nvmrc` (recommended):**
+**`.nvmrc` (recommended):** Use major version only — nvm resolves to latest available patch:
 ```
-24.13.0
+24
 ```
 
 **`.node-version` (alternative):**
 ```
-24.13.0
+24
 ```
 
-**`package.json` engines (enforcement):**
+**`package.json` engines (enforcement):** Use the CVE minimum floor, not a specific patch:
 ```json
 {
   "engines": {
@@ -142,13 +146,15 @@ See `references/patterns/security-patterns.md` for defensive coding patterns.
 
 ### Version Requirements
 
-| Framework | New Projects | Minimum Supported | Rationale |
-|-----------|--------------|-------------------|-----------|
-| **Next.js** | 16.x | 15.x | Active LTS / Maintenance LTS |
-| **React** | 19 | 18 | Current / Security-supported |
-| **Vue** | 3.5 | 3.4 | Current active minor |
+**Always use the latest minor/patch within the target major version.**
 
-### Current LTS Schedule (as of 2026-01-14)
+| Framework | New Projects (Target Major) | Minimum Supported | Rationale |
+|-----------|---------------------------|-------------------|-----------|
+| **Next.js** | 16 | 15 | Active LTS / Maintenance LTS |
+| **React** | 19 | 18 | Current / Security-supported |
+| **Vue** | 3 | 3 | Current major |
+
+### Current LTS Schedule
 
 #### Next.js
 
@@ -172,13 +178,12 @@ See `references/patterns/security-patterns.md` for defensive coding patterns.
 
 #### Vue
 
-| Version | Released | Status |
-|---------|----------|--------|
-| **3.5** | Sep 3, 2024 | **Current (Active)** |
-| 3.4 | Dec 29, 2023 | Unsupported |
-| 2.7 | Jul 1, 2022 | **EOL Dec 31, 2023** |
+| Version | Status |
+|---------|--------|
+| **3.x** | **Current (Active)** — always use latest minor/patch |
+| 2.x | **EOL Dec 31, 2023** |
 
-**Policy:** Only the latest minor version receives updates. When new major releases, previous major's last minor gets 18 months bug fixes + 18 months security-only.
+**Policy:** Only the latest minor version receives updates. Always use the latest 3.x release.
 
 ### Framework Version Pinning
 
@@ -186,9 +191,9 @@ See `references/patterns/security-patterns.md` for defensive coding patterns.
 ```json
 {
   "dependencies": {
-    "next": "^16.0.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "next": "^16",
+    "react": "^19",
+    "react-dom": "^19"
   }
 }
 ```
@@ -197,7 +202,7 @@ See `references/patterns/security-patterns.md` for defensive coding patterns.
 ```json
 {
   "dependencies": {
-    "vue": "^3.5.0"
+    "vue": "^3"
   }
 }
 ```
@@ -206,28 +211,26 @@ See `references/patterns/security-patterns.md` for defensive coding patterns.
 
 | Framework | Minimum Node.js | Recommended Node.js |
 |-----------|-----------------|---------------------|
-| Next.js 16 | 18.18.0 | 24.13.0+ |
-| Next.js 15 | 18.18.0 | 22.22.0+ |
-| React 19 | 18.0.0 | 24.13.0+ |
-| Vue 3.5 | 18.0.0 | 24.13.0+ |
+| Next.js 16 | 18.18.0 | Node 24 (latest patch) |
+| Next.js 15 | 18.18.0 | Node 22 (latest patch) |
+| React 19 | 18.0.0 | Node 24 (latest patch) |
+| Vue 3 | 18.0.0 | Node 24 (latest patch) |
 
-**Note:** Always use Node.js 22.22.0+ or 24.13.0+ regardless of framework minimum to ensure security patches (CVE-2025-59466).
+**Note:** Always use Node 22.22.0+ or Node 24.13.0+ regardless of framework minimum to ensure security patches (CVE-2025-59466).
 
 ---
 
 ## Tool Version Policy
 
-All tools in the Ironclad Stack have explicit version requirements. Use caret (`^`) for patch/minor updates while maintaining major version stability.
-
-**Last updated:** 2026-01-14
+**Always use the latest minor/patch version within the target major version.** The tables below specify target major versions only. When installing or upgrading, use the latest available release within that major (e.g., `^5` means latest 5.x, not a specific 5.y.z). The only exception is CVE-driven minimum floors, which are called out explicitly.
 
 ### Testing Tools
 
-| Tool | Minimum | Recommended | Notes |
-|------|---------|-------------|-------|
-| **Vitest** | 4.0.0 | `^4.0.0` | Current stable, Browser Mode stable |
-| **@vitest/coverage-v8** | 4.0.0 | `^4.0.0` | Must match Vitest major version |
-| **Playwright** | 1.50.0 | `^1.50.0` | E2E testing, auto-waiting |
+| Tool | Target Major | Notes |
+|------|-------------|-------|
+| **Vitest** | `^4` | Current stable, Browser Mode stable |
+| **@vitest/coverage-v8** | `^4` | Must match Vitest major version |
+| **Playwright** | `^1` | E2E testing, auto-waiting |
 
 **Vitest 4.x Key Changes:**
 - Browser Mode now stable (was experimental in 3.x)
@@ -243,7 +246,7 @@ All tools in the Ironclad Stack have explicit version requirements. Use caret (`
 {
   "devDependencies": {
     "vitest": "~3.2.0",
-    "@cloudflare/vitest-pool-workers": "^0.7.5"
+    "@cloudflare/vitest-pool-workers": "latest"
   }
 }
 ```
@@ -252,72 +255,73 @@ All tools in the Ironclad Stack have explicit version requirements. Use caret (`
 ```json
 {
   "devDependencies": {
-    "vitest": "^4.0.0",
-    "@vitest/coverage-v8": "^4.0.0",
-    "@playwright/test": "^1.50.0"
+    "vitest": "^4",
+    "@vitest/coverage-v8": "^4",
+    "@playwright/test": "^1"
   }
 }
 ```
 
 ### Build Tools
 
-| Tool | Minimum | Recommended | Notes |
-|------|---------|-------------|-------|
-| **TypeScript** | 5.5.0 | `^5.7.0` | Strict mode required |
-| **tsup** | 8.0.0 | `^8.0.0` | Backend/CLI builds |
-| **typescript-eslint** | 8.0.0 | `^8.0.0` | ESLint TypeScript support |
+| Tool | Target Major | Notes |
+|------|-------------|-------|
+| **TypeScript** | `^5` | Strict mode required |
+| **tsup** | `^8` | Backend/CLI builds |
 
 **package.json:**
 ```json
 {
   "devDependencies": {
-    "typescript": "^5.7.0",
-    "tsup": "^8.0.0",
-    "typescript-eslint": "^8.0.0"
+    "typescript": "^5",
+    "tsup": "^8"
   }
 }
 ```
 
+**Note:** `typescript-eslint` (`^8`) is only needed when using residual ESLint gap plugins that lint `.ts`/`.tsx` files. See Code Quality Tools section.
+
 ### Database Tools (Drizzle Ecosystem)
 
-| Tool | Minimum | Recommended | Notes |
-|------|---------|-------------|-------|
-| **drizzle-orm** | 0.40.0 | `^0.45.0` | TypeScript-native ORM |
-| **drizzle-kit** | 0.30.0 | `^0.31.0` | Migrations CLI |
-| **drizzle-zod** | 0.8.0 | `^0.8.0` | Schema-to-Zod bridge |
+| Tool | Target Version | Notes |
+|------|---------------|-------|
+| **drizzle-orm** | `latest` | TypeScript-native ORM (pre-1.0) |
+| **drizzle-kit** | `latest` | Migrations CLI (pre-1.0) |
+| **drizzle-zod** | `latest` | Schema-to-Zod bridge (pre-1.0) |
 
-**Note:** Drizzle is still in 0.x (pre-1.0). API is stable but check release notes when upgrading.
+**Note:** Drizzle is still in 0.x (pre-1.0) — there is no stable major to pin. Always use the latest available version. Check release notes when upgrading.
 
 **package.json:**
 ```json
 {
   "dependencies": {
-    "drizzle-orm": "^0.45.0"
+    "drizzle-orm": "latest"
   },
   "devDependencies": {
-    "drizzle-kit": "^0.31.0",
-    "drizzle-zod": "^0.8.0"
+    "drizzle-kit": "latest",
+    "drizzle-zod": "latest"
   }
 }
 ```
 
 ### Validation & API Tools
 
-| Tool | Recommended | Minimum | Notes |
-|------|-------------|---------|-------|
-| **Zod** | `^4.0.0` | 3.24.0 (existing projects only) | Runtime validation |
-| **tRPC** | `^11.0.0` | 11.0.0 | Type-safe internal APIs |
-| **Hono** | `^4.11.0` | 4.0.0 | HTTP framework, edge-compatible |
-| **@hono/zod-openapi** | `^0.18.0` | 0.18.0 | OpenAPI generation |
+| Tool | Target Major | Notes |
+|------|-------------|-------|
+| **Zod** | `^4` | Runtime validation (new projects) |
+| **Zod** | `^3` | Runtime validation (existing projects, until ready to migrate) |
+| **tRPC** | `^11` | Type-safe internal APIs |
+| **Hono** | `^4` | HTTP framework, edge-compatible |
+| **@hono/zod-openapi** | `latest` | OpenAPI generation (pre-1.0); the **Option-B back-to-front default** for APIs/services/internal tools — see canonical section below |
 
 **Zod Version Policy:**
 
 | Context | Version | Rationale |
 |---------|---------|-----------|
-| **New projects** | `^4.0.0` | 14x faster string parsing, 57% smaller bundle |
-| **Existing projects** | `^3.24.0` | Stay on 3.x until ready to migrate |
+| **New projects** | `^4` | 14x faster string parsing, 57% smaller bundle |
+| **Existing projects** | `^3` | Stay on 3.x until ready to migrate |
 
-**Note:** Zod has **NO LTS policy** - both 3.x and 4.x are actively maintained. Current stable versions: Zod 4.3.6 (`npm latest`), Zod 3.25.76 (latest 3.x).
+**Note:** Zod has **NO LTS policy** — both 3.x and 4.x are actively maintained.
 
 **Zod 4 Benefits:**
 - 14x faster string parsing
@@ -341,56 +345,68 @@ import { z } from 'zod/v4';  // Use v4 alongside v3 during migration
 ```json
 {
   "dependencies": {
-    "zod": "^4.0.0",
-    "@trpc/server": "^11.0.0",
-    "@trpc/client": "^11.0.0",
-    "hono": "^4.11.0"
+    "zod": "^4",
+    "@trpc/server": "^11",
+    "@trpc/client": "^11",
+    "hono": "^4"
   }
 }
 ```
 
-**package.json (existing projects staying on 3.x):**
+**package.json (existing projects staying on Zod 3.x):**
 ```json
 {
   "dependencies": {
-    "zod": "^3.24.0",
-    "@trpc/server": "^11.0.0",
-    "@trpc/client": "^11.0.0",
-    "hono": "^4.11.0"
+    "zod": "^3",
+    "@trpc/server": "^11",
+    "@trpc/client": "^11",
+    "hono": "^4"
   }
 }
 ```
 
 ### Code Quality Tools
 
-| Tool | Minimum | Recommended | Notes |
-|------|---------|-------------|-------|
-| **ESLint** | 9.0.0 | `^9.0.0` | Flat config required |
-| **Prettier** | 3.0.0 | `^3.0.0` | Code formatting |
-| **Husky** | 9.0.0 | `^9.0.0` | Git hooks |
-| **lint-staged** | 16.0.0 | `^16.0.0` | Pre-commit staging |
+| Tool | Target Major | Notes |
+|------|-------------|-------|
+| **Oxlint** | `latest` | Primary linter, 668 built-in rules, zero npm deps |
+| **Biome** | `latest` | Formatter only (linter disabled), replaces Prettier |
+| **ESLint** | `^10` (new projects), `^9` minimum | Residual only — gap plugins (Vue, Astro, Tailwind, Playwright) |
+| **eslint-plugin-oxlint** | `latest` | Disables ESLint rules already covered by Oxlint |
+| **Husky** | `^9` | Git hooks |
+| **lint-staged** | `^16` | Pre-commit staging |
 
-**ESLint 9 Flat Config:** Legacy `.eslintrc.*` configs are deprecated. Use `eslint.config.js` or `eslint.config.mjs`.
+**Oxlint + Biome replaces ESLint + Prettier** as the default. ESLint is only needed for gap plugins that Oxlint doesn't cover yet (Vue templates, Astro, Tailwind class sorting, Playwright, Obsidian). See `/lint` skill for full framework detection matrix.
+
+**Core install (all projects) — 3 packages:**
+```bash
+pnpm add -D oxlint @biomejs/biome typescript
+```
+
+**Add residual ESLint only when gap plugins needed:**
+```bash
+pnpm add -D eslint eslint-plugin-oxlint  # + specific gap plugin
+```
 
 **package.json:**
 ```json
 {
   "devDependencies": {
-    "eslint": "^9.0.0",
-    "prettier": "^3.0.0",
-    "husky": "^9.0.0",
-    "lint-staged": "^16.0.0"
+    "oxlint": "latest",
+    "@biomejs/biome": "latest",
+    "husky": "^9",
+    "lint-staged": "^16"
   }
 }
 ```
 
 ### Package Management
 
-| Tool | Minimum | Recommended | Notes |
-|------|---------|-------------|-------|
-| **pnpm** | 10.0.0 | `^10.28.2` | Security-first defaults, latest stable |
+| Tool | Target Major | Notes |
+|------|-------------|-------|
+| **pnpm** | `10` | Security-first defaults, always use latest 10.x |
 
-**Version Policy:** pnpm does NOT have an LTS policy. Use the latest stable 10.x for new projects. Current stable: **10.28.2** (as of 2026-02-02).
+**Version Policy:** pnpm does NOT have an LTS policy. Always use the latest stable 10.x release.
 
 **pnpm 10 Breaking Changes:**
 - Lifecycle scripts blocked by default (security improvement)
@@ -398,31 +414,22 @@ import { z } from 'zod/v4';  // Use v4 alongside v3 during migration
 - `pnpm link` adds to workspace root
 - Requires explicit `pnpm.onlyBuiltDependencies` for native modules
 
-**packageManager field (new projects):**
-```json
-{
-  "packageManager": "pnpm@10.28.2"
-}
-```
-
-**Update command:**
+**packageManager field:** Set to the latest 10.x available at time of project creation:
 ```bash
-npm pkg set packageManager=pnpm@10.28.2
+npm pkg set packageManager=pnpm@$(pnpm --version)
 ```
 
-**For existing projects staying on pnpm 9:**
-```json
-{
-  "packageManager": "pnpm@9.15.9"
-}
+**For existing projects staying on pnpm 9:** Use latest 9.x:
+```bash
+npm pkg set packageManager=pnpm@$(pnpm --version)
 ```
 
 ### Styling Tools
 
-| Tool | Minimum | Recommended | Notes |
-|------|---------|-------------|-------|
-| **Tailwind CSS** | 4.0.0 | `^4.0.0` | CSS-first config, 5x faster |
-| **shadcn/ui** | N/A | Latest CLI | Copy-paste components |
+| Tool | Target Major | Notes |
+|------|-------------|-------|
+| **Tailwind CSS** | `^4` | CSS-first config, 5x faster |
+| **shadcn/ui** | `latest` | Copy-paste components |
 
 **Tailwind CSS 4.x Key Changes:**
 - CSS-first configuration (no `tailwind.config.js`)
@@ -439,7 +446,7 @@ npm pkg set packageManager=pnpm@10.28.2
 ```json
 {
   "dependencies": {
-    "tailwindcss": "^4.0.0"
+    "tailwindcss": "^4"
   }
 }
 ```
@@ -448,43 +455,51 @@ npm pkg set packageManager=pnpm@10.28.2
 ```json
 {
   "dependencies": {
-    "tailwindcss": "^3.4.0"
+    "tailwindcss": "^3"
   }
 }
 ```
 
 ### Complete Version Summary
 
-**New Project Dependencies (2026-02-02):**
+**New Project Dependencies:**
 
 ```json
 {
   "dependencies": {
-    "zod": "^4.0.0",
-    "drizzle-orm": "^0.45.0",
-    "hono": "^4.11.0",
-    "@trpc/server": "^11.0.0",
-    "@trpc/client": "^11.0.0",
-    "tailwindcss": "^4.0.0"
+    "zod": "^4",
+    "drizzle-orm": "latest",
+    "hono": "^4",
+    "@trpc/server": "^11",
+    "@trpc/client": "^11",
+    "tailwindcss": "^4"
   },
   "devDependencies": {
-    "typescript": "^5.7.0",
+    "typescript": "^5",
     "@types/node": "^24",
-    "tsup": "^8.0.0",
-    "vitest": "^4.0.0",
-    "@vitest/coverage-v8": "^4.0.0",
-    "@playwright/test": "^1.50.0",
-    "eslint": "^9.0.0",
-    "typescript-eslint": "^8.0.0",
-    "prettier": "^3.0.0",
-    "husky": "^9.0.0",
-    "lint-staged": "^16.0.0",
-    "drizzle-kit": "^0.31.0",
-    "drizzle-zod": "^0.8.0"
+    "tsup": "^8",
+    "vitest": "^4",
+    "@vitest/coverage-v8": "^4",
+    "@playwright/test": "^1",
+    "oxlint": "latest",
+    "@biomejs/biome": "latest",
+    "husky": "^9",
+    "lint-staged": "^16",
+    "drizzle-kit": "latest",
+    "drizzle-zod": "latest"
   },
-  "packageManager": "pnpm@10.28.2",
   "engines": {
     "node": ">=22.22.0"
+  }
+}
+```
+
+**With residual ESLint (gap plugins needed):** Add to devDependencies:
+```json
+{
+  "devDependencies": {
+    "eslint": "^10",
+    "eslint-plugin-oxlint": "latest"
   }
 }
 ```
@@ -494,7 +509,7 @@ npm pkg set packageManager=pnpm@10.28.2
 {
   "devDependencies": {
     "vitest": "~3.2.0",
-    "@cloudflare/vitest-pool-workers": "^0.7.5"
+    "@cloudflare/vitest-pool-workers": "latest"
   }
 }
 ```
@@ -558,7 +573,7 @@ npm pkg set packageManager=pnpm@10.28.2
 
 **Why:** Maximum compatibility and Claude training data. Every npm package works. Battle-tested in production. Enterprise infrastructure standardized on Node.
 
-**Version policy:** Node 24.13.0+ for new projects, minimum Node 22.22.0+ for all projects (security baseline).
+**Version policy:** Node 24 (latest patch) for new projects, minimum Node 22.22.0+ for all projects (CVE security baseline).
 
 ---
 
@@ -608,9 +623,8 @@ save-exact=true
 **package.json enforcement:**
 ```json
 {
-  "packageManager": "pnpm@9.15.9",
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=22.22.0"
   }
 }
 ```
@@ -1058,59 +1072,79 @@ app.doc('/openapi.json', { openapi: '3.0.0', info: { title: 'API', version: '1.0
 ```
 
 **Decision guide:**
-- Internal APIs (monorepo, same team) → tRPC
-- External APIs (public, third-party) → OpenAPI via Hono
+- Pure internal API, both ends in one TS monorepo, no external/MCP consumer → tRPC
+- Anything with an external consumer, a separate SPA dashboard, **or an MCP server** → `@hono/zod-openapi` **single-source (Option-B back-to-front)** — the recommended default. One `createRoute()` single-sources request+response validation, the generated OpenAPI doc, dashboard client types, and MCP tool schemas. See "The Option-B Back-to-Front Pattern (Recommended Default)" below for the canonical definition and `patterns/api-patterns.md` for the implementation gotchas.
 
 ---
 
-### ESLint 9 + Prettier
+### Oxlint + Biome (Linting + Formatting)
 
-**Role:** Linting + formatting
+**Role:** Linting (Oxlint) + formatting (Biome)
 
-**Why ESLint (not Biome):**
-- Maximum Claude training data
-- Plugin ecosystem (eslint-plugin-obsidianmd, jsx-a11y, etc.)
-- Works for ALL project types without exceptions
-- ESLint 9 flat config is simpler than legacy
+**Why Oxlint + Biome (replacing ESLint + Prettier):**
+- **50-100x faster** than ESLint, 25x faster than Prettier
+- **3 packages** for most projects vs 13+ with ESLint + Prettier
+- **668 built-in rules** across 14 native plugins (React, Next.js, TypeScript, Vitest, Node.js, jsx-a11y, import, promise, unicorn — all zero npm deps)
+- **Residual ESLint** only needed for gap plugins (Vue templates, Astro, Tailwind class sorting, Playwright, Obsidian)
 
-**Standard eslint.config.js:**
-```javascript
-import tseslint from 'typescript-eslint';
-import prettier from 'eslint-plugin-prettier';
-import eslintConfigPrettier from 'eslint-config-prettier';
-
-export default [
-  { ignores: ['node_modules/**', 'dist/**', 'coverage/**'] },
-  ...tseslint.configs.recommended,
-  {
-    plugins: { prettier },
-    rules: {
-      'prettier/prettier': 'error',
-      '@typescript-eslint/no-unused-vars': ['error', {
-        argsIgnorePattern: '^_',
-        varsIgnorePattern: '^_'
-      }],
-      '@typescript-eslint/explicit-function-return-type': ['warn', {
-        allowExpressions: true,
-        allowTypedFunctionExpressions: true,
-      }],
-      '@typescript-eslint/consistent-type-imports': 'error',
-    },
-  },
-  eslintConfigPrettier,
-];
+**Core install (all projects):**
+```bash
+pnpm add -D oxlint @biomejs/biome typescript
 ```
 
-**Standard .prettierrc:**
+**Standard oxlint.json:**
 ```json
 {
-  "semi": true,
-  "trailingComma": "es5",
-  "singleQuote": true,
-  "printWidth": 100,
-  "tabWidth": 2
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["import", "promise"],
+  "rules": {},
+  "ignorePatterns": ["dist", "node_modules", "coverage", ".next"]
 }
 ```
+
+Enable framework plugins as needed by adding to `plugins` array:
+- React: `"react", "jsx-a11y"`
+- Next.js: `"react", "jsx-a11y", "nextjs"`
+- Node.js: `"node"`
+- Vitest: `"vitest"`
+
+**Standard biome.json:**
+```json
+{
+  "$schema": "https://biomejs.dev/schemas/2.0.0/schema.json",
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "linter": { "enabled": false },
+  "javascript": {
+    "formatter": { "quoteStyle": "single", "trailingCommas": "es5", "semicolons": "always" }
+  },
+  "assist": {
+    "actions": { "source": { "organizeImports": "on" } }
+  },
+  "files": {
+    "includes": ["**/*.{ts,tsx,js,jsx,json,jsonc,css,md}"]
+  }
+}
+```
+
+**Residual ESLint (only for gap plugins):**
+```bash
+# Only install when a gap plugin is needed
+pnpm add -D eslint eslint-plugin-oxlint
+
+# Example: Tailwind class sorting (replaces prettier-plugin-tailwindcss)
+pnpm add -D eslint-plugin-better-tailwindcss
+
+# Example: Vue templates
+pnpm add -D eslint-plugin-vue typescript-eslint
+```
+
+See `/lint` skill for the full framework detection matrix and residual ESLint config templates.
 
 ---
 
@@ -1122,8 +1156,8 @@ export default [
 
 **Setup:**
 ```bash
-npm install --save-dev husky lint-staged
-npx husky init
+pnpm add -D husky lint-staged
+pnpm exec husky init
 echo "npx lint-staged" > .husky/pre-commit
 ```
 
@@ -1132,11 +1166,14 @@ echo "npx lint-staged" > .husky/pre-commit
 {
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
-      "eslint --fix --cache",
-      "prettier --write"
+      "oxlint --fix --max-warnings=0",
+      "biome format --write"
     ],
-    "*.{json,md,css,yml,yaml}": [
-      "prettier --write"
+    "*.css": [
+      "biome format --write"
+    ],
+    "*.{json,md}": [
+      "biome format --write"
     ]
   }
 }
@@ -1244,6 +1281,78 @@ The Ironclad Stack's key advantage: single source of truth flowing through every
 
 ---
 
+## The Option-B Back-to-Front Pattern (Recommended Default) — CANONICAL
+
+> **This section is the canonical definition of the back-to-front ironclad pattern.** Other docs and skills should point here rather than duplicate it. Proven in production: a pnpm workspace monorepo edge router on Cloudflare Workers, fully migrated to this pattern with a four-figure test suite green.
+
+For back-end and back-to-front projects (a Worker/API that owns the contract, with a dashboard and/or MCP server consuming its types), this is the **default architecture**. The boundary for when *not* to use it is in "Back-to-Front vs Front-to-Back" below.
+
+### Core principle: one shared Zod route definition is the single source of truth
+
+Using `@hono/zod-openapi`, ONE `createRoute()` + `.openapi()` definition single-sources **all four** of:
+
+1. **Runtime validation** — both request and response are described by the same schema (requests are validated; responses are documented — see gotchas).
+2. **The OpenAPI document** — *generated* from the route registry (never hand-written), with `info.version` self-healing from the build `VERSION`.
+3. **The typed dashboard/client types** — the dashboard infers `z.input` (pre-default form shapes); Worker consumers infer `z.infer` / `z.output` (defaults applied).
+4. **The MCP tool input schemas** — the MCP server's tools source the shared schema's `.shape`.
+
+```
+                 shared/  (single source of truth)
+                 Zod route def: createRoute() + .openapi()
+                              │
+        ┌──────────┬──────────┴──────────┬──────────────┐
+        ↓          ↓                      ↓              ↓
+   request +    OpenAPI doc          dashboard       MCP tool
+   response     (generated from      client types    input schemas
+   validation   route registry)      (z.input /      (shared .shape)
+   (runtime)    + API Shield         z.infer)
+```
+
+### Why `@hono/zod-openapi` (not a rewrite)
+
+`OpenAPIHono` **extends `Hono`** — `.route()`, `.use()`, `.onError()`, and `.request()` all behave identically. Adoption is therefore an **incremental, strangler-safe, per-router conversion**: converted `.openapi()` routers mount alongside plain Hono routers on the same instance, so you migrate one router at a time without a big-bang rewrite. A typical migration converts one router group at a time (e.g. feedback → analytics → admin → storage → system), each shipping independently.
+
+### Stack (reference as-built)
+
+pnpm workspace monorepo:
+
+| Workspace | Role |
+|-----------|------|
+| **root Worker** | Hono + `@hono/zod-openapi` + Zod 4 — owns routes, generates the OpenAPI doc |
+| **`shared/`** | The single-source-of-truth package: Zod schemas, inferred types, error catalog, the `apiSuccess` response envelope |
+| **`admin/`** | React 19 + Vite + Tailwind + shadcn dashboard — imports types from `shared/` |
+| **`mcp/`** | stdio MCP server — tool input schemas source `shared/` schema `.shape` |
+
+Supporting: Stytch B2B auth + RBAC; Cloudflare KV / D1 / R2; Drizzle (+ drizzle-zod where DB types feed the chain); Biome (format) + Oxlint (lint, `--max-warnings=0`) + Vitest (Cloudflare Workers pool); CI pipeline (`lint → format:check → typecheck-all-workspaces → test-all-workspaces`, then deploy: `develop`→dev, `main`→prod).
+
+### API Shield integration (Cloudflare)
+
+The *generated* OpenAPI doc feeds **Cloudflare API Shield** schema validation in **BLOCK mode** on the zone. Two consequences make the freshness machinery non-negotiable:
+
+- **A path absent from the uploaded spec 403s ALL traffic to it.** Dropping a path from the generated doc is a production outage, not a docs nit.
+- The upload runs **only on the prod deploy step** (gated).
+
+Two guards protect this (both detailed in `patterns/api-patterns.md`):
+
+1. **Parity test** — the generated doc must be a *superset* of a committed baseline of live operations (no path silently dropped).
+2. **Freshness gate** — wired into `pnpm run check`: the committed spec must equal the generator output, so CI fails on drift.
+
+### Back-to-Front vs Front-to-Back: which to choose
+
+| | **Back-to-front (this pattern — DEFAULT)** | **Front-to-back** |
+|---|---|---|
+| Owns the contract | The API/Worker (`shared/` Zod) | The frontend framework |
+| Types flow | OUT from the Worker → dashboard + MCP | Co-located in the framework (server actions / RSC / route handlers) |
+| Shape | Worker + SPA dashboard + MCP, split workspaces | One Next.js full-stack app |
+| Choose when | The project is fundamentally an **API + SPA (+ MCP)** split — a service, internal tool, or platform API | The project is fundamentally a **Next.js web app**, not an API+SPA split |
+| Reference | Worker + `shared/` + `admin/` + `mcp/` monorepo (above) | `Full-Stack Web App` config below |
+
+**Default to back-to-front** for services, APIs, and internal tools. Use front-to-back (Next.js full-stack — server actions, RSC, route handlers, types co-located) only when the project genuinely *is* a Next.js web app. tRPC remains the right internal-API choice when there is no external/MCP consumer and both ends live in one TypeScript monorepo (see `tRPC` above).
+
+> **Gotchas:** the hard-won `@hono/zod-openapi` gotchas (defaultHook error funnelling, validation-vs-middleware ordering, repeated query keys, MCP arg coercion, `.refine()` enum loss, opaque content types, request-only validation) are codified in `patterns/api-patterns.md` → "@hono/zod-openapi Single-Source Pattern".
+
+---
+
 ## Project-Type Configurations
 
 The core stack is universal. Framework and build tool choices vary by project type:
@@ -1260,12 +1369,12 @@ The core stack is universal. Framework and build tool choices vary by project ty
 
 **Quick start:**
 ```bash
-pnpm dlx create-next-app@latest my-app --typescript --tailwind --eslint --app
+pnpm dlx create-next-app@latest my-app --typescript --tailwind --app
 cd my-app
 pnpm add @trpc/server @trpc/client @trpc/react-query @tanstack/react-query zod
 pnpm add drizzle-orm drizzle-zod postgres
-pnpm add -D drizzle-kit vitest @playwright/test husky lint-staged
-pnpm dlx husky init && echo "pnpm dlx lint-staged" > .husky/pre-commit
+pnpm add -D drizzle-kit vitest @playwright/test oxlint @biomejs/biome husky lint-staged
+pnpm dlx husky init && echo "npx lint-staged" > .husky/pre-commit
 pnpm dlx shadcn@latest init
 echo "24.13" > .nvmrc
 echo 'engine-strict=true\nsave-exact=true' > .npmrc
@@ -1357,11 +1466,11 @@ echo 'engine-strict=true\nsave-exact=true' > .npmrc
 | Framework | Obsidian API |
 | Build | esbuild (ecosystem standard) |
 | Output | CommonJS (required) |
-| Linting | ESLint + eslint-plugin-obsidianmd |
+| Linting | Oxlint + residual ESLint (eslint-plugin-obsidianmd) |
 
 **Special requirements:**
 - Must output CommonJS (Obsidian requirement)
-- Use `eslint-plugin-obsidianmd` for Obsidian-specific rules
+- Use `eslint-plugin-obsidianmd` via residual ESLint for Obsidian-specific rules
 - Runtime is Electron renderer, not Node.js
 - Keep esbuild (matches official template and ecosystem)
 
@@ -1471,11 +1580,13 @@ export default defineConfig({
 ```
 What are you building?
 │
-├─► API/Microservice?
+├─► API/Microservice (incl. API + SPA dashboard + MCP)?
+│   ├─► Owns the contract for a dashboard and/or MCP consumer?  ◄── recommended DEFAULT
+│   │   └─► Option-B back-to-front: @hono/zod-openapi single-source
 │   ├─► Public/Edge-deployed?
 │   │   └─► Cloudflare Workers + Hono + D1 (see cloudflare.md)
-│   └─► Private/Self-hosted?
-│       └─► Hono + tsup + PostgreSQL/SQLite
+│   └─► Private/Self-hosted, no external/MCP consumer?
+│       └─► Hono + tsup + PostgreSQL/SQLite (tRPC if both ends in one monorepo)
 │
 ├─► Full-stack web app with SSR/SEO?
 │   ├─► Edge-deployed?
@@ -1488,7 +1599,7 @@ What are you building?
 │       Deploy: Cloudflare Pages or self-hosted
 │
 ├─► Obsidian plugin?
-│   └─► Obsidian API + esbuild + eslint-plugin-obsidianmd
+│   └─► Obsidian API + esbuild + Oxlint + residual ESLint (eslint-plugin-obsidianmd)
 │
 ├─► MCP server?
 │   └─► MCP SDK + tsup + Node.js (mandatory, not edge-compatible)
@@ -1591,7 +1702,7 @@ Expose Verdaccio securely within Tailscale network:
 # Serve on tailnet only (no public internet)
 tailscale serve --bg 4873
 
-# Access at https://npm.<tailnet>.ts.net/
+# Access at https://npm.<your-tailnet-domain>/
 ```
 
 **For persistent HTTPS serve:**
@@ -1601,17 +1712,17 @@ tailscale serve reset   # Clear config
 tailscale serve --bg --https=443 http://localhost:4873
 ```
 
-Access at: `https://npm.<tailnet>.ts.net/`
+Access at: `https://npm.<your-tailnet-domain>/`
 
 ### Client Configuration
 
 **.npmrc (project or user level):**
 ```ini
 # Use Verdaccio for @myorg scoped packages
-@myorg:registry=https://npm.<tailnet>.ts.net/
+@myorg:registry=https://npm.<your-tailnet-domain>/
 
-# Auth token (generate via: pnpm login --registry=https://npm.<tailnet>.ts.net/)
-//npm.<tailnet>.ts.net/:_authToken=${VERDACCIO_TOKEN}
+# Auth token (generate via: pnpm login --registry=https://npm.<your-tailnet-domain>/)
+//npm.<your-tailnet-domain>/:_authToken=${VERDACCIO_TOKEN}
 
 # Public packages still come from npm
 registry=https://registry.npmjs.org/
@@ -1621,10 +1732,10 @@ registry=https://registry.npmjs.org/
 
 ```bash
 # Login once
-pnpm login --registry=https://npm.<tailnet>.ts.net/
+pnpm login --registry=https://npm.<your-tailnet-domain>/
 
 # Publish (package.json must have @myorg scope)
-pnpm publish --registry=https://npm.<tailnet>.ts.net/
+pnpm publish --registry=https://npm.<your-tailnet-domain>/
 ```
 
 **package.json for private package:**
@@ -1634,7 +1745,7 @@ pnpm publish --registry=https://npm.<tailnet>.ts.net/
   "version": "1.0.0",
   "private": false,
   "publishConfig": {
-    "registry": "https://npm.<tailnet>.ts.net/"
+    "registry": "https://npm.<your-tailnet-domain>/"
   }
 }
 ```
@@ -1710,13 +1821,13 @@ Path Aliases:       @/* → src/*
 Environment:        Zod + dotenv (type-safe config)
 Validation:         Zod
 ORM:                Drizzle + drizzle-kit (PostgreSQL or SQLite)
-API (internal):     tRPC
-API (external):     Hono + OpenAPI (when needed)
+API (internal):     tRPC (both ends in one TS monorepo, no external/MCP consumer)
+API (back-to-front): @hono/zod-openapi single-source — recommended DEFAULT for API + dashboard/MCP
 Build (backend):    tsup
 Build (frontend):   Vite
 Testing:            Vitest + Playwright
-Linting:            ESLint 9 (flat config)
-Formatting:         Prettier
+Linting:            Oxlint (primary) + residual ESLint (gap plugins)
+Formatting:         Biome (linter disabled)
 Pre-commit:         Husky + lint-staged (mandatory)
 Styling:            Tailwind CSS + shadcn/ui
 Framework:          Varies by project type
@@ -1737,7 +1848,8 @@ Framework:          Varies by project type
 |----------|---------|
 | `cloudflare.md` | Complete Cloudflare Workers/D1/Wrangler reference |
 | `typescript-ironclad-infra.md` | Deployment and infrastructure guide |
+| `patterns/api-patterns.md` | `@hono/zod-openapi` single-source implementation + API Shield guards + hard-won gotchas |
 
 ---
 
-*Last updated: 2026-02-02 (Zod 4 default for new projects; pnpm 10.28.2 latest stable)*
+*Last updated: 2026-06-05 (Option-B back-to-front single-source pattern added as recommended default — `@hono/zod-openapi`, proven in production; Zod 4 default for new projects; pnpm 10.28.2 latest stable)*

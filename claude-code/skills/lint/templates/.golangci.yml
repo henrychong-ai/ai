@@ -1,25 +1,49 @@
-# golangci-lint v2 Strict Configuration
+# golangci-lint v2 Configuration
 # Copy to project root
+#
+# Based on patterns from Google Go projects and community standards:
+# - google/osv-scanner (default: all approach)
+# - google/go-github, google/ko, google/cadvisor
+# - prometheus/prometheus, etcd-io/etcd, open-telemetry/opentelemetry-go
+# - https://github.com/maratori/golangci-lint-config
+#
+# Note: gofumpt runs as a built-in formatter — no standalone install needed.
+# golangci-lint handles both linting AND formatting.
 
 version: "2"
 
 linters:
   default: all
   disable:
-    - depguard          # Dependency guard (project-specific)
-    - exhaustruct       # Require all struct fields (too strict)
-    - ireturn           # Accept interfaces, return concrete
-    - varnamelen        # Variable name length
-    - wrapcheck         # Error wrapping (manual)
-    - nlreturn          # Newline before return
-    - wsl               # Whitespace linter
+    - depguard          # Dependency guard — enable per-project with custom deny rules
+    - exhaustruct       # Require all struct fields initialized (too strict)
+    - ireturn           # Accept interfaces, return concrete (too opinionated)
+    - varnamelen        # Variable name length (too strict for idiomatic Go)
+    - wrapcheck         # Error wrapping enforcement (handled manually)
+    - nlreturn          # Newline before return (style opinion)
+    - wsl               # Whitespace linter (style opinion)
+    - godox             # TODO/FIXME/BUG comments (noisy during development)
+    - err113            # Dynamic errors (too strict, conflicts with fmt.Errorf)
+    - testpackage       # Require _test package (blocks white-box testing)
+    - paralleltest      # Require t.Parallel (not always appropriate)
+    - thelper           # Require t.Helper (too strict)
+    - cyclop            # Redundant with gocyclo/gocognit
+    - forcetypeassert   # Allow unchecked type assertions (checked by errcheck)
+    - tagliatelle       # Struct tag naming convention (too opinionated)
+    - nonamedreturns    # Named returns useful for documentation
+    - mnd               # Magic number detection (too noisy)
+    - funlen            # Function length — use gocognit for complexity instead
+    - lll               # Line length — gofumpt handles formatting
 
 formatters:
   enable:
-    - gofmt
+    - gofumpt           # Stricter than gofmt — no standalone install needed
     - goimports
 
 linters-settings:
+  gofumpt:
+    extra-rules: true
+
   errcheck:
     check-type-assertions: true
     check-blank: true
@@ -33,21 +57,39 @@ linters-settings:
   govet:
     enable-all: true
     disable:
-      - fieldalignment
+      - fieldalignment  # Disabled in every Google project that customizes govet
+    settings:
+      shadow:
+        strict: true
 
   revive:
     severity: warning
     rules:
       - name: blank-imports
       - name: context-as-argument
+      - name: context-keys-type
+      - name: dot-imports
+      - name: early-return
+      - name: empty-block
       - name: error-return
       - name: error-strings
       - name: error-naming
+      - name: errorf
       - name: exported
-      - name: var-naming
-      - name: receiver-naming
-      - name: unexported-return
+      - name: if-return
+      - name: increment-decrement
       - name: indent-error-flow
+      - name: package-comments
+      - name: range
+      - name: receiver-naming
+      - name: redefines-builtin-id
+      - name: superfluous-else
+      - name: time-naming
+      - name: unexported-return
+      - name: unreachable-code
+      - name: unused-parameter
+      - name: var-declaration
+      - name: var-naming
 
   gosec:
     severity: medium
@@ -58,8 +100,27 @@ linters-settings:
       - diagnostic
       - style
       - performance
+      - experimental
+      - opinionated
+
+  nakedret:
+    max-func-lines: 0   # Disallow naked returns entirely
+
+  staticcheck:
+    checks:
+      - all
+      - -ST1000         # Package comments (handled by revive)
+      - -ST1020         # Comment on exported method (too noisy for existing codebases)
+      - -ST1021         # Comment on exported type (too noisy for existing codebases)
+      - -ST1022         # Comment on exported const (too noisy for existing codebases)
+      - -QF1008         # Embedded field selector (style preference)
+
+  nolintlint:
+    require-explanation: true
+    require-specific: true
 
 exclusions:
+  generated: lax
   warn-unused: true
   presets:
     - comments
@@ -67,17 +128,36 @@ exclusions:
     - common-false-positives
 
   rules:
+    # Relax checks in test files
     - path: _test\.go
       linters:
         - errcheck
         - gosec
         - goconst
+        - dupl
+        - noctx
 
+    # Exclude generated files
     - path: \.pb\.go$
       linters:
         - all
+
+    - path: _mock\.go$
+      linters:
+        - all
+
+    - path: \.gen\.go$
+      linters:
+        - all
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
 
 output:
   formats:
     - format: colored-line-number
   sort-results: true
+  sort-order:
+    - linter
+    - file

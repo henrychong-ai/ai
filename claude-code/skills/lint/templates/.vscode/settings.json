@@ -1,22 +1,23 @@
 {
-  // Format on save
+  // Format on save using Biome
   "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.defaultFormatter": "biomejs.biome",
 
-  // ESLint auto-fix on save
+  // Oxlint auto-fix on save (via VSCode extension)
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit",
-    "source.organizeImports": "never"
+    "source.fixAll.oxc": "explicit",
+    "source.organizeImports.biome": "explicit"
   },
 
-  // ESLint validation
-  "eslint.validate": [
-    "javascript",
-    "javascriptreact",
-    "typescript",
-    "typescriptreact",
-    "vue"
-  ],
+  // ESLint validation (only needed for residual ESLint projects)
+  // Uncomment if using residual ESLint for gap plugins:
+  // "eslint.validate": [
+  //   "vue",
+  //   "astro"
+  // ],
+  // "editor.codeActionsOnSave": {
+  //   "source.fixAll.eslint": "explicit"
+  // },
 
   // Use workspace TypeScript
   "typescript.tsdk": "node_modules/typescript/lib",
@@ -37,26 +38,36 @@
     "**/coverage": true
   },
 
-  // Language-specific formatters
+  // Language-specific formatters (all use Biome)
+  "[javascript]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
   "[json]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "biomejs.biome"
   },
   "[jsonc]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[markdown]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[yaml]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[html]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "biomejs.biome"
   },
   "[css]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "biomejs.biome"
   },
-  "[scss]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  "[markdown]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  // YAML: Biome does NOT format YAML (on 2026 roadmap). No default formatter set.
+  // "[yaml]": {
+  //   "editor.defaultFormatter": "biomejs.biome"
+  // },
+  "[html]": {
+    "editor.defaultFormatter": "biomejs.biome"
   }
 }

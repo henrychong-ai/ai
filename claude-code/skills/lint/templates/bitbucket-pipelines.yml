@@ -16,6 +16,8 @@ definitions:
           - pnpm lint
           - pnpm format:check
           - pnpm typecheck
+          # Uncomment if using residual ESLint for gap plugins:
+          # - pnpm exec eslint . --max-warnings=0
 
     - step: &test
         name: Test & Coverage
@@ -37,19 +39,11 @@ definitions:
     #       - uv run ruff check .
     #       - uv run ruff format --check .
     #       - uv run mypy src/
-    #
-    # - step: &test-python
-    #     name: Test Python & Coverage
-    #     image: python:3.13
-    #     script:
-    #       - pip install uv
-    #       - uv sync --dev
-    #       - uv run pytest --cov=src --cov-fail-under=80 --cov-report=xml
 
     # Optional: Go lint step
     # - step: &lint-go
     #     name: Lint Go
-    #     image: golang:1.22
+    #     image: golang:1.26
     #     script:
     #       - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
     #       - golangci-lint run

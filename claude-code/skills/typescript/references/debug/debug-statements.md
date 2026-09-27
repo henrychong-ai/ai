@@ -9,7 +9,7 @@ Unconditional `process.stderr.write('[DEBUG]...')` or `console.log('[DEBUG]...')
 3. **CI/CD Timeouts**: Log buffers fill, causing pipeline failures or excessive log storage costs
 4. **Silent Production Noise**: Debug output in production logs obscures real errors
 
-## Real-World Case: mcp-neo4j-knowledge-graph v1.8.2
+## Real-World Case: an MCP Server Package
 
 ### Symptoms
 - iTerm memory usage spiking during `npm test`
@@ -126,6 +126,5 @@ grep -rn "\[DEBUG\]" src/
 
 ## Reference
 
-- **KG Entity**: "MCP KG Test Memory Issue Fix"
-- **Version**: mcp-neo4j-knowledge-graph v1.8.2 (2025-12-22)
+- **Case**: stray unconditional debug writes in a Node.js MCP server package (December 2025)
 - **Severity**: P0 - caused terminal crashes

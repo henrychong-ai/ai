@@ -20,12 +20,28 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      include: ['src/**/*.ts'],
-      exclude: ['src/**/*.test.ts', 'src/types.ts'],
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/**/*.{test,spec}.{ts,tsx}', 'src/**/*.d.ts'],
     },
   },
 });
 ```
+
+### Coverage measurement checks
+
+Choose a provider supported by the actual test runtime. A Workers isolate does
+not supply Node inspector coverage; validate transform-based instrumentation in
+that runtime. When includes omit a hosted entrypoint or package, inspect resolved
+paths and the complete source inventory before adding tests or changing floors.
+Use absolute include paths if required by the installed pool integration; verify
+the report contains every owned executable file, including files never imported.
+
+Keep per-package reports separate. Merge only compatible provider mappings for
+the same source/build, without counting both source and compiled output. Report
+raw covered/total counters and explain denominator changes; rounded percentages
+alone cannot establish non-regression. Test coverage-checker exemptions with
+negative cases: an enclosing declaration hit must not cover an unexecuted
+operation, and partially mapped executable changes must not silently pass.
 
 ### With Path Aliases
 

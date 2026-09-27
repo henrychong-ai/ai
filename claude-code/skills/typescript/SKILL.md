@@ -1,15 +1,9 @@
 ---
 name: typescript
-description: TypeScript development specialist for type-safe JavaScript, fintech platforms, and modern frameworks. Covers TypeScript compiler, React/Node.js, type system, API development (Hono/tRPC/REST/GraphQL), async patterns, testing (Vitest), and Cloudflare Workers. Use for TypeScript code, type definitions, framework development, and fintech applications.
+description: "TypeScript development — type-safe JavaScript, fintech platforms, TypeScript compiler, React/Node.js, type system, async patterns, testing (Vitest), Cloudflare Workers, NestJS core, Astro content sites, Obsidian plugins. Owns an opinionated back-to-front ironclad stack (recommended default for back-end/services/internal tools): the Option-B @hono/zod-openapi single-source pattern where ONE createRoute() drives request+response validation, the generated OpenAPI doc, dashboard client types, and MCP tool schemas (API Shield parity/freshness guards + migration gotchas in api-patterns.md). Also covers API development (Hono, tRPC, REST, GraphQL) and the front-to-back Next.js full-stack boundary for when not to use it. Use for TypeScript code, type definitions, framework development, picking an API/stack architecture, and fintech applications."
 ---
 
 # TypeScript Development Specialist
-
-Expert TypeScript development for type-safe applications, fintech platforms, and modern frameworks.
-
-## Overview
-
-Comprehensive TypeScript expertise including advanced type system, React/Node.js frameworks, Cloudflare Workers, real-time systems, financial applications, testing, and performance optimization.
 
 ## When to Use This Skill
 
@@ -32,13 +26,14 @@ Load as needed based on the task at hand:
 - `references/coding-standards/clean-code.md` - Clean code principles for TypeScript
 - `references/coding-standards/tooling.md` - tsconfig.json, Biome, editor integration
 
-**Linting Setup:** For comprehensive ESLint configuration, invoke the `/lint` skill. The lint skill is the single source of truth for ESLint flat config with 7 core plugins + framework-specific plugins.
+**Linting Setup:** For comprehensive linting configuration, invoke the `/lint` skill. The lint skill is the single source of truth for Oxlint + Biome setup with residual ESLint gap plugins.
 
 ### Implementation Patterns
 - `references/patterns/error-handling.md` - Result/Either patterns, Zod, error boundaries
 - `references/patterns/async-patterns.md` - Concurrency, cancellation, retries
-- `references/patterns/api-patterns.md` - Hono, tRPC, REST/GraphQL patterns
+- `references/patterns/api-patterns.md` - Hono, tRPC, REST/GraphQL **and the `@hono/zod-openapi` single-source pattern — the recommended DEFAULT for back-end / back-to-front projects** (one `createRoute()` drives request+response validation, the OpenAPI doc, dashboard client types, and MCP tool schemas; API Shield parity, auth-before-validation ordering, and the migration gotchas — proven in production)
 - `references/patterns/security-patterns.md` - Input depth limiting, DoS prevention, CVE mitigations
+- `references/patterns/nestjs-patterns.md` - **Core NestJS** (modules, DI, the request lifecycle order, guards/interceptors/pipes/filters, custom param decorators, config, testing) — *not part of the ironclad stack; for existing or inherited NestJS codebases; core framework only*
 
 ### Testing
 - `references/testing/vitest-patterns.md` - Vitest config, mocking, coverage
@@ -49,9 +44,12 @@ Load as needed based on the task at hand:
 - `references/ai-development/project-configuration.md` - Multi-environment project setup (rules, @import, environments)
 
 ### Tech Stack (Ironclad Stack)
-- `references/tech-stack/typescript-ironclad-stack.md` - Core tech stack decisions
+- `references/tech-stack/typescript-ironclad-stack.md` - Core tech stack decisions, incl. **the Option-B back-to-front pattern (recommended default)** + the back-to-front vs front-to-back boundary (when not to use it)
 - `references/tech-stack/typescript-ironclad-infra.md` - Deployment infrastructure
 - `references/tech-stack/cloudflare.md` - Cloudflare Workers/D1/KV complete reference
+- `references/tech-stack/when-to-use-astro.md` - When Astro is (and is not) the right choice
+- `references/tech-stack/astro-content-site-stack.md` - Astro content-site stack on Cloudflare (optional Payload CMS)
+- `references/tech-stack/obsidian.md` - Obsidian plugin development stack
 
 ### Frontend Resources
 - https://www.builtatlightspeed.com - Frontend themes, templates, and UI kits
@@ -71,6 +69,7 @@ Load as needed based on the task at hand:
 - **React**: Hooks, context, performance optimization
 - **Node.js**: Async patterns, streams
 - **GraphQL**: Type-safe queries with generated types
+- **NestJS** (core): modules, DI, guards/interceptors/pipes/filters, custom decorators — see `references/patterns/nestjs-patterns.md` (non-ironclad; for existing NestJS codebases)
 
 ### 3. Cloudflare Workers
 - Edge-first API development
@@ -95,9 +94,11 @@ Load as needed based on the task at hand:
 | **Legacy/CRA projects** | Jest | Existing infrastructure, gradual migration |
 
 #### Coverage Requirements
-- **Minimum 80%** for lines, functions, branches, statements
-- Coverage enforced in CI (build fails below threshold)
-- Use `/* v8 ignore next */` sparingly for untestable code
+- Follow the approved repository coverage policy; generic examples do not override it.
+- If no policy exists, propose thresholds by package and risk; 80% is a starting example, not a universal minimum.
+- Measure complete owned runtime source, including unimported TS/TSX; apply additional per-file floors to critical security decisions.
+- Document and review exclusions; a filename such as `types.ts` does not prove the file has no runtime code.
+- See testing references for assertion quality, provider compatibility, and evidence limits.
 
 #### When Tests Are MANDATORY
 - Any new function/method with business logic
@@ -141,8 +142,6 @@ pnpm test:ui           # Visual UI
 - `templates/testing/setup.ts` - Global test setup
 - `templates/testing/jest.config.ts` - Legacy Jest config
 
-**Linting for Tests:** Use `/lint` skill with `eslint-plugin-vitest` for test file linting.
-
 ## Quick Reference
 
 ### Project Setup (Ironclad Stack)
@@ -150,18 +149,9 @@ pnpm test:ui           # Visual UI
 mkdir my-project && cd my-project
 pnpm init
 pnpm add typescript zod hono
-pnpm add -D vitest @types/node@^24 eslint @eslint/js typescript-eslint
-echo "24.13" > .nvmrc
+pnpm add -D vitest @types/node@^24 oxlint @biomejs/biome
+echo "24" > .nvmrc
 ```
-
-**MANDATORY: Strict Linting Configuration**
-
-All new TypeScript projects (especially Ironclad stack) MUST use strict recommended ESLint settings:
-- `eslint.configs.recommended`
-- `tseslint.configs.strictTypeChecked`
-- `tseslint.configs.stylisticTypeChecked`
-
-See `references/coding-standards/tooling.md` for complete ESLint flat config setup.
 
 ### Type Patterns
 ```typescript
@@ -187,18 +177,25 @@ const Status = {
 type Status = typeof Status[keyof typeof Status];
 ```
 
-### Testing
-```bash
-pnpm test              # Run tests
-pnpm test:coverage     # With coverage
-pnpm vitest --ui       # UI mode
-```
+## Proactive Coaching
 
-## Integration with TypeScript Agent
+**When reviewing TypeScript code, check:**
+1. Strict mode enabled in tsconfig.json
+2. No `any` types (use `unknown` + narrowing)
+3. Zod schemas for external data
+4. Result types for error handling
+5. Proper async/await patterns (no floating promises)
 
-**Agent**: Full TypeScript platform development with fintech context
-**Skill**: Quick type reference, patterns, framework guidance
+**When debugging:**
+1. Check type narrowing issues
+2. Verify Zod schema matches expected data
+3. Look for unhandled promise rejections
+4. Check for null/undefined access
+
+**When optimizing:**
+1. Profile with Chrome DevTools or clinic.js
+2. Use proper memoization (useMemo, useCallback)
+3. Consider edge deployment for latency
+4. Bundle analysis with source-map-explorer
 
 ---
-
-**Primary Focus**: Type-safe TypeScript development using the Ironclad Stack (Hono, Drizzle, Zod, Vitest) for modern frameworks and high-performance applications.

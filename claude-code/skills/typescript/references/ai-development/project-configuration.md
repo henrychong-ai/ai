@@ -78,7 +78,7 @@ Create environment-specific configs at user level for reuse across projects:
 ### Example Environment File
 
 ```markdown
-# ~/.claude/rules/environments/cloudflare-personal.md
+# ~/.claude/rules/config/cloudflare-personal.md
 
 # Personal Cloudflare Environment
 
@@ -113,7 +113,7 @@ Import environment configs into project-local files:
 ```markdown
 # Local Environment Configuration
 
-@~/.claude/rules/environments/cloudflare-personal.md
+@~/.claude/rules/config/cloudflare-personal.md
 ```
 
 ### In CLAUDE.md, below the shim line (Claude-only, always-on imports)
@@ -122,7 +122,7 @@ Import environment configs into project-local files:
 @AGENTS.md
 
 ## Environment Setup
-@~/.claude/rules/environments/cloudflare-personal.md
+@~/.claude/rules/config/cloudflare-personal.md
 ```
 
 Keep user-level imports out of `AGENTS.md`: other agents read it and cannot resolve `@~/.claude/...` paths.
@@ -225,7 +225,7 @@ my-project/
 
 1. **Personal clone:** Create `CLAUDE.local.md` in the project root with personal config
 2. **Work clone:** Create `CLAUDE.local.md` in the project root with work config
-3. **Both use @import:** `@~/.claude/rules/environments/[appropriate-env].md`
+3. **Both use @import:** `@~/.claude/rules/config/[appropriate-env].md`
 
 ---
 
@@ -244,7 +244,7 @@ ln -s ~/shared-claude-rules ~/.claude/rules/shared
 
 ```bash
 # Share individual rule
-ln -s ~/.claude/rules/environments/cloudflare-personal.md \
+ln -s ~/.claude/rules/config/cloudflare-personal.md \
       ~/projects/my-project/.claude/rules/environment.md
 ```
 
@@ -265,7 +265,7 @@ ln -s ~/.claude/rules/environments/cloudflare-personal.md \
 | Personal environment config | `./CLAUDE.local.md` | **Gitignored** |
 | Setup template | `./CLAUDE.local.md.example` | Tracked |
 | User defaults | `~/.claude/rules/*.md` | N/A |
-| Environment configs | `~/.claude/rules/environments/*.md` | N/A |
+| Environment configs | `~/.claude/rules/config/*.md` | N/A |
 
 ---
 

@@ -1,6 +1,6 @@
 # AI Testing Protocols
 
-Testing requirements and protocols for AI-driven TypeScript development with Claude Code.
+Testing requirements and protocols for AI-driven TypeScript development across agent harnesses.
 
 ---
 
@@ -55,14 +55,14 @@ Use TDD (write tests BEFORE implementation) when:
 5. **API contract changes** - Define new contract in tests first
 6. **Refactoring existing code** - Ensure tests pass before and after
 
-### TDD Workflow for Claude Code
+### Agent TDD Workflow
 
 ```
 1. User describes feature/fix
-2. Claude writes failing test(s) first
-3. Claude implements minimum code to pass
-4. Claude refactors while keeping tests green
-5. Claude runs full test suite
+2. The agent writes failing test(s) first
+3. The agent implements minimum code to pass
+4. The agent refactors while keeping tests green
+5. The agent runs the full test suite
 6. Commit with tests and implementation together
 ```
 
@@ -70,9 +70,12 @@ Use TDD (write tests BEFORE implementation) when:
 
 ## Coverage Requirements
 
-### Minimum Thresholds
+### Example thresholds when no repository policy exists
 
-| Metric | Minimum | Recommended |
+The approved repository policy takes precedence. Choose package and security-file
+floors based on risk and source inventory; the following values are illustrative.
+
+| Metric | Example starting floor | Example higher target |
 |--------|---------|-------------|
 | **Lines** | 80% | 90% |
 | **Functions** | 80% | 90% |
@@ -117,26 +120,26 @@ Valid exception reasons:
 
 ---
 
-## Claude Code Integration
+## Harness Integration
 
-### TodoWrite for Test Tracking
+### Task Tracking
 
-When implementing features with tests, use TodoWrite to track:
+When implementing features with tests, use the active harness's task plan or checklist to track:
 
 ```
 1. [ ] Write unit tests for [feature]
 2. [ ] Implement [feature]
 3. [ ] Verify tests pass
-4. [ ] Check coverage meets 80%
+4. [ ] Check complete-source coverage meets the repository policy
 5. [ ] Run full test suite
 ```
 
 ### Test Verification Workflow
 
-After writing code, Claude Code should:
+After writing code, the agent should:
 
-1. **Run tests** - `pnpm test:run`
-2. **Check coverage** - `pnpm test:coverage`
+1. **Run the canonical gate** — inspect the repo scripts and use the CI-equivalent command
+2. **Consume fresh coverage** — if that gate already runs tests with coverage, do not repeat an uninstrumented pass
 3. **Report results** - Show pass/fail and coverage percentages
 4. **Fix failures** - Iterate until tests pass
 
@@ -154,7 +157,29 @@ Never commit:
 - Failing tests
 - Tests that skip/ignore without justification
 
+### Cloudflare Workers Test Isolation (workerd Process Leaks)
+
+When using `@cloudflare/vitest-pool-workers`, each vitest invocation spawns `workerd` child processes. In multi-agent sessions where several agents run tests in parallel, these processes accumulate and are not cleaned up when agents finish, causing memory exhaustion.
+
+**Rule: Agents write tests only, never execute them in parallel.**
+
+In team/multi-agent workflows:
+1. Each agent writes and modifies test files but does **not** run `pnpm test` or `vitest`
+2. The coordinating agent runs the full test suite once after all agents complete: `pnpm run check`
+3. Before heavy test sessions, kill stale processes: `pkill -f workerd 2>/dev/null`
+
+**Single-agent sessions** are unaffected — run tests normally.
+
 ---
+
+## Auth failure and browser acceptance
+
+For authentication changes, exercise never-settling upstream calls, cancellation,
+and a subsequent request after the failed attempt. Distinguish optional profile
+enrichment from mandatory identity/organisation/permission checks: the latter fail
+closed. Check that the real browser exits loading with a useful retry/error state.
+Mocked JWT success and a green health probe do not establish real-provider login
+acceptance; use separately scoped admin, writer, read-only, and restricted personas.
 
 ## Test Quality Standards
 
@@ -361,12 +386,41 @@ it('should show morning greeting at 9am', () => {
 Before merging any PR:
 
 - [ ] All tests pass (`pnpm test:run`)
-- [ ] Coverage meets 80% threshold (`pnpm test:coverage`)
+- [ ] Coverage meets the approved repository policy (use its canonical coverage command)
 - [ ] No skipped tests without justification
 - [ ] No `console.log` in test files
-- [ ] Tests run in < 2 minutes total
+- [ ] Runtime meets the repository's measured budget; investigate regressions without weakening coverage or assertions
 
 ---
 
 *Companion to: vitest-patterns.md, jest-patterns.md, testing-strategies.md*
 *Last updated: 2026-01-15*
+
+## Behavioural evidence and review
+
+For a substantial coverage remediation, inventory and review the existing test
+files as well as the new ones. A passing suite is execution evidence, not a review.
+Record gaps and their resolution in the repository; routine small changes need
+only proportionate review of their affected tests.
+
+- Exercise production handlers and permission decisions; mock external service
+  boundaries rather than copying the implementation into a test router.
+- Assert exact observable results and side effects. A denial should also prove
+  that the write did not happen; a cancellation test must actually cancel and
+  prove no retry. Avoid accepting multiple status codes merely to make a test pass.
+- Keep titles aligned with what assertions prove. Source-text checks can protect
+  a static contract but do not prove runtime behaviour.
+- For a bug fix, demonstrate the regression against the defective implementation
+  when practical, then its closure. Use deterministic clocks, isolated fixtures,
+  and restore globals/spies after each test.
+- For critical predicates, focused mutation probes should fail assertions when
+  the predicate is removed or inverted; compilation failures are not a killed
+  behavioural mutation. Do not imply a whole-repository mutation score.
+- Self-test fuzz oracles with known leaking and safe samples, including the
+  representations they claim to recognise. Document grammar, decoding, fragment,
+  and size bounds; seeded success is not universal security proof.
+
+DOM tests establish state and request contracts. Use a real browser for browser
+capabilities such as canvas pixel output and important real control interactions;
+use actual SDK transport tests for protocol startup/dispatch/shutdown. Controlled
+identity fixtures do not prove a live identity-provider login or deployment.

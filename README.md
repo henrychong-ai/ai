@@ -47,8 +47,8 @@ Bundled knowledge packages with reference materials. Copy entire folder to `~/.c
 | [go](claude-code/skills/go/) | Go development specialist for backends, APIs, CLI tools |
 | [images](claude-code/skills/images/) | Image processing and manipulation |
 | [instruction-creator](claude-code/skills/instruction-creator/) | Create Claude instruction files (agents, skills, commands, MCP servers) and package skills for Claude Desktop upload (CD-S/CD-P, sanitization, fork subagents, cross-platform conversion) |
-| [lint](claude-code/skills/lint/) | Linting and formatting setup for TypeScript/JavaScript projects |
-| [typescript](claude-code/skills/typescript/) | TypeScript development specialist with Cloudflare Workers, React, Node.js patterns |
+| [lint](claude-code/skills/lint/) | Linting and formatting across ecosystems — TypeScript/JavaScript (Oxlint + Biome, residual ESLint), Python (Ruff), Go (golangci-lint v2), .NET (Roslyn), Solidity — with gitleaks pre-commit secret scanning and copy-ready templates |
+| [typescript](claude-code/skills/typescript/) | TypeScript development — strict type patterns, Vitest testing, Hono/tRPC/`@hono/zod-openapi` single-source APIs, Cloudflare Workers, NestJS core, Astro content sites |
 | [typescript-version-upgrade](claude-code/skills/typescript-version-upgrade/) | Node.js/TypeScript version upgrade protocols |
 
 ### Plugins

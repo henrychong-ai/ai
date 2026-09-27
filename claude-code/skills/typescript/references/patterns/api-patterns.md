@@ -4,6 +4,8 @@ Patterns for building type-safe APIs with Hono, tRPC, and REST/GraphQL.
 
 > **Full Hono/Workers setup:** See `tech-stack/cloudflare.md` for complete Cloudflare Workers configuration.
 
+> **Recommended default for back-end / back-to-front projects:** the **`@hono/zod-openapi` single-source pattern** (one `createRoute()` drives request+response validation, the generated OpenAPI doc, dashboard client types, and MCP tool schemas). Hono, tRPC, REST, and GraphQL all remain documented below, but for a Worker/API that owns the contract with a dashboard and/or MCP consuming its types, default to the single-source pattern — see "@hono/zod-openapi Single-Source Pattern (Recommended Default)". The architectural rationale and the back-to-front vs front-to-back boundary live in `tech-stack/typescript-ironclad-stack.md` → "The Option-B Back-to-Front Pattern (Recommended Default)".
+
 ---
 
 ## Hono Patterns
@@ -201,7 +203,7 @@ app.get('*', async (c) => {
 });
 ```
 
-**Reference:** Discovered in Bifrost project v1.11.6-v1.11.7 (February 2026). See KG entity "Cloudflare Workers Static Assets Immutable Response Issue" for full context.
+**Background:** Responses returned by the `ASSETS` binding have immutable headers; mutating them directly throws at runtime. Always clone into a new `Response` before setting headers (observed in production, February 2026).
 
 ### Error Handling
 
@@ -495,7 +497,11 @@ app.use('/api/*', async (c, next) => {
 
 ---
 
-## OpenAPI Integration
+## @hono/zod-openapi Single-Source Pattern (Recommended Default)
+
+The recommended API approach for back-end / back-to-front projects. **One** shared Zod route definition (`createRoute()` + `.openapi()`) is the single source of truth for **all four** of: request+response validation, the generated OpenAPI doc, the dashboard/client types, and the MCP tool input schemas. Proven in production on a Cloudflare Workers monorepo (full migration with a four-figure test suite green). Architectural rationale + the back-to-front vs front-to-back boundary: `tech-stack/typescript-ironclad-stack.md`.
+
+`OpenAPIHono` **extends `Hono`** — adoption is an incremental, strangler-safe per-router conversion. Converted `.openapi()` routers mount alongside plain Hono routers on the same instance; `.route()` / `.use()` / `.onError()` / `.request()` all behave identically.
 
 ### Hono + Zod OpenAPI
 
@@ -541,11 +547,77 @@ app.openapi(getUserRoute, async (c) => {
   return c.json(user, 200);
 });
 
-// Generate OpenAPI spec
+// Generate OpenAPI spec — the doc is GENERATED from the route registry, never hand-written.
+// Self-heal info.version from the build VERSION so the doc never drifts behind the deploy.
 app.doc('/openapi.json', {
   openapi: '3.0.0',
-  info: { title: 'My API', version: '1.0.0' },
+  info: { title: 'My API', version: VERSION },
 });
+```
+
+The dashboard infers `z.input<typeof UserSchema>` (pre-default form shapes); Worker/MCP consumers infer `z.infer` / `z.output<typeof UserSchema>` (defaults applied). The MCP server's tool input schemas source the shared schema's `.shape`.
+
+### Hard-Won Gotchas (codify — these bite without warning)
+
+These were paid for during a full production migration. Preserve each deliberately.
+
+- **Funnel validation failures with `defaultHook`.** Request-validation failures otherwise return the library's raw 400 shape, not your error envelope. Set a `defaultHook` on the `OpenAPIHono` instance to convert them into your standard envelope. For a router with a bespoke legacy error body, the `defaultHook` can **return that exact `c.json(...)` body** to preserve it.
+
+  ```typescript
+  const app = new OpenAPIHono({
+    defaultHook: (result, c) => {
+      if (!result.success) {
+        return c.json(apiError('VALIDATION_FAILED', result.error.issues), 400);
+      }
+    },
+  });
+  ```
+
+- **Preserve auth-before-validation ordering.** Route-def request validation runs AFTER instance/mounted middleware but BEFORE the handler. If a handler relied on doing an auth/RBAC check before body validation, move that check into `createRoute({ middleware: [...] })` so it still runs first.
+
+- **Repeated query keys become `string[]`.** The query validator surfaces `?x=a&x=b` as an array, which scalar schemas reject with a 400 — unlike `c.req.query()` first-value semantics. Wrap query objects in a `repeatTolerantQuery` preprocess (array → first element) to preserve the old behaviour.
+
+  ```typescript
+  const repeatTolerantQuery = <T extends z.ZodTypeAny>(schema: T) =>
+    z.preprocess((v) => {
+      if (v && typeof v === 'object') {
+        const out: Record<string, unknown> = {};
+        for (const [k, val] of Object.entries(v)) out[k] = Array.isArray(val) ? val[0] : val;
+        return out;
+      }
+      return v;
+    }, schema);
+  ```
+
+- **Keep `z.coerce` on MCP tool schemas.** MCP tool args may arrive as strings, so keep `z.coerce.number()` / `z.coerce.boolean()` on the shared tool schemas. Footgun to preserve deliberately: `z.coerce.boolean("false") === true` — coercion is truthiness-based, not string-value-based.
+
+- **`.refine()` does NOT serialise to an OpenAPI `enum`.** An allow-list built with `.refine()` (e.g. a domain allow-list) loses its enum in the generated doc — and the doc feeds API Shield. Use `z.enum([...])`, or inject the enum onto the generated doc post-hoc.
+
+- **Opaque content types can't be Zod-bound.** multipart/form-data uploads, binary / octet-stream, text/markdown, `204 No Content`, and slash-bearing path params (`:key{.+}` — an OpenAPI `{key}` param is single-segment and drops the `.+` match) cannot be route-def-validated. Keep these as plain-Hono methods on the same `OpenAPIHono` instance, and document them via `app.openAPIRegistry.registerPath()` so they still appear in the spec (required for API Shield parity).
+
+- **Only requests are runtime-validated.** `@hono/zod-openapi` validates requests but only *documents* response schemas. Binding a response schema is therefore **zero-runtime-risk** — it drives the doc and the client types without adding a runtime failure mode.
+
+### API Shield Integration (Cloudflare)
+
+The *generated* OpenAPI doc feeds **Cloudflare API Shield** schema validation in **BLOCK mode** on the zone. This makes spec freshness a production concern, not a docs nicety:
+
+- **A path absent from the uploaded spec 403s ALL traffic to it.** Dropping a path from the generated doc is an outage. (This is why opaque-content-type routes must still be `registerPath()`-documented.)
+- The spec upload runs **only on the prod deploy step** (gated).
+
+Two guards protect this:
+
+1. **Parity test** — the generated doc must be a *superset* of a committed baseline of live operations, so no path is silently dropped.
+2. **Freshness gate** — wired into `pnpm run check`: the committed spec must equal the generator output. CI fails on drift, forcing the spec to be regenerated and committed alongside any route change.
+
+```jsonc
+// package.json (excerpt) — freshness wired into the standard check gate
+{
+  "scripts": {
+    "openapi:gen": "tsx scripts/generate-openapi.ts > openapi.json",
+    "openapi:check": "tsx scripts/generate-openapi.ts | diff -q - openapi.json",
+    "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm openapi:check && pnpm test"
+  }
+}
 ```
 
 ---
@@ -652,5 +724,5 @@ async function validateResponse<T>(
 ---
 
 *Companion to: error-handling.md, async-patterns.md*
-*See also: tech-stack/cloudflare.md for Hono/Workers setup*
-*Last updated: 2026-02-03*
+*See also: tech-stack/cloudflare.md for Hono/Workers setup; tech-stack/typescript-ironclad-stack.md for the Option-B back-to-front canonical definition*
+*Last updated: 2026-06-05 (@hono/zod-openapi single-source promoted to recommended default; API Shield guards + production migration gotchas added)*

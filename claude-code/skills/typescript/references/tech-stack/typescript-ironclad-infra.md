@@ -13,7 +13,7 @@ Companion to the Ironclad Stack. Two deployment options: Cloudflare (primary) an
 | Stack | When to Use |
 |-------|-------------|
 | **Cloudflare** | APIs, websites, public services, edge compute |
-| **Self-hosted (VPS2 + Tailscale)** | Private internal tools, admin dashboards |
+| **Self-hosted (VPS + Tailscale)** | Private internal tools, admin dashboards |
 
 ```
 Is it public-facing?
@@ -192,7 +192,7 @@ wrangler pages deploy .vercel/output/static
 
 ---
 
-## Stack 2: Self-Hosted (VPS2 + Tailscale)
+## Stack 2: Self-Hosted (VPS + Tailscale)
 
 ### When to Use
 
@@ -244,7 +244,7 @@ services:
 
 **Deploy:**
 ```bash
-# On VPS2
+# On the VPS
 git clone <repo>
 cd <repo>
 docker compose up -d
@@ -257,7 +257,7 @@ docker compose up -d
 tailscale serve --bg --https=443 http://localhost:3000
 
 # Access at:
-# https://vps2.<tailnet>.ts.net
+# https://<vps-hostname>.<your-tailnet-domain>
 ```
 
 **Benefits:**
@@ -397,7 +397,7 @@ echo "24.13.0" > .nvmrc
 ┌─────────────────────────────────────┐
 │    SELF-HOSTED (Private Only)       │
 ├─────────────────────────────────────┤
-│ VPS2        - Docker containers     │
+│ VPS         - Docker containers     │
 │ Tailscale   - Private access        │
 │ SQLite/PG   - Full database         │
 │ Node.js     - Full runtime          │
