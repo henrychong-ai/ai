@@ -390,20 +390,18 @@ go fmt ./...                # Format
 **Recommended Stack:** Roslyn Analyzers + dotnet format
 
 ### Quick Setup
-```bash
-dotnet add package Roslynator.Analyzers
-dotnet add package StyleCop.Analyzers
-dotnet add package SonarAnalyzer.CSharp
-```
+- `Directory.Build.props`: `AnalysisLevel` `latest-recommended` (default; `latest-all` is an opt-in strict profile), `EnforceCodeStyleInBuild` and `TreatWarningsAsErrors` `true`
+- `Directory.Packages.props` (Central Package Management): StyleCop.Analyzers, Roslynator.Analyzers and SonarAnalyzer.CSharp as `GlobalPackageReference`; no `Version=` on `PackageReference` (NU1008)
+- CA2007 (ConfigureAwait) off at the solution root; libraries opt in via a nested `.editorconfig`
 
 ### Run Commands
 ```bash
-dotnet format                    # Format
+dotnet format                     # Format
 dotnet format --verify-no-changes # Check (CI)
-dotnet build /warnaserror        # Build with strict warnings
+dotnet build -warnaserror         # Build; analyzers run as part of it
 ```
 
-**Reference:** `references/dotnet-roslyn.md` for full configuration.
+**Reference:** `references/dotnet-roslyn.md` for full configuration; full .NET conventions in the `/dotnet` skill (`references/coding-standards/tooling.md`) where installed.
 
 ---
 

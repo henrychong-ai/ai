@@ -148,7 +148,7 @@ The 5-quality-test framework for validating Gemini gems before distribution.
 **CC Syntax Eliminated:**
 - [ ] No YAML frontmatter
 - [ ] No tool references (Read, Write, WebSearch, Grep, Glob, Edit, Bash)
-- [ ] No MCP references (mcp__kg__, mcp__st__, mcp__perplexity__)
+- [ ] No MCP references (mcp__kg__, mcp__yggdrasil__, mcp__perplexity__)
 - [ ] No file paths (/Users/..., ~/.claude/..., ~/[vault]/...)
 - [ ] No TodoWrite tracking
 - [ ] No agent/skill cross-references

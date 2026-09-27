@@ -1,6 +1,6 @@
 ---
 name: typescript-version-upgrade
-description: This skill should be used for upgrading Node.js, TypeScript, ECMAScript targets, and framework versions with production-grade safety protocols. Use for CVE remediation, LTS upgrades, TypeScript migrations, ES target upgrades (ES5→ES2024), Next.js upgrades, and multi-repository version standardization. Triggers on version upgrade, node upgrade, typescript migration, CVE patch, security update, framework migration, ES target, tsconfig target, lib upgrade, ECMAScript upgrade.
+description: Upgrades Node.js, TypeScript, ECMAScript targets, and framework versions with production-grade safety protocols — CVE remediation, LTS upgrades, TypeScript migrations, ES target upgrades (ES5→ES2024), Next.js upgrades, and multi-repository version standardisation.
 allowed-tools: Read, Grep, Glob, Bash, Edit, Write
 ---
 

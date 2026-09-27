@@ -85,7 +85,7 @@ CC instructions heavily integrate multiple MCP tools in sophisticated patterns.
 **Example:**
 ```markdown
 1. mcp__kg__semantic_search("compliance requirements")
-2. mcp__st__sequentialthinking for analysis planning
+2. mcp__yggdrasil__sequential_thinking for analysis planning
 3. mcp__perplexity__research for current regulations
 4. mcp__kg__create_entities for findings
 5. mcp__bifrost__create_route for results publication

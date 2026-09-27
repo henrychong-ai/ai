@@ -55,7 +55,7 @@ Examine configuration files to identify error patterns and system settings.
 | MCP Pattern | Action |
 |-------------|--------|
 | `mcp__kg__*` | Remove knowledge graph operations |
-| `mcp__st__*` | Remove sequential thinking references |
+| `mcp__yggdrasil__*` | Remove structured-reasoning references |
 | `mcp__perplexity__*` | Remove Perplexity integration |
 | `mcp__bifrost__*` | Remove edge router references |
 | `mcp__codex__*` | Remove Codex references |
@@ -63,7 +63,7 @@ Examine configuration files to identify error patterns and system settings.
 **Example:**
 ```
 # Before (CC)
-Use mcp__kg__semantic_search to find related entities, then mcp__st__sequentialthinking for analysis.
+Use mcp__kg__semantic_search to find related entities, then mcp__yggdrasil__sequential_thinking for analysis.
 
 # After (Gem)
 Search for related information and apply systematic analysis to understand connections.
@@ -254,7 +254,7 @@ Before finalizing any converted gem:
 ### CC Syntax
 - [ ] YAML frontmatter removed
 - [ ] All tool references removed (Read, Write, Edit, Grep, Glob, Bash, etc.)
-- [ ] All MCP references removed (mcp__kg__, mcp__st__, etc.)
+- [ ] All MCP references removed (mcp__kg__, mcp__yggdrasil__, etc.)
 - [ ] All file paths removed (/Users/, ~/.claude/, ~/[vault]/, etc.)
 - [ ] All agent/skill cross-references removed
 - [ ] All TodoWrite patterns removed

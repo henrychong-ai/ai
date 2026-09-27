@@ -51,11 +51,12 @@ dotnet_naming_symbols.interfaces.applicable_kinds = interface
 dotnet_naming_style.interface_style.capitalization = pascal_case
 dotnet_naming_style.interface_style.required_prefix = I
 
-# Analyzer severity
-dotnet_analyzer_diagnostic.severity = warning
-dotnet_diagnostic.CA1062.severity = error
-dotnet_diagnostic.CA2007.severity = error
-dotnet_diagnostic.CA2016.severity = error
+# Analyzer severity (default profile; see references/dotnet-roslyn.md for the opt-in strict profile)
+# CA2007 (ConfigureAwait): off for applications and tests; library projects opt in via a nested
+# .editorconfig without root = true. ASP.NET Core has no SynchronizationContext.
+dotnet_diagnostic.CA2007.severity = none
+dotnet_diagnostic.CA1062.severity = none
+dotnet_diagnostic.CA2016.severity = warning
 
 # StyleCop adjustments
 dotnet_diagnostic.SA1101.severity = none
