@@ -44,7 +44,6 @@ Bundled knowledge packages with reference materials. Copy entire folder to `~/.c
 | [codex](claude-code/skills/codex/) | Route work to OpenAI GPT-6 (Astra/Sol/Luna) through the official Codex plugin — second opinions and code review (requires the Codex plugin and the `codex-relay` agent) |
 | [ffmpeg](claude-code/skills/ffmpeg/) | Video/audio processing with ffmpeg |
 | [gemini-gem-creator](claude-code/skills/gemini-gem-creator/) | Create and convert Gemini Custom Gems |
-| [go](claude-code/skills/go/) | Go development specialist for backends, APIs, CLI tools |
 | [images](claude-code/skills/images/) | Image processing and manipulation |
 | [instruction-creator](claude-code/skills/instruction-creator/) | Create Claude instruction files (agents, skills, commands, MCP servers) and package skills for Claude Desktop upload (skill zips, linked Desktop Projects, sanitization, fork subagents, cross-platform conversion) |
 | [lint](claude-code/skills/lint/) | Linting and formatting across ecosystems — TypeScript/JavaScript (Oxlint + Biome, residual ESLint), Python (Ruff), Go (golangci-lint v2), .NET (Roslyn), Solidity — with gitleaks pre-commit secret scanning and copy-ready templates |
