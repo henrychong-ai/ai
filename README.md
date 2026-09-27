@@ -48,7 +48,6 @@ Bundled knowledge packages with reference materials. Copy entire folder to `~/.c
 | [images](claude-code/skills/images/) | Image processing and manipulation |
 | [instruction-creator](claude-code/skills/instruction-creator/) | Create Claude instruction files (agents, skills, commands, MCP servers) and package skills for Claude Desktop upload (CD-S/CD-P, sanitization, fork subagents, cross-platform conversion) |
 | [lint](claude-code/skills/lint/) | Linting and formatting setup for TypeScript/JavaScript projects |
-| [pdf](claude-code/skills/pdf/) | PDF manipulation toolkit (extract, create, merge, split, forms) |
 | [typescript](claude-code/skills/typescript/) | TypeScript development specialist with Cloudflare Workers, React, Node.js patterns |
 | [typescript-version-upgrade](claude-code/skills/typescript-version-upgrade/) | Node.js/TypeScript version upgrade protocols |
 
@@ -103,7 +102,7 @@ Skills are invoked with `/skill-name` or automatically triggered based on contex
 
 ```
 /typescript   # Invoke TypeScript skill
-/pdf          # Invoke PDF skill
+/lint         # Invoke lint skill
 ```
 
 ### Using Agents
