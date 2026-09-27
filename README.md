@@ -42,7 +42,6 @@ Bundled knowledge packages with reference materials. Copy entire folder to `~/.c
 |-------|-------------|
 | [1password](claude-code/skills/1password/) | 1Password CLI, secrets management, op run setup |
 | [codex](claude-code/skills/codex/) | Route work to GPT-6 Astra and GPT-5.6 (Sol/Terra/Luna) through the official Codex plugin — second opinions and code review |
-| [dotnet](claude-code/skills/dotnet/) | .NET development specialist for enterprise applications |
 | [ffmpeg](claude-code/skills/ffmpeg/) | Video/audio processing with ffmpeg |
 | [gemini-gem-creator](claude-code/skills/gemini-gem-creator/) | Create and convert Gemini Custom Gems |
 | [go](claude-code/skills/go/) | Go development specialist for backends, APIs, CLI tools |
