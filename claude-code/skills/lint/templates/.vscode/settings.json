@@ -1,73 +1,32 @@
 {
-  // Format on save using Biome
+  // Biome formats and sorts imports; Oxlint fixes lint issues on save
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "biomejs.biome",
-
-  // Oxlint auto-fix on save (via VSCode extension)
   "editor.codeActionsOnSave": {
     "source.fixAll.oxc": "explicit",
     "source.organizeImports.biome": "explicit"
   },
 
-  // ESLint validation (only needed for residual ESLint projects)
-  // Uncomment if using residual ESLint for gap plugins:
-  // "eslint.validate": [
-  //   "vue",
-  //   "astro"
-  // ],
-  // "editor.codeActionsOnSave": {
-  //   "source.fixAll.eslint": "explicit"
-  // },
+  // Residual ESLint projects only: uncomment, and list the gap-plugin languages
+  // "eslint.validate": ["vue", "astro"],
 
-  // Use workspace TypeScript
+  // Use the workspace TypeScript
   "typescript.tsdk": "node_modules/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true,
 
-  // File associations
-  "files.associations": {
-    "*.css": "css",
-    "*.scss": "scss"
-  },
+  // Languages Biome formats. Markdown, YAML and HTML are left to the editor
+  // default: Biome does not format them yet (HTML only behind an opt-in).
+  "[javascript]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[javascriptreact]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[typescript]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[typescriptreact]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[json]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[jsonc]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[css]": { "editor.defaultFormatter": "biomejs.biome" },
 
-  // Exclude from search/watch
   "files.exclude": {
     "**/node_modules": true,
     "**/dist": true,
-    "**/build": true,
-    "**/.next": true,
     "**/coverage": true
-  },
-
-  // Language-specific formatters (all use Biome)
-  "[javascript]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "[typescript]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "[typescriptreact]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "[javascriptreact]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "[json]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "[jsonc]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "[css]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "[markdown]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  // YAML: Biome does NOT format YAML (on 2026 roadmap). No default formatter set.
-  // "[yaml]": {
-  //   "editor.defaultFormatter": "biomejs.biome"
-  // },
-  "[html]": {
-    "editor.defaultFormatter": "biomejs.biome"
   }
 }

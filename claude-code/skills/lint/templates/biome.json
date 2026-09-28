@@ -1,5 +1,27 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.3.15/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.5.14/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "includes": [
+      "**",
+      "!**/dist",
+      "!**/build",
+      "!**/out",
+      "!**/coverage",
+      "!**/.next",
+      "!**/.nuxt",
+      "!**/.output",
+      "!**/.turbo",
+      "!**/.wrangler",
+      "!**/.pnpm-store",
+      "!**/*.min.js",
+      "!**/*.min.css"
+    ]
+  },
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
@@ -9,20 +31,10 @@
   },
   "javascript": {
     "formatter": {
-      "quoteStyle": "single",
+      "quoteStyle": "double",
       "trailingCommas": "all",
       "semicolons": "always",
-      "arrowParentheses": "asNeeded"
-    }
-  },
-  "json": {
-    "formatter": {
-      "trailingCommas": "none"
-    }
-  },
-  "css": {
-    "parser": {
-      "cssModules": false
+      "arrowParentheses": "always"
     }
   },
   "linter": {
@@ -34,34 +46,5 @@
         "organizeImports": "on"
       }
     }
-  },
-  "vcs": {
-    "enabled": true,
-    "clientKind": "git",
-    "useIgnoreFile": true
-  },
-  "files": {
-    "includes": [
-      "**",
-      "!**/dist/**",
-      "!**/build/**",
-      "!**/out/**",
-      "!**/node_modules/**",
-      "!.pnpm-store/**",
-      "!**/.next/**",
-      "!**/.nuxt/**",
-      "!**/.output/**",
-      "!**/coverage/**",
-      "!**/.nyc_output/**",
-      "!**/.cache/**",
-      "!**/.turbo/**",
-      "!**/pnpm-lock.yaml",
-      "!**/package-lock.json",
-      "!**/yarn.lock",
-      "!**/bun.lockb",
-      "!**/*.min.js",
-      "!**/*.min.css",
-      "!**/*.bundle.js"
-    ]
   }
 }

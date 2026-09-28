@@ -9,7 +9,7 @@
  * - Global test utilities
  * - Environment setup
  */
-import { expect, vi } from 'vitest';
+import { afterEach, expect, vi } from "vitest";
 
 // ============================================================================
 // Custom Matchers
@@ -32,12 +32,11 @@ expect.extend({
   },
 
   /**
-   * Check if a value is a valid UUID
+   * Check if a value is a valid UUID (RFC 9562 versions 1-8, including v4 and v7)
    * @example expect(id).toBeUUID()
    */
   toBeUUID(received: string) {
-    const uuidRegex =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     const pass = uuidRegex.test(received);
     return {
       pass,
@@ -76,9 +75,11 @@ interface CustomMatchers<R = unknown> {
   toBeRecentDate(withinSeconds?: number): R;
 }
 
-declare module 'vitest' {
-  interface Assertion<T = unknown> extends CustomMatchers<T> {}
-  interface AsymmetricMatchersContaining extends CustomMatchers {}
+// One `Matchers` augmentation types expect(x).*, expect.* and expect.extend (Vitest 3.2+).
+// The `any` default must match Vitest's own declaration for the interfaces to merge.
+declare module "vitest" {
+  // oxlint-disable-next-line typescript/no-explicit-any
+  interface Matchers<T = any> extends CustomMatchers<T> {}
 }
 
 // ============================================================================
@@ -91,7 +92,7 @@ declare module 'vitest' {
 export async function waitFor(
   condition: () => boolean | Promise<boolean>,
   timeout = 5000,
-  interval = 100
+  interval = 100,
 ): Promise<void> {
   const start = Date.now();
   while (!(await condition())) {
@@ -138,7 +139,7 @@ afterEach(() => {
 // ============================================================================
 
 // Set timezone for consistent date testing
-process.env.TZ = 'UTC';
+process.env["TZ"] = "UTC";
 
 // Suppress console during tests (optional)
 // vi.spyOn(console, 'log').mockImplementation(() => {});

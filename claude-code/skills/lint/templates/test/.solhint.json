@@ -1,0 +1,12 @@
+{
+  "rules": {
+    "use-natspec": "off",
+    "func-name-mixedcase": "off",
+    "one-contract-per-file": "off",
+    "no-empty-blocks": "off",
+    "no-console": "off",
+    "gas-custom-errors": "off",
+    "gas-strict-inequalities": "off",
+    "import-path-check": "off"
+  }
+}

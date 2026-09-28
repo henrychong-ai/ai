@@ -1,208 +1,115 @@
 ---
 name: typescript
-description: "TypeScript development — type-safe JavaScript, fintech platforms, TypeScript compiler, React/Node.js, type system, async patterns, testing (Vitest), Cloudflare Workers. Owns an opinionated back-to-front ironclad stack (recommended default for back-end/services/internal tools): the Option-B @hono/zod-openapi single-source pattern where ONE createRoute() drives request+response validation, the generated OpenAPI doc, dashboard client types, and MCP tool schemas (API Shield parity/freshness guards + gotchas in api-patterns.md). Also covers API development (Hono, tRPC, REST, GraphQL) and the front-to-back Next.js full-stack boundary for when not to use it. Use for TypeScript code, type definitions, framework development, picking an API/stack architecture, and fintech applications."
+description: "TypeScript development standards — strict tsconfig, style and type patterns, Zod 4 validation, async and error handling, Vitest/Jest testing, and the single owner of Node, TypeScript, pnpm and JS/TS tool version policy. Owns an opinionated back-to-front ironclad stack, the recommended default for services and internal tools: the Option-B @hono/zod-openapi pattern where ONE createRoute() drives runtime request validation, compile-time response typing, the generated OpenAPI doc (documented responses, API Shield guards), dashboard client types and MCP tool schemas. Also covers the ORM standard (Drizzle for internal tools and Workers, Prisma 7 for product apps incl. SQL Server), Fastify + Temporal Node services, Next.js front-to-back apps, TypeScript on Cloudflare Workers, Astro content sites and NestJS codebases. Use when writing, reviewing or testing TypeScript, choosing versions or a stack, or designing an API."
 ---
 
-# TypeScript Development Specialist
+# TypeScript Development Standards
 
-## When to Use This Skill
+How to write, structure, version and test TypeScript across repositories. Repository-specific facts belong in each repository's own `AGENTS.md`, not here.
 
-- Writing or refactoring TypeScript code
-- Type definitions and advanced type patterns
-- React or Node.js framework implementation
-- API development (Hono, tRPC, REST, GraphQL)
-- Cloudflare Workers and edge deployment
-- Fintech and financial calculations
-- Vitest/TypeScript testing strategies
-- Performance optimization and async patterns
+## Related skills
 
-## Reference Files
+| Need | Skill |
+|------|-------|
+| Lint, format and git-hook configuration (Oxlint, Biome, residual ESLint, husky, lint-staged, gitleaks) | `/lint` |
+| Upgrading Node, TypeScript, React, Next.js or the ES target | `/typescript-version-upgrade` |
 
-Load as needed based on the task at hand:
+## Reference files
 
-### Coding Standards
-- `references/coding-standards/style-guide.md` - Naming, formatting, organization (mkosir-based)
-- `references/coding-standards/type-patterns.md` - Advanced TypeScript type patterns
-- `references/coding-standards/clean-code.md` - Clean code principles for TypeScript
-- `references/coding-standards/tooling.md` - tsconfig.json, Biome, editor integration
+Load what the task needs.
 
-**Linting Setup:** For comprehensive linting configuration, invoke the `/lint` skill. The lint skill is the single source of truth for Oxlint + Biome setup with residual ESLint gap plugins.
+### Stack and versions
+- `references/tech-stack/version-policy.md` — **single owner** of Node, TypeScript, pnpm (via pinned Corepack) and tool versions, with live-check commands
+- `references/tech-stack/typescript-ironclad-stack.md` — the stack, **the canonical Option-B back-to-front pattern**, back-to-front vs front-to-back, project shapes, decision tree
+- `references/tech-stack/orm.md` — Drizzle (internal tools, Workers) and Prisma 7 (product apps, PostgreSQL and SQL Server)
+- `references/tech-stack/cloudflare.md` — TypeScript on Workers: generated `Env`, `nodejs_compat`, D1 migrations, Vitest with `cloudflareTest()`
+- `references/tech-stack/astro.md` — when to use Astro, and current Astro (Content Layer, Workers adapter)
 
-### Implementation Patterns
-- `references/patterns/error-handling.md` - Result/Either patterns, Zod, error boundaries
-- `references/patterns/async-patterns.md` - Concurrency, cancellation, retries
-- `references/patterns/api-patterns.md` - Hono, tRPC, REST/GraphQL **and the `@hono/zod-openapi` single-source pattern — the recommended DEFAULT for back-end / back-to-front projects** (one `createRoute()` drives request+response validation, the OpenAPI doc, dashboard client types, and MCP tool schemas; API Shield parity, auth-before-validation ordering, and the migration gotchas)
-- `references/patterns/security-patterns.md` - Input depth limiting, DoS prevention, CVE mitigations
-- `references/patterns/nestjs-patterns.md` - **Core NestJS** (modules, DI, the request lifecycle order, guards/interceptors/pipes/filters, custom param decorators, config, testing) — *not part of the ironclad stack; for existing or inherited NestJS codebases; core only — codebase-specific conventions live in that repository's `AGENTS.md`*
+### Coding standards
+- `references/coding-standards/style-guide.md` — naming, types, functions, modules, comments, clean-code principles, rules for editing existing code
+- `references/coding-standards/type-patterns.md` — advanced type patterns (discriminated unions, branded types, conditional and template literal types)
+- `references/coding-standards/tooling.md` — **the tsconfig standard** (TS 7-ready), package scripts, editor settings
+
+### Patterns
+- `references/patterns/api-patterns.md` — Hono, tRPC, REST, **the `@hono/zod-openapi` single-source implementation**, API Shield parity and freshness guards, migration gotchas
+- `references/patterns/node-services.md` — Fastify 5 + Temporal workers + Zod config
+- `references/patterns/error-handling.md` — Result types, Zod validation, error classes, error boundaries
+- `references/patterns/async-patterns.md` — concurrency, cancellation, retries
+- `references/patterns/security-patterns.md` — input depth limiting and DoS defences
+- `references/patterns/nestjs-patterns.md` — core NestJS, for existing NestJS codebases (not part of the default stack)
 
 ### Testing
-- `references/testing/vitest-patterns.md` - Vitest config, mocking, coverage
-- `references/testing/testing-strategies.md` - TDD, testing pyramid, E2E with Playwright
-
-### AI Development
-- `references/ai-development/claude-code-rules.md` - TypeScript conventions for Claude Code
-- `references/ai-development/project-configuration.md` - Multi-environment project setup (rules, @import, environments)
-
-### Tech Stack (Ironclad Stack)
-- `references/tech-stack/typescript-ironclad-stack.md` - Core tech stack decisions, incl. **the Option-B back-to-front pattern (recommended default)** + the back-to-front vs front-to-back boundary (when not to use it)
-- `references/tech-stack/typescript-ironclad-infra.md` - Deployment infrastructure
-- `references/tech-stack/cloudflare.md` - Cloudflare Workers/D1/KV complete reference
-- `references/tech-stack/when-to-use-astro.md` - Decision guide: when a content-driven site should use Astro
-- `references/tech-stack/astro-content-site-stack.md` - Astro 5 content-site stack on Cloudflare (optional Payload CMS)
-- `references/tech-stack/obsidian.md` - Obsidian plugin development stack (official sample-plugin template)
+- `references/testing/vitest-patterns.md` — Vitest config, `test.projects`, mocking, coverage
+- `references/testing/testing-strategies.md` — test pyramid, integration and E2E (Playwright), CI gate
+- `references/testing/ai-testing-protocols.md` — testing requirements for agent-assisted work, behavioural evidence
+- `references/testing/jest-patterns.md` — Jest for NestJS and unmigrated suites
 
 ### Debugging
-- `references/debug/debug-statements.md` - Unconditional debug output in production code: symptoms, levelled-logger fix, detection greps
+- `references/debug/debug-statements.md` — unconditional debug output: symptoms, levelled-logger fix, detection
 
-### Frontend Resources
-- https://www.builtatlightspeed.com - Frontend themes, templates, and UI kits
+### Templates (`templates/testing/`)
+- `vitest.config.ts` — Node/backend base config
+- `vitest.config.react.ts` — React/jsdom config
+- `vitest.config.projects.ts` — monorepo root config with `test.projects`
+- `setup.ts` — global Vitest setup (custom matchers, helpers)
+- `setup.react.ts` — React Testing Library setup with constructible observer mocks
+- `jest.config.ts`, `jest.setup.ts`, `tsconfig.jest.json` — Jest with ts-jest (the tsconfig compiles tests as CommonJS)
 
-## Core Capabilities
+Templates are formatted with `/lint`'s Biome defaults (double quotes), so they pass `biome check` when copied. Code examples in `references/` are illustrative and use single quotes for brevity; the repository's formatter decides the final style.
 
-### 1. Type System Mastery
-- Advanced types (generics, conditional, mapped, template literal)
-- Type narrowing and type guards
-- Utility types and custom type builders
-- Strict compiler configuration
-- Type-safe API design with Zod
+## Core defaults
 
-### 2. Framework Integration
-- **Hono**: Type-safe routes, middleware, Workers integration
-- **tRPC**: End-to-end type-safe APIs
-- **React**: Hooks, context, performance optimization
-- **Node.js**: Async patterns, streams
-- **GraphQL**: Type-safe queries with generated types
-- **NestJS** (core): modules, DI, guards/interceptors/pipes/filters, custom decorators — see `references/patterns/nestjs-patterns.md` (non-ironclad; for existing or inherited NestJS codebases)
+| Area | Default |
+|------|---------|
+| Runtime | Node 24 LTS now; Node 26 for new projects once it is LTS (2026-10-28) |
+| Compiler | `typescript@~6.0`, strict; TS 7 only as an optional type-check-only lane |
+| Package manager | pnpm (one pinned major), installed through a pinned Corepack from the hash-pinned `packageManager` field |
+| Validation | Zod 4 at every boundary (requests, env, external data) |
+| API | `@hono/zod-openapi` Option-B for services and internal tools; tRPC for internal-only RPC; Next.js for product web apps; Fastify + Temporal for durable workflows |
+| ORM | Drizzle (internal tools, Workers) · Prisma 7 (product apps) |
+| Run / build | tsx · `tsc` · tsdown · Vite · Wrangler |
+| Test | Vitest `^4.1` (+ Playwright for E2E); Jest in NestJS codebases |
+| Lint / format | Oxlint + Biome via `/lint` |
 
-### 3. Cloudflare Workers
-- Edge-first API development
-- D1 database with Drizzle ORM
-- KV, R2, Queues, Durable Objects
-- Wrangler CLI operations
+Never run an unpinned `pnpm add -D typescript`: npm's `latest` is TypeScript 7, which has no compiler API for typescript-eslint, ts-jest or declaration bundlers. Check live versions with the commands in `version-policy.md` before writing any version.
 
-### 4. Fintech Applications
-- Financial calculations with proper decimal handling
-- Real-time trading systems and WebSocket streams
-- Payment processing integration
-- Blockchain and cryptocurrency APIs
+## Testing expectations
 
-### 5. Testing & Quality (MANDATORY for AI Development)
+- New behaviour, bug fixes (a failing test first), API endpoints, data transformations and error paths get tests. Trivial getters, constants and type-only files do not need them.
+- Coverage follows the repository's approved policy. Where none exists, propose thresholds by package and risk (80% is a starting example, not a universal minimum), measure all owned runtime source including files no test imports, and review every exclusion: a name like `types.ts` does not prove a file has no runtime code.
+- Co-locate tests (`src/user-service.ts` → `src/user-service.test.ts`); name them `*.test.ts`.
+- Run the repository's own gate (`pnpm check` or the CI-equivalent script) before calling work done.
 
-**Testing is non-negotiable for AI-driven development.** All code generated by Claude Code must have corresponding tests to validate correctness.
+## Quick reference
 
-#### Framework Selection
-| Project Type | Framework | Rationale |
-|--------------|-----------|-----------|
-| **New projects** | Vitest | Native ESM, fast, TypeScript-first |
-| **Legacy/CRA projects** | Jest | Existing infrastructure, gradual migration |
-
-#### Coverage Requirements
-- Follow the approved repository coverage policy; generic examples do not override it.
-- If no policy exists, propose thresholds by package and risk; 80% is a starting example, not a universal minimum.
-- Measure complete owned runtime source, including unimported TS/TSX; apply additional per-file floors to critical security decisions.
-- Document and review exclusions; a filename such as `types.ts` does not prove the file has no runtime code.
-- See testing references for assertion quality, provider compatibility, and evidence limits.
-
-#### When Tests Are MANDATORY
-- Any new function/method with business logic
-- Any bug fix (test proves bug exists → proves fix works)
-- Any API endpoint (request/response validation)
-- Any data transformation or calculation
-- Any error handling path
-
-#### When Tests Are OPTIONAL
-- Simple getters/setters with no logic
-- Pure configuration/constant exports
-- Type-only files (*.d.ts)
-- Trivial wrapper functions
-
-#### Quick Setup (Vitest)
 ```bash
-pnpm add -D vitest @vitest/coverage-v8
+# Add dependencies with explicit ranges (see version-policy.md)
+pnpm add zod@^4 hono@^4 @hono/zod-openapi@^1
+pnpm add -D typescript@~6.0 @types/node@^24 vitest@^4.1 @vitest/coverage-v8@^4.1 tsx@^4
+# Lint, format and hooks: /lint.
 ```
 
-#### Test Commands
-```bash
-pnpm test              # Watch mode
-pnpm test:run          # Single run (CI)
-pnpm test:coverage     # With coverage report
-pnpm test:ui           # Visual UI
-```
-
-#### File Conventions
-- Co-locate tests: `src/utils.ts` → `src/utils.test.ts`
-- Or use `__tests__/` directory for complex modules
-- Naming: `*.test.ts` or `*.spec.ts`
-
-#### Reference Files
-- `references/testing/vitest-patterns.md` - Vitest config, mocking, assertions
-- `references/testing/jest-patterns.md` - Jest for legacy projects
-- `references/testing/testing-strategies.md` - TDD, testing pyramid, E2E
-- `references/testing/ai-testing-protocols.md` - Claude Code testing requirements
-
-#### Templates
-- `templates/testing/vitest.config.ts` - Base config with 80% coverage
-- `templates/testing/setup.ts` - Global test setup
-- `templates/testing/vitest.config.react.ts` - React/DOM (jsdom) Vitest config
-- `templates/testing/setup.react.ts` - React Testing Library setup
-- `templates/testing/vitest.workspace.ts` - Monorepo Vitest workspace config
-- `templates/testing/jest.config.ts` - Legacy Jest config
-- `templates/testing/jest.setup.ts` - Legacy Jest global setup
-
-## Quick Reference
-
-### Project Setup (Ironclad Stack)
-```bash
-mkdir my-project && cd my-project
-pnpm init
-pnpm add typescript zod hono
-pnpm add -D vitest @types/node@^24 oxlint @biomejs/biome
-echo "24" > .nvmrc
-```
-
-### Type Patterns
 ```typescript
-// Result type for error handling
-type Result<T, E> =
-  | { success: true; data: T }
-  | { success: false; error: E };
+// Result type for expected failures
+type Result<T, E> = { success: true; data: T } | { success: false; error: E };
 
-// Type guards
-function isUser(value: unknown): value is User {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'id' in value
-  );
-}
+// Parse, don't cast
+const User = z.object({ id: z.uuid(), email: z.email() });
+type User = z.infer<typeof User>;
+const user = User.parse(await response.json());
 
-// Const objects over enums
-const Status = {
-  Pending: 'pending',
-  Active: 'active',
-} as const;
-type Status = typeof Status[keyof typeof Status];
+// Const object instead of enum
+const Status = { Pending: 'pending', Active: 'active' } as const;
+type Status = (typeof Status)[keyof typeof Status];
 ```
 
-## Proactive Coaching
+## Reviewing TypeScript
 
-**When reviewing TypeScript code, check:**
-1. Strict mode enabled in tsconfig.json
-2. No `any` types (use `unknown` + narrowing)
-3. Zod schemas for external data
-4. Result types for error handling
-5. Proper async/await patterns (no floating promises)
+Check, in order:
 
-**When debugging:**
-1. Check type narrowing issues
-2. Verify Zod schema matches expected data
-3. Look for unhandled promise rejections
-4. Check for null/undefined access
-
-**When optimizing:**
-1. Profile with Chrome DevTools or clinic.js
-2. Use proper memoization (useMemo, useCallback)
-3. Consider edge deployment for latency
-4. Bundle analysis with source-map-explorer
-
----
+1. The tsconfig matches `tooling.md` (strict, no `baseUrl`, TS 7-ready).
+2. No `any`, unchecked `as` or `!` without a stated reason; external data parsed with Zod.
+3. Expected failures typed (Result or specific error classes); no swallowed exceptions.
+4. No floating promises; timeouts cancel work (`AbortSignal.timeout`); concurrency bounded.
+5. Versions and ranges follow `version-policy.md`; no `"latest"` in `package.json`.
+6. Tests cover the change and assert behaviour, not implementation.

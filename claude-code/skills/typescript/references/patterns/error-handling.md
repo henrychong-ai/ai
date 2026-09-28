@@ -105,12 +105,11 @@ function flatMapResult<T, U, E>(
   return result;
 }
 
-// Usage
-const result = ok(5)
-  |> mapResult(%, x => x * 2)      // ok(10)
-  |> flatMapResult(%, x =>
-       x > 5 ? ok(x) : err('too small')
-     );                             // ok(10)
+// Usage (nested calls; JavaScript has no pipeline operator)
+const doubled = mapResult(ok(5), (x) => x * 2); // ok(10)
+const checked = flatMapResult(doubled, (x) =>
+  x > 5 ? ok(x) : err('too small'),
+); // ok(10)
 ```
 
 ---
@@ -123,9 +122,9 @@ const result = ok(5)
 import { z } from 'zod';
 
 const UserSchema = z.object({
-  id: z.string().uuid(),
-  name: z.string().min(1, 'Name is required'),
-  email: z.string().email('Invalid email format'),
+  id: z.uuid(),
+  name: z.string().min(1, { error: 'Name is required' }),
+  email: z.email({ error: 'Invalid email format' }),
   age: z.number().int().min(0).max(150),
 });
 
@@ -147,7 +146,7 @@ function parseUser(input: unknown): Result<User, z.ZodError> {
 // Usage
 const result = parseUser(requestBody);
 if (!result.success) {
-  const errors = result.error.flatten().fieldErrors;
+  const errors = z.flattenError(result.error).fieldErrors;
   return Response.json({ errors }, { status: 400 });
 }
 const user = result.data;
@@ -156,14 +155,13 @@ const user = result.data;
 ### Error Formatting
 
 ```typescript
+// First message per field; nested paths join with '.', form-level issues use '_form'
 function formatZodErrors(error: z.ZodError): Record<string, string> {
-  const flattened = error.flatten();
   const errors: Record<string, string> = {};
 
-  for (const [field, messages] of Object.entries(flattened.fieldErrors)) {
-    if (messages && messages.length > 0) {
-      errors[field] = messages[0];
-    }
+  for (const issue of error.issues) {
+    const field = issue.path.join('.') || '_form';
+    errors[field] ??= issue.message;
   }
 
   return errors;
@@ -177,18 +175,18 @@ function formatZodErrors(error: z.ZodError): Record<string, string> {
 ```typescript
 const CreateOrderSchema = z.object({
   items: z.array(z.object({
-    productId: z.string().uuid(),
+    productId: z.uuid(),
     quantity: z.number().int().positive(),
-  })).min(1, 'Order must have at least one item'),
+  })).min(1, { error: 'Order must have at least one item' }),
 
   shippingAddress: z.object({
     street: z.string().min(1),
     city: z.string().min(1),
-    postalCode: z.string().regex(/^\d{5}$/, 'Invalid postal code'),
+    postalCode: z.string().regex(/^\d{5}$/, { error: 'Invalid postal code' }),
   }),
 }).refine(
   data => data.items.every(item => item.quantity <= 100),
-  { message: 'Maximum quantity per item is 100' }
+  { error: 'Maximum quantity per item is 100' }
 );
 ```
 
@@ -199,16 +197,17 @@ const CreateOrderSchema = z.object({
 ### Base Application Error
 
 ```typescript
+import type { ContentfulStatusCode } from 'hono/utils/http-status';
+
 class AppError extends Error {
   constructor(
     message: string,
     public readonly code: string,
-    public readonly statusCode: number = 500,
+    public readonly statusCode: ContentfulStatusCode = 500, // Hono's c.json() needs this type
     public readonly details?: Record<string, unknown>
   ) {
     super(message);
     this.name = 'AppError';
-    Error.captureStackTrace(this, this.constructor);
   }
 
   toJSON() {
@@ -321,12 +320,12 @@ app.onError((error, c) => {
 ### React Error Boundary
 
 ```typescript
-import { Component, ReactNode } from 'react';
+import { Component, type ErrorInfo, type ReactNode } from 'react';
 
 type Props = {
   children: ReactNode;
   fallback: ReactNode;
-  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
 };
 
 type State = {
@@ -334,18 +333,19 @@ type State = {
   error?: Error;
 };
 
+// `override` is required by the noImplicitOverride flag in the tsconfig standard
 class ErrorBoundary extends Component<Props, State> {
-  state: State = { hasError: false };
+  override state: State = { hasError: false };
 
   static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+  override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     this.props.onError?.(error, errorInfo);
   }
 
-  render() {
+  override render() {
     if (this.state.hasError) {
       return this.props.fallback;
     }
@@ -416,16 +416,18 @@ async function fetchAllUsers(ids: Array<string>): Promise<{
   const succeeded: Array<User> = [];
   const failed: Array<{ id: string; error: string }> = [];
 
-  results.forEach((result, index) => {
-    if (result.status === 'fulfilled') {
+  // Illustrative: fetchUser here resolves to a User and rejects on failure
+  for (const [index, id] of ids.entries()) {
+    const result = results[index];
+    if (result?.status === 'fulfilled') {
       succeeded.push(result.value);
     } else {
       failed.push({
-        id: ids[index],
-        error: result.reason?.message ?? 'Unknown error',
+        id,
+        error: result?.reason instanceof Error ? result.reason.message : 'Unknown error',
       });
     }
-  });
+  }
 
   return { succeeded, failed };
 }
@@ -440,6 +442,8 @@ type RetryOptions = {
   maxDelay: number;
   backoffFactor: number;
 };
+
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 async function withRetry<T>(
   fn: () => Promise<T>,
@@ -504,6 +508,7 @@ try {
 }
 
 // ✅ Good: handle specific cases
+// Illustrative: NetworkError, showRetryDialog and showFieldErrors are app-specific
 try {
   await doSomething();
 } catch (error) {
@@ -511,7 +516,7 @@ try {
     return showRetryDialog();
   }
   if (error instanceof ValidationError) {
-    return showFieldErrors(error.fields);
+    return showFieldErrors(error.details);
   }
   throw error; // Re-throw unexpected errors
 }
@@ -562,11 +567,9 @@ app.onError((error, c) => {
 | Library | Use Case |
 |---------|----------|
 | **zod** | Schema validation with type inference |
-| **neverthrow** | Full Result/Option implementation |
-| **effect** | Comprehensive effect system |
-| **fp-ts** | Functional programming utilities |
+| **neverthrow** | Full Result type with chaining |
+| **effect** | Comprehensive effect system (successor to fp-ts) |
 
 ---
 
 *Companion to: async-patterns.md, api-patterns.md*
-*Last updated: 2025-12-31*

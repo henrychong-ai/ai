@@ -1,6 +1,6 @@
 # ECMAScript Version Features Reference
 
-Complete feature list by ECMAScript version from ES5 through ES2024.
+Feature list by ECMAScript edition, ES5 through ES2026. Editions are approved by Ecma each June; check https://tc39.es/ecma262/ and the finished-proposals list (https://github.com/tc39/proposals/blob/main/finished-proposals.md) for the current edition.
 
 **Sources:**
 - [ECMAScript-features GitHub](https://github.com/sudheerj/ECMAScript-features)
@@ -178,13 +178,13 @@ String improvements and logical assignment operators.
 | **Logical Assignment (??=)** | Nullish-assign | `x ??= default` |
 | **Numeric Separators** | Underscore in numbers | `1_000_000` |
 
-**Cannot be polyfilled:** WeakRef, FinalizationRegistry
+**Cannot be polyfilled or transpiled:** WeakRef, FinalizationRegistry (garbage-collector features)
 
 ---
 
 ## ES2022 / ES13 (June 2022)
 
-**RECOMMENDED DEFAULT TARGET** - Excellent runtime support across Node 18+ and modern browsers.
+Supported by every maintained Node line and by all current browsers.
 
 | Feature | Description | Example |
 |---------|-------------|---------|
@@ -200,7 +200,7 @@ String improvements and logical assignment operators.
 | **Error.cause** | Attach error context | `new Error('msg', { cause: err })` |
 | **RegExp Match Indices** | /d flag for positions | `/a+/d.exec('aaa').indices` |
 
-**Cannot be polyfilled:** Private class fields (#), Top-level await (module system feature)
+**Down-levelling:** TypeScript transpiles class fields and private `#fields` (via WeakMaps) for lower targets. Top-level await cannot be transpiled — it needs an ES-module runtime.
 
 ---
 
@@ -239,49 +239,58 @@ Grouping, better Unicode, and Promise improvements.
 | **ArrayBuffer.prototype.resize()** | Resizable array buffers | `buffer.resize(1024)` |
 | **ArrayBuffer.prototype.transfer()** | Transfer ownership | `buffer.transfer()` |
 
-**TypeScript requirement:** TypeScript 5.6+ required for ES2024 target
+**TypeScript requirement:** TypeScript 5.7+ required for ES2024 target
 
 ---
 
 ## ES2025 / ES16 (June 2025)
 
-Current version with recent additions.
+| Feature | Example |
+|---------|---------|
+| **Iterator helpers** | `iter.map(f).filter(g).take(3).toArray()` |
+| **Set methods** | `a.union(b)`, `a.intersection(b)`, `a.difference(b)`, `a.isSubsetOf(b)` |
+| **Import attributes and JSON modules** | `import data from './d.json' with { type: 'json' }` |
+| **`RegExp.escape()`** | `new RegExp(RegExp.escape(userText))` |
+| **RegExp pattern modifiers** | `/(?i:abc)def/` |
+| **Duplicate named capture groups** | The same group name in different alternatives of one pattern |
+| **`Promise.try()`** | `Promise.try(() => maybeSync())` |
+| **`Float16Array`, `Math.f16round()`** | Half-precision floats |
 
-| Feature | Description | Status |
-|---------|-------------|--------|
-| **Set Methods** | union, intersection, difference | Stage 4 |
-| **Iterator Helpers** | map, filter, take on iterators | Stage 4 |
-| **Duplicate Named Capture Groups** | Same name in alternation | Stage 4 |
-| **Import Attributes** | `import x from 'y' with { type: 'json' }` | Stage 4 |
-| **JSON Modules** | Native JSON import | Stage 4 |
-
----
-
-## Feature Polyfillability Matrix
-
-| Category | Polyfillable | Not Polyfillable |
-|----------|--------------|------------------|
-| **Array Methods** | All (forEach, map, flat, toSorted, etc.) | — |
-| **Object Methods** | All (entries, fromEntries, groupBy, etc.) | — |
-| **String Methods** | All (padStart, replaceAll, etc.) | — |
-| **Promise Methods** | All (allSettled, any, withResolvers) | — |
-| **Syntax** | — | ?., ??, async/await, => |
-| **Class Features** | — | Private fields (#), static blocks |
-| **BigInt** | Comparison only | Arithmetic operations |
-| **Proxy** | — | Cannot polyfill |
-| **WeakRef** | — | Cannot polyfill |
-| **RegExp** | — | Named groups, lookbehind, v flag |
-| **Modules** | — | Top-level await, dynamic import |
+**TypeScript requirement:** TypeScript 6.0+ for the `es2025` target and lib. Node 24 and 26 support the edition.
 
 ---
 
-## Version Selection Guide
+## ES2026 / ES17 (June 2026)
 
-| Scenario | Recommended Target |
-|----------|-------------------|
-| **Default for all projects** | ES2022 |
-| **Node 22+ only, no legacy support** | ES2024 |
-| **Browser support required** | ES2020 (95%+ coverage) |
-| **Legacy Node 16 support** | ES2021 |
-| **Legacy Node 14 support** | ES2020 |
-| **Legacy browser support (IE11)** | ES5 (avoid if possible) |
+Approved by the Ecma General Assembly on 2026-06-30. Highlights (verify the full list against the spec before relying on one):
+
+| Feature | Notes |
+|---------|-------|
+| **Temporal** | Modern date/time API; enabled by default in Node 26 |
+| **Explicit resource management** | `using` / `await using` declarations, `Symbol.dispose` |
+| **`Array.fromAsync()`** | Build an array from an async iterable |
+| **Map upsert** | `map.getOrInsert()`, `map.getOrInsertComputed()` |
+| **`Error.isError()`, `Math.sumPrecise()`, `Uint8Array` base64/hex** | Smaller built-in additions |
+
+TypeScript exposes these through `lib: ["esnext"]` or specific `esnext.*` libs until an `es2026` target exists; check `tsc --target es2026` on your compiler before using it.
+
+---
+
+## Native, Transpiled, Polyfilled or Impossible
+
+When the runtime is older than the feature, one of four things applies:
+
+| Category | How it reaches an older runtime | Examples |
+|---|---|---|
+| **Syntax** | Transpiled by TypeScript, SWC, esbuild or Babel when `target` is lower | `?.`, `??`, `async`/`await`, arrow functions, classes, class fields, private `#fields`, static blocks, `**` |
+| **Built-in APIs** | Polyfilled (core-js), because the method is missing at runtime, not a syntax error | `Array.prototype.at`/`findLast`/`toSorted`, `Object.groupBy`, `Promise.withResolvers`, `Set` methods, `String.prototype.replaceAll` |
+| **Engine features** | Impossible — no transpile or polyfill reproduces them | `Proxy`, `WeakRef`/`FinalizationRegistry`, BigInt arithmetic, RegExp lookbehind/named groups/`v` flag/modifiers, `SharedArrayBuffer`/`Atomics` |
+| **Module-system features** | Need an ES-module runtime | Top-level await, import attributes |
+
+Transpiling syntax costs bundle size and sometimes semantics (class field define semantics — see `es-upgrade-checklist.md`); raising the target removes that cost only when every runtime supports the syntax natively.
+
+---
+
+## Choosing a target
+
+Choose from the runtime, not from this list: use the Node mapping in `es-upgrade-checklist.md` for server code and the browser floor in `browser-support.md` for front ends. Record your default in your TypeScript standards.

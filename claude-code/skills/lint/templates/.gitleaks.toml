@@ -26,7 +26,7 @@ useDefault = true
 id = "dotenv-file-committed"
 description = "Committing a .env file is not allowed — use 'op run' / AWS Secrets Manager"
 path = '''(^|/)\.env(\.[^/]+)?$'''
-  [rules.allowlist]
+  [[rules.allowlists]]
   description = "Permit example/template env files"
   paths = ['''(^|/)\.env\.(example|sample|template|dist)$''']
 

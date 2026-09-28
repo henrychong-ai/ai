@@ -1,182 +1,66 @@
-# Go Linting + Formatting with golangci-lint
+# Go Linting + Formatting with golangci-lint v2
 
-golangci-lint is the standard Go linter, aggregating 100+ linters into a single fast tool. It also handles formatting via built-in gofumpt — no standalone gofumpt binary needed.
+golangci-lint runs Go linters and formatters (gofmt, goimports, gofumpt) from one binary and one `.golangci.yml`. All configuration here targets **golangci-lint v2** (validated against v2.14.0); a v1 binary cannot read it.
+
+## Baseline vs Strict
+
+| Profile | Template | Linters | Formatters | Use |
+|---------|----------|---------|------------|-----|
+| **Baseline** (default) | `templates/.golangci.yml` | v2 `standard` set: errcheck, govet, ineffassign, staticcheck, unused | gofmt, goimports | Every Go repo. Low-friction default that most codebases pass with few changes. |
+| **Strict** (opt-in) | `templates/.golangci.strict.yml` | `default: all` minus a documented disable list | gofumpt, goimports | Deliberate adoption on a new or clean codebase. Expect many findings on existing code; fix them before making CI blocking. |
+
+Copy the chosen template to the module root as `.golangci.yml`, then run `golangci-lint config verify`.
 
 ## Installation
 
-### macOS
+Pin an exact v2 release in every install (local, CI, pre-commit) so all environments report the same issues. Releases: <https://github.com/golangci/golangci-lint/releases>.
+
 ```bash
+# Binary (upstream-recommended): installs the pinned version into $(go env GOPATH)/bin
+curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.14.0
+
+# macOS
 brew install golangci-lint
+
+# Verify
+golangci-lint version
 ```
 
-### Go Install
-```bash
-go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-```
-
-### Binary Download
-```bash
-curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
-```
+Source installs use the **v2 module path**: `go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0`. The old path without `/v2` installs v1. Upstream does not guarantee `go install`, `go get -tool` / `go tool`, or the "tools pattern" (results depend on the local Go version and untested dependency versions) and recommends the binary install.
 
 ## Configuration
 
-### golangci-lint v2 (2025+)
+### Setup Check
 
-**Note:** v2 introduced breaking changes. Use `golangci-lint migrate` to convert v1 configs.
+```bash
+golangci-lint config verify          # validates .golangci.yml against the v2 schema
+golangci-lint linters                # shows which linters and formatters are enabled
+```
 
-### Strict Configuration (.golangci.yml)
-
-Based on patterns from Google Go projects and community standards:
-- [google/osv-scanner](https://github.com/google/osv-scanner) — uses `default: all` approach
-- [google/go-github](https://github.com/google/go-github) — most comprehensive Google config
-- [prometheus/prometheus](https://github.com/prometheus/prometheus), [etcd-io/etcd](https://github.com/etcd-io/etcd), [open-telemetry/opentelemetry-go](https://github.com/open-telemetry/opentelemetry-go)
-- [maratori/golangci-lint-config](https://github.com/maratori/golangci-lint-config)
+### Baseline (`templates/.golangci.yml`)
 
 ```yaml
 version: "2"
 
 linters:
-  # Enable all linters, disable specific ones
-  # Same approach as google/osv-scanner
-  default: all
-  disable:
-    - depguard          # Dependency guard — enable per-project with custom deny rules
-    - exhaustruct       # Require all struct fields initialized (too strict)
-    - ireturn           # Accept interfaces, return concrete (too opinionated)
-    - varnamelen        # Variable name length (too strict for idiomatic Go)
-    - wrapcheck         # Error wrapping enforcement (handled manually)
-    - nlreturn          # Newline before return (style opinion)
-    - wsl               # Whitespace linter (style opinion)
-    - godox             # TODO/FIXME/BUG comments (noisy during development)
-    - err113            # Dynamic errors (too strict, conflicts with fmt.Errorf)
-    - testpackage       # Require _test package (blocks white-box testing)
-    - paralleltest      # Require t.Parallel (not always appropriate)
-    - thelper           # Require t.Helper (too strict)
-    - cyclop            # Redundant with gocyclo/gocognit
-    - forcetypeassert   # Allow unchecked type assertions (checked by errcheck)
-    - tagliatelle       # Struct tag naming convention (too opinionated)
-    - nonamedreturns    # Named returns useful for documentation
-    - mnd               # Magic number detection (too noisy)
-    - funlen            # Function length — use gocognit for complexity instead
-    - lll               # Line length — gofumpt handles formatting
+  default: standard            # errcheck, govet, ineffassign, staticcheck, unused
+  settings:
+    errcheck:
+      exclude-functions: []    # add repo-specific closers only if the preset misses them
+  exclusions:
+    generated: lax
+    warn-unused: true
+    presets:
+      - comments
+      - std-error-handling     # .Close, .Flush, os.Remove(All), fmt.Print*, os.(Un)Setenv, ...
+      - common-false-positives
 
 formatters:
   enable:
-    - gofumpt       # Stricter than gofmt — no standalone install needed
+    - gofmt
     - goimports
-
-linters-settings:
-  gofumpt:
-    extra-rules: true
-
-  errcheck:
-    check-type-assertions: true
-    check-blank: true
-    # No exclude-functions needed — the std-error-handling preset already covers:
-    # .*Close, .*Flush, os.Remove(All), fmt.Print*, os.(Un)Setenv, stdout/stderr
-
-  gocyclo:
-    min-complexity: 15
-
-  gocognit:
-    min-complexity: 20
-
-  govet:
-    enable-all: true
-    disable:
-      - fieldalignment  # Disabled in every Google project that customizes govet
-    settings:
-      shadow:
-        strict: true
-
-  revive:
-    severity: warning
-    rules:
-      - name: blank-imports
-      - name: context-as-argument
-      - name: context-keys-type
-      - name: dot-imports
-      - name: early-return
-      - name: empty-block
-      - name: error-return
-      - name: error-strings
-      - name: error-naming
-      - name: errorf
-      - name: exported
-      - name: if-return
-      - name: increment-decrement
-      - name: indent-error-flow
-      - name: package-comments
-      - name: range
-      - name: receiver-naming
-      - name: redefines-builtin-id
-      - name: superfluous-else
-      - name: time-naming
-      - name: unexported-return
-      - name: unreachable-code
-      - name: unused-parameter
-      - name: var-declaration
-      - name: var-naming
-
-  gosec:
-    severity: medium
-    confidence: medium
-
-  gocritic:
-    enabled-tags:
-      - diagnostic
-      - style
-      - performance
-      - experimental
-      - opinionated
-
-  nakedret:
-    max-func-lines: 0   # Disallow naked returns entirely
-
-  staticcheck:
-    checks:
-      - all
-      - -ST1000         # Package comments (handled by revive)
-      - -ST1020         # Comment on exported method (too noisy for existing codebases)
-      - -ST1021         # Comment on exported type (too noisy for existing codebases)
-      - -ST1022         # Comment on exported const (too noisy for existing codebases)
-      - -QF1008         # Embedded field selector (style preference)
-
-  nolintlint:
-    require-explanation: true
-    require-specific: true
-
-exclusions:
-  generated: lax
-  warn-unused: true
-  presets:
-    - comments
-    - std-error-handling
-    - common-false-positives
-
-  rules:
-    # Relax checks in test files
-    - path: _test\.go
-      linters:
-        - errcheck
-        - gosec
-        - goconst
-        - dupl
-        - noctx
-
-    # Exclude generated files
-    - path: \.pb\.go$
-      linters:
-        - all
-
-    - path: _mock\.go$
-      linters:
-        - all
-
-    - path: \.gen\.go$
-      linters:
-        - all
+  exclusions:
+    generated: lax
 
 issues:
   max-issues-per-linter: 0
@@ -184,88 +68,76 @@ issues:
 
 output:
   formats:
-    - format: colored-line-number
-  sort-results: true
+    text:
+      path: stdout
   sort-order:
     - linter
     - file
 ```
 
-### Minimal Configuration (Quick Start)
-```yaml
-version: "2"
+### Strict (`templates/.golangci.strict.yml`)
 
-linters:
-  default: standard
+Starts from `linters.default: all` and disables linters that are too noisy or opinionated for general use (including `wsl`, its successor `wsl_v5`, and the deprecated `gomodguard`). It configures errcheck, govet (all analysers except fieldalignment, strict shadow), revive, gosec, gocritic, nakedret, staticcheck and nolintlint, and uses gofumpt (`extra.group-params`, which replaces the deprecated `extra-rules`). The pattern follows `default: all` configs from google/osv-scanner, google/go-github, prometheus and etcd. Read the template for the full list with a reason per entry.
 
-formatters:
-  enable:
-    - gofumpt
-    - goimports
+### v2 Layout (common mistakes)
 
-linters-settings:
-  gofumpt:
-    extra-rules: true
+| v1 / wrong | v2 |
+|------------|-----|
+| top-level `linters-settings:` | `linters.settings:` |
+| top-level `exclusions:` or `issues.exclude-rules` | `linters.exclusions:` (`rules`, `paths`, `presets`, `generated`) |
+| `enable-all` / `disable-all` | `linters.default: all \| standard \| fast \| none` |
+| gofmt/goimports/gofumpt under `linters.enable` | `formatters.enable` (settings under `formatters.settings`) |
+| `output.formats: - format: colored-line-number` | `output.formats: { text: { path: stdout } }` (map form) |
+| `output.sort-results` | removed; `output.sort-order` only |
+| `run.skip-dirs` | `linters.exclusions.paths` |
+| `gosimple`, `stylecheck` linters | merged into `staticcheck` |
+
+### Migrating a v1 Config
+
+Some repos still pin golangci-lint v1 (for example as a Go `tool` dependency). To move them to v2:
+
+```bash
+golangci-lint migrate                # rewrites .golangci.yml to the v2 layout (keeps a backup)
+golangci-lint config verify
 ```
+
+Then install a pinned v2 binary, and drop the v1 `tool` directive from `go.mod` (`go get -tool github.com/golangci/golangci-lint/cmd/golangci-lint@none`) if the repo used one.
 
 ## Commands
 
 ```bash
-# Basic lint
-golangci-lint run
-
-# Lint with auto-fix
-golangci-lint run --fix
-
-# Lint specific packages
-golangci-lint run ./pkg/...
-
-# Fast mode (subset of linters)
-golangci-lint run --fast
-
-# Show all enabled linters
-golangci-lint linters
-
-# Verbose output
-golangci-lint run -v
-
-# Generate config
-golangci-lint config
-
-# Migrate v1 to v2
-golangci-lint migrate
+golangci-lint run ./...              # lint + formatter checks
+golangci-lint run --fix ./...        # apply linter fixes and formatting
+golangci-lint fmt ./...              # format only (enabled formatters)
+golangci-lint run --fast-only ./...  # only linters marked fast (v2 flag; v1's --fast is gone)
+golangci-lint run -v ./...           # verbose
+golangci-lint linters                # enabled/disabled linters
+golangci-lint config verify          # validate config
+golangci-lint migrate                # convert a v1 config to v2
 ```
 
 ## Key Linters
 
-### Must-Have
+### Baseline (`standard`)
 | Linter | Purpose |
 |--------|---------|
-| `staticcheck` | Advanced static analysis |
-| `govet` | Go vet checks |
 | `errcheck` | Unchecked errors |
-| `gosimple` | Code simplification |
+| `govet` | Suspicious constructs (`go vet`) |
 | `ineffassign` | Ineffective assignments |
+| `staticcheck` | Static analysis, including the former gosimple and stylecheck checks |
 | `unused` | Unused code |
 
-### Recommended
+### Common Additions (enabled by the strict profile)
 | Linter | Purpose |
 |--------|---------|
 | `gosec` | Security issues |
-| `gocyclo` | Cyclomatic complexity |
 | `gocritic` | Opinionated checks |
-| `revive` | Fast, configurable linter |
+| `revive` | Configurable style rules |
+| `gocognit` / `gocyclo` | Complexity |
+| `bodyclose` / `noctx` | HTTP response body close, requests without context |
 | `misspell` | Spelling mistakes |
-| `prealloc` | Slice preallocation |
 
-### Strict Additions
-| Linter | Purpose |
-|--------|---------|
-| `gocognit` | Cognitive complexity |
-| `dupl` | Code duplication |
-| `goconst` | Repeated strings |
-| `noctx` | HTTP requests without context |
-| `bodyclose` | HTTP response body close |
+To add a few linters to the baseline instead of switching profile, keep `default: standard` and list them under `linters.enable`.
 
 ## Makefile Integration
 
@@ -273,16 +145,15 @@ golangci-lint migrate
 .PHONY: lint lint-fix
 
 lint:
-	golangci-lint run
+	golangci-lint run ./...
 
 lint-fix:
-	golangci-lint run --fix
-
-lint-verbose:
-	golangci-lint run -v --timeout=5m
+	golangci-lint run --fix ./...
 ```
 
 ## CI/CD Integration
+
+Pin the golangci-lint version and take the Go version from `go.mod`.
 
 ### GitHub Actions
 ```yaml
@@ -293,104 +164,68 @@ jobs:
   golangci:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
-          go-version: '1.26'
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+          go-version-file: go.mod
+      - uses: golangci/golangci-lint-action@v9   # v7+ supports golangci-lint v2 only
         with:
-          version: latest
-          args: --timeout=5m
+          version: v2.14
 ```
 
-### GitLab CI
+### Bitbucket Pipelines
 ```yaml
-lint:
-  image: golangci/golangci-lint:latest
-  script:
-    - golangci-lint run --timeout=5m
+- step:
+    name: Lint Go
+    image: golang:1.27   # match the go directive in go.mod (1.25 and older are end of life)
+    script:
+      - curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.14.0
+      - golangci-lint run ./...
 ```
+
+A runner that already provides a pinned golangci-lint binary on `PATH` can skip the install line.
 
 ## Pre-commit Hook
+
+golangci-lint lints **packages, not file lists**, so hooks run it on `./...` rather than on the staged file names.
+
+### lint-staged
+```js
+'*.go': () => 'golangci-lint run --fix ./...',
+```
 
 ### .pre-commit-config.yaml
 ```yaml
 repos:
   - repo: https://github.com/golangci/golangci-lint
-    rev: v1.62.0
+    rev: v2.14.0
     hooks:
-      - id: golangci-lint
-```
-
-### Manual Hook (.git/hooks/pre-commit)
-```bash
-#!/bin/sh
-golangci-lint run --fix
+      - id: golangci-lint-full        # golangci-lint run --fix
+      - id: golangci-lint-config-verify
 ```
 
 ## Troubleshooting
 
-### Slow Performance
-```yaml
-# Reduce timeout
-run:
-  timeout: 5m
-
-# Use fast preset
-linters:
-  default: fast
-```
-
-### Too Many False Positives
-```yaml
-exclusions:
-  presets:
-    - comments
-    - std-error-handling
-    - common-false-positives
-```
-
-### Memory Issues
-```bash
-# Increase memory limit
-GOGC=100 golangci-lint run
-```
-
-### Specific File Exclusions
-```yaml
-exclusions:
-  rules:
-    - path: ".*_test\\.go"
-      linters:
-        - errcheck
-    - path: "generated/"
-      linters:
-        - all
-```
+| Issue | Fix |
+|-------|-----|
+| `can't load config` / "additional properties … not allowed" | v1 layout: run `golangci-lint migrate`, then `config verify` |
+| `unknown flag: --fast` | v2 renamed it to `--fast-only` |
+| Formatter findings after `gofmt -w` | Formatting is owned by golangci-lint's formatters (gofumpt in strict); run `golangci-lint fmt` or `run --fix`, not a separate gofmt |
+| Warnings about unmatched exclusion rules | `linters.exclusions.warn-unused: true` reports stale rules; remove them or set it to `false` for generic rules |
+| Slow first run | Normal (cold cache); set `run.timeout` only if CI needs a hard cap |
+| Generated files flagged | Keep `exclusions.generated: lax`; add `linters.exclusions.paths` / `formatters.exclusions.paths` for generated files without a "Code generated" header |
 
 ## Editor Integration
 
-### VSCode settings.json
+### VS Code (Go extension)
 ```json
 {
-  "go.lintTool": "golangci-lint",
-  "go.lintFlags": ["--fast"],
+  "go.lintTool": "golangci-lint-v2",
   "go.lintOnSave": "package"
 }
 ```
 
+Use `"go.lintFlags": ["--fast-only"]` for faster on-save feedback.
+
 ### GoLand
 Settings → Tools → Go Linter → golangci-lint
-
-## Migration from v1 to v2
-
-```bash
-# Automatic migration
-golangci-lint migrate
-
-# Key changes:
-# - enable-all/disable-all → linters.default: all/none/standard/fast
-# - run.skip-dirs → exclusions.paths
-# - issues.exclude-rules → exclusions.rules
-```

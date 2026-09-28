@@ -408,7 +408,7 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   webServer: {
-    command: 'npm run dev',
+    command: 'pnpm dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
   },
@@ -471,44 +471,16 @@ test('invalid credentials show error', async ({ page }) => {
 
 ## Testing in CI
 
-### GitHub Actions
+CI runs the same gate as local development (`pnpm check`, or the repository's CI-equivalent script) on a clean checkout with `pnpm install --frozen-lockfile`. A minimal job, whatever the CI system:
 
-```yaml
-# .github/workflows/test.yml
-name: Test
-
-on: [push, pull_request]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: 'pnpm'
-
-      - run: pnpm install
-      - run: pnpm test:coverage
-
-      - uses: codecov/codecov-action@v3
-        with:
-          files: ./coverage/lcov.info
+```bash
+# Node image on the same line as .nvmrc
+npm install -g corepack@<pinned> && corepack enable   # pnpm from packageManager, hash-checked
+pnpm install --frozen-lockfile
+pnpm check
 ```
 
-### Test Splitting for Speed
-
-```yaml
-jobs:
-  test:
-    strategy:
-      matrix:
-        shard: [1, 2, 3, 4]
-    steps:
-      - run: pnpm test --shard=${{ matrix.shard }}/4
-```
+Split long suites with `vitest run --shard=<index>/<count>` across parallel jobs.
 
 ---
 
@@ -560,7 +532,7 @@ it('should export constant', () => {
 });
 
 // ✅ Focus on critical paths and edge cases
-// 80% meaningful coverage > 100% meaningless coverage
+// Meaningful coverage of behaviour beats a high percentage of trivial lines
 ```
 
 ---
@@ -580,4 +552,3 @@ it('should export constant', () => {
 ---
 
 *Companion to: vitest-patterns.md, jest-patterns.md, ai-testing-protocols.md*
-*Last updated: 2026-01-15*

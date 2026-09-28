@@ -5,14 +5,15 @@
  *
  * Features:
  * - TypeScript support with globals
- * - 80% coverage thresholds (enforced)
+ * - Example 80% coverage floor (the repository's approved policy wins)
  * - V8 coverage provider
  * - Path aliases (update to match your tsconfig.json)
  *
  * @see https://vitest.dev/config/
  */
-import { defineConfig } from 'vitest/config';
-import path from 'path';
+
+import path from "path";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
@@ -20,39 +21,33 @@ export default defineConfig({
     globals: true,
 
     // Environment: 'node' for backend, 'jsdom' for frontend
-    environment: 'node',
+    environment: "node",
 
     // Test file patterns
-    include: ['**/*.test.ts', '**/*.spec.ts'],
-    exclude: ['**/node_modules/**', '**/dist/**', '**/e2e/**'],
+    include: ["**/*.test.ts", "**/*.spec.ts"],
+    exclude: ["**/node_modules/**", "**/dist/**", "**/e2e/**"],
 
     // Path aliases (must match tsconfig.json)
     alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@/': path.resolve(__dirname, './src/'),
+      "@": path.resolve(import.meta.dirname, "./src"),
     },
 
     // Coverage configuration
     coverage: {
       // Use V8 for fast, accurate coverage
-      provider: 'v8',
+      provider: "v8",
 
       // Output formats
-      reporter: ['text', 'json', 'html', 'lcov'],
+      reporter: ["text", "json", "html", "lcov"],
 
       // Files to include in coverage
-      include: ['src/**/*.ts'],
+      include: ["src/**/*.ts"],
 
       // Files to exclude from coverage
-      exclude: [
-        'src/**/*.test.ts',
-        'src/**/*.spec.ts',
-        'src/**/*.d.ts',
-        'src/types/**',
-        'src/index.ts', // Entry points often just re-export
-      ],
+      // Exclude a file only after checking it has no runtime code
+      exclude: ["src/**/*.test.ts", "src/**/*.spec.ts", "src/**/*.d.ts"],
 
-      // Coverage thresholds (80% minimum - ENFORCED)
+      // Example floor: replace with the repository's approved coverage policy
       thresholds: {
         lines: 80,
         functions: 80,
@@ -62,10 +57,7 @@ export default defineConfig({
     },
 
     // Reporter configuration
-    reporters: ['default'],
-
-    // Pool configuration (threads for speed, forks for isolation)
-    pool: 'threads',
+    reporters: ["default"],
 
     // Timeout for individual tests (ms)
     testTimeout: 10000,

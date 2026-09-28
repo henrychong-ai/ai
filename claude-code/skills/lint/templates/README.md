@@ -1,116 +1,84 @@
 # Lint Skill Templates
 
-Ready-to-copy configuration files for linting and formatting.
+Ready-to-copy configuration files. Paths are relative to this `templates/` directory.
 
-## Template Selection by Ecosystem
+## TypeScript/JavaScript
 
-### TypeScript/JavaScript (All Projects)
-
-**Always copy:**
 ```bash
-cp oxlint.json biome.json tsconfig.json /your/project/
+cp .oxlintrc.json biome.json <project>/
+cp eslint.config.mjs <project>/        # only for residual ESLint gap plugins
 ```
 
-**If residual ESLint needed (Vue templates, Astro, Tailwind, Playwright, Obsidian, Compat):**
-```bash
-cp eslint.config.mjs /your/project/
-```
-Uncomment relevant sections in `eslint.config.mjs`.
+Set Oxlint `plugins` for the project type, and keep only the needed sections of `eslint.config.mjs`:
 
-| Project Type | Residual ESLint Needed? | Sections to Uncomment |
-|--------------|------------------------|----------------------|
-| React | No (oxlint built-in) | - |
-| Next.js | No (oxlint built-in) | - |
-| Node.js | No (oxlint built-in) | - |
-| Vitest/Jest | No (oxlint built-in) | - |
+| Project type | Residual ESLint? | Section |
+|--------------|------------------|---------|
+| React, Vite + React, Next.js, Node.js, Vitest/Jest | No (Oxlint built in) | - |
 | Vue | Yes | vue |
 | Astro | Yes | astro |
-| Tailwind CSS | Yes | better-tailwindcss |
+| Tailwind CSS v4 | Yes | better-tailwindcss |
 | Playwright | Yes | playwright |
-| Obsidian | Yes | obsidianmd |
 | Browser compat | Yes | compat |
 
-### Python
+tsconfig comes from the `/typescript` skill.
+
+## Git Hooks (every repo)
 
 ```bash
-cp pyproject.toml /your/project/
+mkdir -p <project>/.husky
+cp .husky/pre-commit .husky/commit-msg <project>/.husky/
+cp .gitleaks.toml lint-staged.config.mjs commitlint.config.mjs <project>/
 ```
 
-### Go
+Then in the project:
 
 ```bash
-cp .golangci.yml /your/project/
-```
-
-### .NET/C#
-
-```bash
-cp .editorconfig /your/project/
-```
-
-### Solidity
-
-```bash
-cp .solhint.json /your/project/
-```
-
-## Optional Templates
-
-### IDE Integration
-
-```bash
-mkdir -p .vscode && cp .vscode/settings.json /your/project/.vscode/
-```
-
-### CI/CD Workflows
-
-| Platform | Command |
-|----------|---------|
-| GitHub Actions | `mkdir -p .github/workflows && cp .github/workflows/lint.yml /your/project/.github/workflows/` |
-| Bitbucket | `cp bitbucket-pipelines.yml /your/project/` |
-
-### Pre-commit Hooks (lint-staged + gitleaks secret scan)
-
-```bash
-mkdir -p .husky && cp .husky/pre-commit /your/project/.husky/
-cp lint-staged.config.js /your/project/
-cp .gitleaks.toml /your/project/          # canonical secret-scan config (repo root)
-```
-
-Then run:
-```bash
-pnpm add -D husky lint-staged
+pnpm add -D husky lint-staged @commitlint/cli @commitlint/config-conventional
 pnpm exec husky init
-brew install gitleaks                      # the hook calls gitleaks; CI enforces it too
+brew install gitleaks
 ```
 
-The hook runs **gitleaks** (blocks secrets + `.env` files) before lint-staged. The same `.gitleaks.toml` is auto-discovered by a gitleaks secret-scan step in your CI pipeline — single source, no drift.
+The pre-commit hook runs gitleaks (blocks secrets and `.env` files) and then lint-staged; the commit-msg hook runs commitlint. The CI secret-scan step reads the same `.gitleaks.toml`.
 
-### Project Instructions (AGENTS.md + CLAUDE.md shim)
+## Other Languages
 
 ```bash
-cp AGENTS.md.template /your/project/AGENTS.md
-printf '@AGENTS.md\n' > /your/project/CLAUDE.md   # import shim for Claude Code
+cp pyproject.toml <project>/                                   # Python: merge the tables
+cp .golangci.yml <project>/                                    # Go baseline
+cp .golangci.strict.yml <project>/.golangci.yml                # Go strict profile (opt-in)
+cp .editorconfig <solution-root>/                              # .NET
+cp .solhint.json <project>/                                    # Solidity
+cp test/.solhint.json <project>/test/                          # Solidity test-directory overrides
 ```
 
-**Important:** Edit AGENTS.md and delete unused sections to save tokens.
+Run `golangci-lint config verify` after copying a Go config.
+
+## Editor and Project Instructions
+
+```bash
+mkdir -p <project>/.vscode && cp .vscode/settings.json .vscode/extensions.json <project>/.vscode/
+```
+
+Merge `AGENTS.md.template` into the project's `AGENTS.md` (with a one-line `@AGENTS.md` `CLAUDE.md` shim) and delete the parts that do not apply.
 
 ## Template List
 
 | File | Ecosystem | Purpose |
 |------|-----------|---------|
-| `AGENTS.md.template` | All | Project instructions (`AGENTS.md`, imported by a `CLAUDE.md` `@AGENTS.md` shim) |
-| `oxlint.json` | TS/JS | Oxlint config with plugin sections |
-| `biome.json` | TS/JS | Biome formatter (linter disabled) |
+| `.oxlintrc.json` | TS/JS | Oxlint config (auto-discovered) |
+| `biome.json` | TS/JS | Biome formatter + import sorting, linter off |
 | `eslint.config.mjs` | TS/JS | Residual ESLint (gap plugins only) |
-| `tsconfig.json` | TS/JS | Strict TypeScript compiler options |
-| `.vscode/settings.json` | All | VSCode format-on-save (Biome + Oxlint) |
-| `.github/workflows/lint.yml` | All | GitHub Actions CI |
-| `bitbucket-pipelines.yml` | All | Bitbucket Pipelines CI |
-| `.husky/pre-commit` | All | Pre-commit hook (gitleaks secret-scan + lint-staged) |
-| `.gitleaks.toml` | All | Canonical gitleaks config — blocks secrets + .env (copy to repo root) |
-| `lint-staged.config.js` | All | Lint-staged configuration |
-| `pyproject.toml` | Python | Ruff + mypy config |
-| `.golangci.yml` | Go | golangci-lint v2 config |
-| `.editorconfig` | .NET | Roslyn analyzer settings |
+| `lint-staged.config.mjs` | All | Staged-file commands |
+| `.husky/pre-commit` | All | gitleaks secret scan, then lint-staged |
+| `.husky/commit-msg` | All | commitlint |
+| `commitlint.config.mjs` | All | Commit header rules |
+| `.gitleaks.toml` | All | Canonical gitleaks config |
+| `.vscode/settings.json` | TS/JS | Biome format-on-save, Oxlint fix-on-save |
+| `.vscode/extensions.json` | TS/JS | Recommended extensions |
+| `AGENTS.md.template` | All | Code-quality section for AGENTS.md |
+| `pyproject.toml` | Python | Ruff + mypy |
+| `.golangci.yml` | Go | golangci-lint v2 baseline |
+| `.golangci.strict.yml` | Go | golangci-lint v2 opt-in strict profile |
+| `.editorconfig` | .NET | Style and analyzer severities |
 | `.solhint.json` | Solidity | Solhint rules |
+| `test/.solhint.json` | Solidity | Test and harness relaxations (nested config) |

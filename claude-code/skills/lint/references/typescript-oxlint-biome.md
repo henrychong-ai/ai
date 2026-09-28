@@ -1,101 +1,36 @@
-# TypeScript/JavaScript Linting with Oxlint + Biome
+# TypeScript/JavaScript: Oxlint + Biome
 
-Primary linting via Oxlint (668 built-in rules, native plugins). Formatting via Biome (Prettier-compatible, linter disabled). Type checking via tsc.
+Oxlint lints, Biome formats and sorts imports (its linter stays off), `tsc --noEmit` type-checks. Residual ESLint is added only for gap plugins (`typescript-residual-eslint.md`).
 
-## Architecture
+Tool versions and upgrade policy (Node, TypeScript, pnpm, lint tools) are owned by `/typescript` → `references/tech-stack/version-policy.md`. Check live versions before pinning: `npm view oxlint version`, `npm view @biomejs/biome version`.
 
-```
-┌─────────────────────────────────┐
-│ Oxlint (primary linter)         │  No npm deps for linting
-│  └─ 668 built-in rules          │
-│  └─ Native plugins (below)      │
-├─────────────────────────────────┤
-│ Biome (formatter only)          │  1 npm dep: @biomejs/biome
-│  └─ Prettier-compatible         │
-│  └─ Import sorting              │
-│  └─ Linter DISABLED             │
-├─────────────────────────────────┤
-│ Residual ESLint (gap only)      │  Only when gap plugins needed
-│  └─ eslint-plugin-oxlint        │
-│  └─ Vue/Astro/Tailwind/etc.     │
-├─────────────────────────────────┤
-│ tsc (type checker)              │  Unchanged
-└─────────────────────────────────┘
-```
+## Packages
 
-## Package Overview
+| Package | Purpose |
+|---------|---------|
+| `oxlint` | Linter (Rust, built-in plugins, no plugin packages to install) |
+| `@biomejs/biome` | Formatter + import sorting |
+| `typescript` | Type checker (pin per `/typescript` version policy) |
 
-### Core Packages (Always Required)
-
-| Package | Purpose | Install |
-|---------|---------|---------|
-| `oxlint` | Primary linter (668 rules, native plugins) | `pnpm add -D oxlint` |
-| `@biomejs/biome` | Formatter + import sorting (linter disabled) | `pnpm add -D @biomejs/biome` |
-| `typescript` | Type checker | `pnpm add -D typescript` |
-
-### Residual ESLint Packages (Only When Gap Plugins Needed)
-
-| Package | When | Purpose |
-|---------|------|---------|
-| `eslint` | Gap plugins detected | ESLint engine |
-| `eslint-plugin-oxlint` | Always with residual ESLint | Disables rules oxlint covers |
-| `eslint-plugin-vue` | Vue projects | Template linting |
-| `eslint-plugin-astro` | Astro projects | .astro file support |
-| `eslint-plugin-better-tailwindcss` | Tailwind v4 | Class validation + sorting |
-| `eslint-plugin-playwright` | Playwright E2E | Test rules |
-| `eslint-plugin-obsidianmd` | Obsidian plugins | Plugin-specific rules |
-| `eslint-plugin-compat` | Frontend + browserslist | Browser compat checking |
-
-## Installation
-
-### Bare Minimum (All TypeScript Projects) — 3 packages
 ```bash
-pnpm add -D oxlint @biomejs/biome typescript
+pnpm add -D oxlint @biomejs/biome
 ```
 
-### React / Next.js — 3 packages (no extra deps!)
-```bash
-pnpm add -D oxlint @biomejs/biome typescript
-# React, Next.js, jsx-a11y plugins are built into oxlint
-# Just add "react", "jsx-a11y", "nextjs" to oxlint.json plugins
-```
+## Oxlint
 
-### Vue — 5 packages (residual ESLint for templates)
-```bash
-pnpm add -D oxlint @biomejs/biome typescript
-pnpm add -D eslint eslint-plugin-oxlint eslint-plugin-vue
-```
+### Config file: `.oxlintrc.json`
 
-### With Tailwind — 5 packages (residual ESLint for class rules)
-```bash
-pnpm add -D oxlint @biomejs/biome typescript
-pnpm add -D eslint eslint-plugin-oxlint eslint-plugin-better-tailwindcss
-```
+Oxlint auto-discovers only `.oxlintrc.json`, `.oxlintrc.jsonc`, `oxlint.config.ts` and `oxlint.config.mts`. Use `templates/.oxlintrc.json`. A repo that keeps a file named `oxlint.json` must pass `-c oxlint.json` in every script, lint-staged entry and CI step; without it Oxlint silently runs its defaults and ignores the file.
 
-## Oxlint Configuration
-
-### oxlint.json
-
-```jsonc
+```json
 {
-  "$schema": "https://raw.githubusercontent.com/nicolo-ribaudo/oxlint-config-schema/refs/heads/main/schema.json",
-  "plugins": [
-    "import",
-    "promise"
-    // Add based on project type:
-    // React: "react", "jsx-a11y"
-    // React + perf: "react", "jsx-a11y", "react-perf"
-    // Next.js: "react", "jsx-a11y", "nextjs"
-    // Node.js: "node"
-    // Vitest: "vitest"
-    // Jest: "jest"
-    // JSDoc: "jsdoc"
-  ],
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc", "import", "promise"],
   "categories": {
     "correctness": "error",
     "suspicious": "warn",
     "pedantic": "off",
-    "style": "warn",
+    "style": "off",
     "restriction": "off",
     "nursery": "off"
   },
@@ -104,339 +39,172 @@ pnpm add -D eslint eslint-plugin-oxlint eslint-plugin-better-tailwindcss
     "import/no-duplicates": "error",
     "import/no-cycle": "warn",
     "import/no-self-import": "error",
+    "import/no-unassigned-import": ["warn", { "allow": ["**/*.css"] }],
+    "typescript/consistent-type-imports": "error",
+    "typescript/no-explicit-any": "error",
     "unicorn/filename-case": ["error", { "cases": { "kebabCase": true, "pascalCase": true } }],
-    "unicorn/prevent-abbreviations": "off",
     "unicorn/no-null": "off"
   },
   "ignorePatterns": [
-    "dist", "build", "node_modules", ".next", ".nuxt", ".output", "coverage"
+    "dist",
+    "build",
+    "coverage",
+    ".next",
+    ".nuxt",
+    ".output",
+    ".wrangler",
+    "*.config.js",
+    "*.config.mjs"
+  ],
+  "overrides": [
+    {
+      "files": ["**/tests/setup.*", "**/test/setup.*", "**/*.setup.*", "**/setupTests.*"],
+      "rules": {
+        "import/no-unassigned-import": "off"
+      }
+    }
   ]
 }
 ```
 
-### Built-in Plugin Coverage
+Key points:
+- **`plugins` replaces the default set.** List every plugin you want, including `typescript`, `unicorn` and `oxc`; any plugin left out is switched off and its rules are silently skipped.
+- **`style` is off.** With `--max-warnings=0`, the style category flags most real code (identifier length, export grouping, function style). Enable individual style rules you want under `rules` instead.
+- **Keep the file comment-free JSON** (or name it `.oxlintrc.jsonc`) so Biome can format it. The template is already in Biome's layout, so `biome check .` passes on a fresh copy; keep it that way after editing (`biome check --write .oxlintrc.json`).
+- **Unknown rule names fail the whole config** ("Rule '…' not found"). After an Oxlint upgrade, run `oxlint` once and remove any rule it reports.
+- **CSS side-effect imports are allowed** (`import "./index.css"` in a Vite entry) through the rule's `allow: ["**/*.css"]` option; other side-effect imports still warn.
+- **Test-setup files are exempt from `import/no-unassigned-import`.** Setup files exist for side-effect imports (`import "@testing-library/jest-dom/vitest"`), which the rule warns on and `--max-warnings=0` turns into a failure. The override covers `tests/setup.*`, `test/setup.*`, `*.setup.*` (incl. `vitest.setup.ts`) and `setupTests.*`; add your setup path if it differs.
+- `$schema` points at the schema shipped in the installed package, so it always matches the version in use.
 
-Oxlint includes these plugins with ZERO npm dependencies:
+### Plugins by project type
 
-| Plugin | Rules | Replaces |
-|--------|-------|----------|
-| `eslint` (core) | ~200 | ESLint core rules |
-| `typescript` | ~90 | @typescript-eslint |
-| `unicorn` | ~100 | eslint-plugin-unicorn |
-| `oxc` (deepscan) | ~30 | eslint-plugin-sonarjs (partial) |
-| `import` | ~25 | eslint-plugin-import |
-| `promise` | ~15 | eslint-plugin-promise |
-| `react` | ~40 | eslint-plugin-react + react-hooks |
-| `react-perf` | ~6 | (new — performance rules) |
-| `nextjs` | ~15 | @next/eslint-plugin-next |
-| `jsx-a11y` | ~30 | eslint-plugin-jsx-a11y |
-| `node` | ~20 | eslint-plugin-n |
-| `vitest` | ~15 | eslint-plugin-vitest |
-| `jest` | ~25 | eslint-plugin-jest |
-| `jsdoc` | ~20 | (optional — JSDoc validation) |
+Oxlint 1.85 ships 870 rules across 15 plugin scopes; `oxlint --rules` lists what the installed version has.
 
-### Framework-Specific Plugin Configuration
+| Project | Add to `plugins` |
+|---------|------------------|
+| Every TS/JS project | `typescript`, `unicorn`, `oxc`, `import`, `promise` |
+| React | `react`, `jsx-a11y` (+ `react-perf` if wanted) |
+| Next.js | `react`, `jsx-a11y`, `nextjs` |
+| Vue | `vue` (script-level rules; templates still need residual ESLint) |
+| Node.js backend | `node` |
+| Vitest / Jest | `vitest` / `jest` |
+| JSDoc-heavy code | `jsdoc` |
 
-#### React
-```jsonc
-{
-  "plugins": ["import", "promise", "react", "jsx-a11y"]
-}
-```
+`react` includes the hooks rules and `react/only-export-components` (the React Refresh / Vite HMR rule), so Vite + React needs no ESLint.
 
-#### React + Performance Monitoring
-```jsonc
-{
-  "plugins": ["import", "promise", "react", "jsx-a11y", "react-perf"]
-}
-```
-
-#### Next.js
-```jsonc
-{
-  "plugins": ["import", "promise", "react", "jsx-a11y", "nextjs"]
-}
-```
-
-#### Node.js Backend
-```jsonc
-{
-  "plugins": ["import", "promise", "node"]
-}
-```
-
-#### Vitest Testing
-```jsonc
-{
-  "plugins": ["import", "promise", "vitest"],
-  "overrides": [{
-    "files": ["**/*.test.ts", "**/*.spec.ts", "**/*.test.tsx", "**/*.spec.tsx"],
-    "rules": {
-      "vitest/no-focused-tests": "error",
-      "vitest/no-disabled-tests": "warn"
-    }
-  }]
-}
-```
-
-#### Jest Testing
-```jsonc
-{
-  "plugins": ["import", "promise", "jest"],
-  "overrides": [{
-    "files": ["**/*.test.ts", "**/*.spec.ts", "**/__tests__/**/*.ts"],
-    "rules": {
-      "jest/no-focused-tests": "error",
-      "jest/no-disabled-tests": "warn"
-    }
-  }]
-}
-```
-
-## Biome Configuration
-
-### biome.json
+Test-file overrides:
 
 ```json
 {
-  "$schema": "https://biomejs.dev/schemas/2.3.15/schema.json",
-  "formatter": {
-    "enabled": true,
-    "indentStyle": "space",
-    "indentWidth": 2,
-    "lineWidth": 100,
-    "lineEnding": "lf"
-  },
-  "javascript": {
-    "formatter": {
-      "quoteStyle": "single",
-      "trailingCommas": "all",
-      "semicolons": "always",
-      "arrowParentheses": "asNeeded"
+  "overrides": [
+    {
+      "files": ["**/*.test.ts", "**/*.spec.ts", "**/*.test.tsx", "**/*.spec.tsx"],
+      "rules": { "vitest/no-focused-tests": "error", "vitest/no-disabled-tests": "warn" }
     }
-  },
-  "json": {
-    "formatter": {
-      "trailingCommas": "none"
-    }
-  },
-  "linter": {
-    "enabled": false
-  },
-  "assist": {
-    "actions": {
-      "source": {
-        "organizeImports": "on"
-      }
-    }
-  },
-  "vcs": {
-    "enabled": true,
-    "clientKind": "git",
-    "useIgnoreFile": true
-  },
+  ]
+}
+```
+
+### Type-aware rules (opt-in; needs `oxlint-tsgolint` and a TS 7-ready tsconfig)
+
+Rules that need type information (`typescript/no-floating-promises`, `no-misused-promises`, `no-unsafe-assignment`, `no-unsafe-call`, `no-unsafe-member-access`, `no-unsafe-return`, `unbound-method` and others; `oxlint --rules -f json` marks them `type_aware`) run only when all of these hold:
+
+- `oxlint --type-aware` or `"options": { "typeAware": true }` in `.oxlintrc.json`
+- the `oxlint-tsgolint` package installed
+- a tsconfig that is TypeScript 7-ready: no `baseUrl` and none of the other options TS 7 removed; tsgolint rejects the file otherwise (`Option 'baseUrl' has been removed`)
+
+Upstream documents TypeScript 7.0+ as required (tsgolint is built on the native compiler). On 2026-09-28 it also ran on a TypeScript 6 project (`typescript@6.0.3`, oxlint 1.86.0, `oxlint-tsgolint` 7.0.2003): with a `baseUrl`-free tsconfig it reported `no-floating-promises` correctly. Treat the rules as **opt-in**; `tsc --noEmit` remains the type-safety gate either way.
+
+### Rules worth knowing
+
+| Rule | Plugin | Purpose |
+|------|--------|---------|
+| `no-explicit-any` | typescript | Disallow `any` |
+| `consistent-type-imports` | typescript | Enforce `import type` |
+| `no-duplicates`, `no-cycle`, `no-self-import` | import | Import correctness (Biome handles order) |
+| `filename-case` | unicorn | File naming |
+| `rules-of-hooks`, `exhaustive-deps` | react | Hooks correctness |
+
+## Biome
+
+### `biome.json`
+
+Use `templates/biome.json`. For new repos it keeps Biome's own JavaScript defaults: double quotes and `arrowParentheses: "always"`. Existing repos keep their configured style; changing it reformats every file.
+
+```json
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.14/schema.json",
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
   "files": {
-    "includes": [
-      "**",
-      "!**/dist/**", "!**/build/**", "!**/node_modules/**",
-      "!**/.next/**", "!**/.nuxt/**", "!**/coverage/**",
-      "!**/pnpm-lock.yaml", "!**/package-lock.json"
-    ]
-  }
+    "includes": ["**", "!**/dist", "!**/build", "!**/coverage", "!**/.next", "!**/.pnpm-store"]
+  },
+  "formatter": { "enabled": true, "indentStyle": "space", "indentWidth": 2, "lineWidth": 100, "lineEnding": "lf" },
+  "javascript": {
+    "formatter": { "quoteStyle": "double", "trailingCommas": "all", "semicolons": "always", "arrowParentheses": "always" }
+  },
+  "linter": { "enabled": false },
+  "assist": { "actions": { "source": { "organizeImports": "on" } } }
 }
 ```
 
-### VCS Integration (Required for CI)
+- **`$schema` must match the installed Biome version.** After every Biome upgrade run `pnpm exec biome migrate --write`; it updates `$schema` and any renamed options.
+- **Turn on VCS integration.** It is off by default; without it Biome ignores `.gitignore` and, in CI containers, formats build output and dependency folders.
+- **Exclusions** are `!` negations inside `files.includes` (Biome 2 has no `files.ignore`/`excludes`). Also add `.pnpm-store/` to `.gitignore`: a cold pnpm cache can create it in the build root.
+- **Tailwind v4 CSS** (`@theme`, `@apply`, `@custom-variant`): add `"css": { "parser": { "tailwindDirectives": true } }`.
+- **`biome check` vs `biome format`:** `biome format` only formats. `biome check` (with the linter off) formats and applies the organise-imports assist, so scripts and hooks use `check`.
 
-**CRITICAL:** Biome's VCS integration is **off by default**. Without the `vcs` block, Biome does NOT read `.gitignore`. This causes CI failures in Docker-based pipelines (Bitbucket Pipelines, GitHub Actions) where Biome scans `node_modules/` and build artifacts, producing hundreds of spurious formatting errors.
+### Language support (Biome 2.5)
 
-The `vcs` config must always be included:
-```json
-{
-  "vcs": {
-    "enabled": true,
-    "clientKind": "git",
-    "useIgnoreFile": true
-  }
-}
-```
+| Language | Format | Notes |
+|----------|--------|-------|
+| JS / TS / JSX / TSX | Yes | |
+| JSON / JSONC | Yes | `.vscode/*.json` and `tsconfig*.json` are read as JSONC |
+| CSS | Yes | SCSS/Less not supported |
+| GraphQL, GritQL | Yes | |
+| HTML | Experimental, opt-in | Leave out of hooks and format-on-save |
+| Vue / Svelte / Astro | Experimental | Leave out of hooks |
+| Markdown, YAML | Not yet (in progress) | Leave out of hooks |
 
-**Why it works locally but fails in CI:** Locally, Biome's built-in `node_modules` hardcoded ignore masks the issue. In CI Docker containers, file discovery context differs and the `files.includes` negation patterns become the sole defence. Negation patterns for directories are unreliable ([Biome bug #7279](https://github.com/biomejs/biome/issues/7279)), so the VCS config is essential as belt-and-suspenders.
+Source: <https://biomejs.dev/internals/language-support/>. A file type Biome does not handle, passed explicitly, fails with "No files were processed"; keep lint-staged globs to supported types, or add `--no-errors-on-unmatched`.
 
-**pnpm store caveat:** Even with VCS integration, `pnpm install` may create a `.pnpm-store/` directory in the build root when the global content-addressable store cache misses (common on first CI runs). This directory contains hundreds of JSON index files that Biome will try to format. Since `.pnpm-store/` is not in a typical `.gitignore`, add it to both `.gitignore` and `biome.json` negation patterns (`"!.pnpm-store/**"`).
+### Prettier → Biome option names
 
-### files.includes Negation Patterns
+| Prettier | Biome |
+|----------|-------|
+| `printWidth` | `formatter.lineWidth` |
+| `tabWidth` / `useTabs` | `formatter.indentWidth` / `formatter.indentStyle` |
+| `semi` | `javascript.formatter.semicolons` (`always` / `asNeeded`) |
+| `singleQuote` | `javascript.formatter.quoteStyle` |
+| `trailingComma` | `javascript.formatter.trailingCommas` (`all` / `es5` / `none`) |
+| `arrowParens` (`always` / `avoid`) | `javascript.formatter.arrowParentheses` (`always` / `asNeeded`) |
+| `endOfLine` | `formatter.lineEnding` |
 
-Biome v2.3.15 uses `files.includes` with `!` negation for exclusions. There is **no `files.excludes` field** (the valid keys are: `maxSize`, `ignoreUnknown`, `includes`, `experimentalScannerIgnores`).
+## package.json scripts
 
-**Rules for negation patterns:**
-- Always use `/**` suffix for directories: `!**/dist/**` not `!**/dist`
-- Always list `"**"` first, then negations
-- Negation patterns for directories are buggy ([#7279](https://github.com/biomejs/biome/issues/7279)) — rely on VCS integration as primary defence, negation patterns as secondary
-
-### Tailwind CSS Projects
-
-If the project uses Tailwind CSS v4, Biome needs the CSS parser configured to handle Tailwind directives (`@theme`, `@apply`, `@custom-variant`):
-
-```json
-{
-  "css": {
-    "parser": {
-      "cssModules": false,
-      "tailwindDirectives": true
-    }
-  }
-}
-```
-
-Without this, `biome format` will fail on CSS files containing Tailwind-specific syntax.
-
-### Formatter Settings (Prettier Equivalents)
-
-| Prettier | Biome | Value |
-|----------|-------|-------|
-| `semi: true` | `javascript.formatter.semicolons` | `"always"` |
-| `singleQuote: true` | `javascript.formatter.quoteStyle` | `"single"` |
-| `tabWidth: 2` | `formatter.indentWidth` | `2` |
-| `trailingComma: "all"` | `javascript.formatter.trailingCommas` | `"all"` |
-| `printWidth: 100` | `formatter.lineWidth` | `100` |
-| `arrowParens: "avoid"` | `javascript.formatter.arrowParentheses` | `"asNeeded"` |
-| `endOfLine: "lf"` | `formatter.lineEnding` | `"lf"` |
-
-### Import Sorting
-
-Biome handles import sorting via `assist.actions.source.organizeImports` (Biome 2.x). This replaces:
-- `eslint-plugin-import` order rules
-- `@trivago/prettier-plugin-sort-imports`
-- `@ianvs/prettier-plugin-sort-imports`
-
-Import correctness rules (no-duplicates, no-cycle, no-self-import) remain in oxlint.
-
-## Package.json Scripts
-
-### Standard (no residual ESLint needed)
 ```json
 {
   "scripts": {
     "lint": "oxlint --max-warnings=0",
     "lint:fix": "oxlint --fix --max-warnings=0",
-    "format": "biome format --write .",
-    "format:check": "biome format .",
+    "format": "biome check --write .",
+    "format:check": "biome check .",
     "typecheck": "tsc --noEmit",
     "check": "pnpm lint && pnpm format:check && pnpm typecheck"
   }
 }
 ```
 
-### With Residual ESLint
-```json
-{
-  "scripts": {
-    "lint": "oxlint --max-warnings=0 && eslint . --max-warnings=0",
-    "lint:fix": "oxlint --fix --max-warnings=0 && eslint . --fix --max-warnings=0",
-    "format": "biome format --write .",
-    "format:check": "biome format .",
-    "typecheck": "tsc --noEmit",
-    "check": "pnpm lint && pnpm format:check && pnpm typecheck"
-  }
-}
-```
+With residual ESLint, append `&& eslint . --max-warnings=0` to `lint` and `&& eslint . --fix --max-warnings=0` to `lint:fix`.
 
-## VSCode Integration
+## Editor (VS Code)
 
-### .vscode/settings.json
-```jsonc
-{
-  "editor.formatOnSave": true,
-  "editor.defaultFormatter": "biomejs.biome",
-  "editor.codeActionsOnSave": {
-    "source.fixAll.oxc": "explicit",
-    "source.organizeImports.biome": "explicit"
-  },
-  "typescript.tsdk": "node_modules/typescript/lib"
-}
-```
+`templates/.vscode/settings.json` (Biome format-on-save, Oxlint fix-on-save) and `templates/.vscode/extensions.json`: `biomejs.biome` and `oxc.oxc-vscode`.
 
-### Recommended Extensions
-- **Biome**: `biomejs.biome` — Formatter + import sorting
-- **Oxlint**: `nicolo-ribaudo.oxlint-vscode` — Linter integration
+## Monorepos
 
-## Key Rules Reference
+- One `.oxlintrc.json` and one `biome.json` at the workspace root. Oxlint also picks up nested `.oxlintrc.json` files for per-package rules; Biome supports nested `biome.json` with `"root": false`.
+- Root scripts run once over the tree (`oxlint`, `biome check .`); `tsc` runs per package (`pnpm -r typecheck`).
 
-### Oxlint TypeScript Rules (via typescript plugin)
+## CSS without Tailwind (optional)
 
-| Rule | Purpose |
-|------|---------|
-| `no-explicit-any` | Disallow `any` type |
-| `no-unsafe-assignment` | Disallow assigning `any` |
-| `no-unsafe-call` | Disallow calling `any` |
-| `no-unsafe-member-access` | Disallow accessing `any` properties |
-| `no-unsafe-return` | Disallow returning `any` |
-| `no-floating-promises` | Require handling promises |
-| `no-misused-promises` | Prevent promise misuse |
-| `consistent-type-imports` | Enforce type-only imports |
-
-### Oxlint Import Rules
-
-| Rule | Purpose |
-|------|---------|
-| `import/no-duplicates` | Prevent duplicate imports |
-| `import/no-cycle` | Detect circular dependencies |
-| `import/no-self-import` | Prevent self-imports |
-
-### Oxlint Unicorn Rules
-
-| Rule | Purpose |
-|------|---------|
-| `prefer-modern-dom-apis` | Use modern DOM methods |
-| `no-array-reduce` | Prefer explicit loops |
-| `prefer-top-level-await` | Use top-level await |
-
-## Migration from ESLint + Prettier
-
-### Step 1: Install New Tools
-```bash
-pnpm add -D oxlint @biomejs/biome
-```
-
-### Step 2: Create Configs
-Copy `oxlint.json` and `biome.json` templates to project root.
-
-### Step 3: Update package.json Scripts
-Replace ESLint/Prettier commands with oxlint/biome commands (see above).
-
-### Step 4: Update lint-staged
-```json
-{
-  "lint-staged": {
-    "*.{ts,tsx,js,jsx}": ["oxlint --fix --max-warnings=0", "biome format --write"],
-    "*.{json,md}": ["biome format --write"]
-  }
-}
-```
-
-### Step 5: Remove Old Dependencies
-```bash
-pnpm remove eslint prettier \
-  @typescript-eslint/eslint-plugin @typescript-eslint/parser \
-  @stylistic/eslint-plugin eslint-plugin-import eslint-plugin-unicorn \
-  eslint-plugin-sonarjs eslint-plugin-promise eslint-config-prettier \
-  eslint-plugin-react eslint-plugin-react-hooks eslint-plugin-jsx-a11y \
-  @next/eslint-plugin-next eslint-plugin-n eslint-plugin-vitest \
-  eslint-plugin-jest eslint-plugin-compat eslint-plugin-html
-```
-
-### Step 6: Delete Old Config Files
-```bash
-rm eslint.config.mjs .prettierrc .prettierignore
-```
-
-### Step 7: Update VSCode Settings
-Replace Prettier formatter with Biome. Add oxlint extension.
-
-### Step 8: Verify
-```bash
-pnpm lint      # Should use oxlint
-pnpm format    # Should use biome
-pnpm typecheck # Should use tsc
-```
+Biome formats CSS but does not lint it with this setup. Where a project needs CSS/SCSS linting, add Stylelint (`stylelint`, `stylelint-config-standard`, `stylelint-config-standard-scss`) with a `.stylelintrc.json`. It is not part of the default stack. Tailwind projects use the better-tailwindcss ESLint plugin instead.

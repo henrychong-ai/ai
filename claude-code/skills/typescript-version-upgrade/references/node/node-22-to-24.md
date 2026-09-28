@@ -1,237 +1,59 @@
-# Node.js 22 to 24 Migration Guide
+# Node.js 22 → 24
 
-Specific breaking changes and migration steps for Node.js v22 → v24.
+Primary source: https://nodejs.org/en/blog/migrations/v22-to-v24. Node 24 is the current Active LTS line until 2026-10-20.
 
-## Key Changes Summary
+| Area | Node 22 | Node 24 |
+|---|---|---|
+| V8 | 12.4 | 13.6 |
+| npm (bundled) | 10.9 | 11.x (lockfile format unchanged, `lockfileVersion: 3`) |
+| OpenSSL | 3.x | 3.5, default security level 2 |
 
-| Change | Impact | Action Required |
-|--------|--------|-----------------|
-| OpenSSL 3.5 | High | Review crypto/TLS code |
-| V8 13.6 | Medium | Check deprecated APIs |
-| npm 11 | Medium | Review npm scripts |
-| C++20 requirement | Low (native modules) | Rebuild required |
-| AsyncLocalStorage perf | Low | None (improvement) |
+## Breaking changes
 
-## Critical: OpenSSL 3.5 Changes
+### OpenSSL 3.5, security level 2
 
-### Minimum Key Lengths
+- RSA, DSA and DH keys shorter than 2048 bits are rejected.
+- ECC keys shorter than 224 bits are rejected.
+- RC4 cipher suites are rejected.
 
-OpenSSL 3.5 enforces stricter minimum key lengths:
-
-| Algorithm | Minimum Size |
-|-----------|--------------|
-| RSA | 2048 bits |
-| DSA | 2048 bits |
-| DH | 2048 bits |
-
-**Breaking:** Keys below these sizes will fail.
-
-### Check Your Keys
 ```bash
-# Check RSA key length
-openssl rsa -in key.pem -text -noout | grep "Private-Key"
-
-# Check certificate key length
+openssl rsa  -in key.pem  -text -noout | grep "Private-Key"
 openssl x509 -in cert.pem -text -noout | grep "Public-Key"
 ```
 
-### Migration Actions
+Inventory every TLS peer and key the service uses (bank and custodian APIs, mTLS certs, JWT signing keys, test fixtures). Regenerate short keys; for a third-party endpoint with a weak key, raise it with the provider — do not lower the security level in production without explicit approval.
 
-1. **Self-signed certificates:** Regenerate with 2048+ bits
-2. **Test certificates:** Update fixtures
-3. **External APIs:** Verify endpoint certificates
-4. **Legacy systems:** May need compatibility layer
+### Removed or runtime-deprecated APIs, with codemods
 
-### Generating New Keys
-```bash
-# RSA 2048-bit (minimum compliant)
-openssl genrsa -out key.pem 2048
+| Change | Codemod (`npx codemod run …`) |
+|---|---|
+| `crypto` RSA-PSS options `hash`/`mgf1Hash` → `hashAlgorithm`/`mgf1HashAlgorithm` | `@nodejs/crypto-rsa-pss-update` |
+| `dirent.path` → `dirent.parentPath` | `@nodejs/dirent-path-to-parent-path` |
+| `fs.F_OK`/`R_OK`/`W_OK`/`X_OK` → `fs.constants.*` | `@nodejs/fs-access-mode-constants` |
+| `fs.truncate(fd, …)` → `fs.ftruncate(fd, …)` | `@nodejs/fs-truncate-fd-deprecation` |
+| HTTP/2 priority signalling removed | `@nodejs/http2-priority-signaling` |
+| `process.assert()` → `node:assert` | `@nodejs/process-assert-to-node-assert` |
+| `tls.createSecurePair()` → `tls.TLSSocket` | `@nodejs/tls-create-secure-pair-to-tls-socket` |
 
-# RSA 4096-bit (recommended)
-openssl genrsa -out key.pem 4096
-```
+The userland-migrations repo also publishes an aggregate recipe, `npx codemod run @nodejs/v22-to-v24`; run the individual recipes if you want reviewable, separate diffs.
 
-## V8 13.6 Changes
+### Other behaviour changes (test for them)
 
-### New JavaScript Features
+- Stricter `fetch()` spec compliance and `AbortSignal` validation.
+- Stream/pipe errors that were swallowed now throw.
+- Test runner defaults changed (if you use `node --test`).
 
-**RegExp.escape():**
-```javascript
-const escaped = RegExp.escape('foo.bar'); // 'foo\\.bar'
-```
+### Platform and toolchain
 
-**Promise.try():**
-```javascript
-const result = await Promise.try(() => {
-  return synchronousOrAsync();
-});
-```
+- No prebuilt binaries for 32-bit Windows (from 23) or 32-bit armv7 Linux (from 24).
+- macOS 13.5 minimum.
+- Native addons build against V8 13.6 and may need a C++20 compiler; prefer Node-API packages to avoid ABI churn. Building Node itself needs gcc 12.2+ / Xcode 16.1+.
 
-### Deprecated APIs
+## Checklist
 
-**Buffer() constructor:**
-```javascript
-// Deprecated (security risk)
-new Buffer(size);
-
-// Use instead
-Buffer.alloc(size);     // Initialized to zeros
-Buffer.allocUnsafe(size); // Uninitialized (faster)
-Buffer.from(data);      // From existing data
-```
-
-### Removed Features
-
-Check for usage of these removed APIs:
-- `process.binding()` - Use N-API instead
-- Legacy URL parser - Use WHATWG URL
-
-## npm 11 Changes
-
-### Package Lock Format
-
-npm 11 uses lockfile version 4:
-```json
-{
-  "lockfileVersion": 4
-}
-```
-
-**Note:** pnpm users unaffected.
-
-### Script Execution
-
-Stricter lifecycle script handling:
-- Pre/post scripts require explicit enable
-- Some implicit behaviors removed
-
-## Native Module Considerations
-
-### C++20 Requirement
-
-Node 24 native modules require C++20 compiler:
-- GCC 10+
-- Clang 10+
-- MSVC 2019+
-
-### Common Native Modules
-
-These likely need rebuild:
-| Module | Status |
-|--------|--------|
-| `better-sqlite3` | Rebuild required |
-| `sharp` | Rebuild required |
-| `bcrypt` | Rebuild required |
-| `node-canvas` | Rebuild required |
-
-```bash
-# Force rebuild all native modules
-npm rebuild
-```
-
-## AsyncLocalStorage Performance
-
-Node 24 significantly improves `AsyncLocalStorage` performance:
-- No code changes needed
-- 20-40% faster in benchmarks
-- Benefits frameworks using ALS (Next.js, etc.)
-
-## Testing Checklist
-
-### Pre-Migration
-- [ ] All tests passing on Node 22
-- [ ] Audit cryptographic key lengths
-- [ ] List all TLS/SSL connections
-- [ ] Document native module versions
-- [ ] Check for deprecated Buffer usage
-
-### Migration Steps
-1. [ ] Audit and upgrade cryptographic keys
-2. [ ] Update `.nvmrc` to `24.13.0`
-3. [ ] Delete node_modules and lockfile
-4. [ ] Install dependencies with Node 24
-5. [ ] Rebuild native modules
-6. [ ] Fix any Buffer() constructor usage
-7. [ ] Run type checking
-8. [ ] Run linting
-9. [ ] Run full test suite
-10. [ ] Test TLS connections
-
-### Post-Migration
-- [ ] Compare test coverage
-- [ ] Verify TLS connections work
-- [ ] Check for deprecation warnings
-- [ ] Performance benchmark (should improve)
-- [ ] Update Dockerfile
-- [ ] Update CI/CD pipelines
-
-## Common Issues
-
-### Issue: TLS Handshake Failures
-```
-Error: ssl3_get_server_certificate: certificate verify failed
-```
-**Possible causes:**
-1. Server using < 2048-bit keys
-2. Weak cipher suites
-3. Self-signed cert with weak key
-
-**Fix:** Contact server admin or regenerate certificates
-
-### Issue: Crypto Key Rejection
-```
-Error: digital envelope routines::unsupported
-```
-**Fix:** Regenerate keys with 2048+ bits
-
-### Issue: Native Module Build Failures
-```
-error: expected ';' before '}' token
-```
-**Fix:** Ensure C++20 compiler available, then `npm rebuild`
-
-## Dockerfile Update
-
-```dockerfile
-# Update base image
-- FROM node:22.22.0-alpine
-+ FROM node:24.13.0-alpine
-
-# Ensure build tools for native modules
-RUN apk add --no-cache python3 make g++
-```
-
-## Environment Variables
-
-### New/Changed Variables
-
-```bash
-# OpenSSL legacy provider (escape hatch - NOT recommended)
-NODE_OPTIONS=--openssl-legacy-provider
-
-# Better: Fix the underlying issue
-```
-
-### Removed Variables
-
-- `NODE_PENDING_DEPRECATION` → Now default behavior
-
-## Performance Notes
-
-Node 24 provides:
-- Faster startup (~10-15%)
-- Improved AsyncLocalStorage (20-40%)
-- Better garbage collection
-- Enhanced WebSocket performance
-
-## Security Notes
-
-Node 24.13.0 includes patches for:
-- CVE-2025-59466 (async_hooks DoS)
-- Various OpenSSL security fixes
-
-**Do not use versions below 24.13.0 in production.**
-
----
-
-*Minimum safe version: 24.13.0 (CVE-2025-59466 patched)*
+1. Audit keys and TLS peers (above).
+2. Run the codemods that match `grep` hits; review each diff.
+3. Update `.nvmrc`, `engines`, all Dockerfile stages, pipeline images, `@types/node@^24` together.
+4. `<pm> install`, `<pm> rebuild` (keep the lockfile). In Alpine images, add `python3 make g++` only if a dependency compiles from source.
+5. Run all gates; exercise every outbound TLS integration in a staging environment.
+6. For the minimum patch, use the live lookup in `migration-overview.md` — do not copy a patch number from an old document.

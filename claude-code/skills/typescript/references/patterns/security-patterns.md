@@ -12,7 +12,7 @@ When `async_hooks` is enabled (by Next.js, React Server Components, or APM tools
 
 **Attack vector:** Deeply nested JSON (50,000+ levels) causes recursive processing to overflow the stack, crashing the process.
 
-**Patched in:** Node.js 24.13.0+, 22.22.0+, 20.20.0+ (January 13, 2026)
+**Patched in:** Node.js 24.13.0, 22.22.0 and 20.20.0 (January 2026). Later security releases supersede these; run the latest patch of a supported line (`../tech-stack/version-policy.md`).
 
 **Reference:** [Node.js Security Release - January 2026](https://nodejs.org/en/blog/vulnerability/december-2025-security-releases)
 
@@ -71,6 +71,7 @@ processData(userInput);
 
 ```typescript
 // middleware/json-depth-limit.ts
+import type { MiddlewareHandler } from 'hono';
 import { createMiddleware } from 'hono/factory';
 
 const MAX_JSON_DEPTH = 50;
@@ -93,7 +94,8 @@ function exceedsMaxDepth(obj: unknown, maxDepth: number): boolean {
   return false;
 }
 
-export const jsonDepthLimit = createMiddleware(async (c, next) => {
+// Annotated: an exported middleware needs a nameable type when the tsconfig emits declarations
+export const jsonDepthLimit: MiddlewareHandler = createMiddleware(async (c, next) => {
   const contentType = c.req.header('content-type');
 
   if (contentType?.includes('application/json')) {
@@ -114,7 +116,7 @@ export const jsonDepthLimit = createMiddleware(async (c, next) => {
     }
   }
 
-  await next();
+  return next(); // `return` keeps noImplicitReturns satisfied
 });
 ```
 
@@ -192,10 +194,10 @@ const UnsafeNestedSchema: z.ZodType<NestedData> = z.lazy(() =>
 
 // SAFE - depth-limited recursive schema
 function createNestedSchema(maxDepth: number) {
-  const createLevel = (depth: number): z.ZodTypeAny => {
+  const createLevel = (depth: number): z.ZodType => {
     if (depth >= maxDepth) {
-      // Leaf level - no more nesting allowed
-      return z.object({
+      // Leaf level: strictObject REJECTS deeper `children` (z.object would silently strip them)
+      return z.strictObject({
         value: z.string(),
       });
     }
@@ -219,7 +221,7 @@ const SafeNestedSchema = createNestedSchema(20);
 ```typescript
 const JsonInputSchema = z.unknown().refine(
   (data) => !exceedsMaxDepth(data, 50),
-  { message: 'Input nesting exceeds maximum depth' }
+  { error: 'Input nesting exceeds maximum depth' }
 );
 ```
 
@@ -238,8 +240,8 @@ const JsonInputSchema = z.unknown().refine(
 
 | Layer | Protection |
 |-------|------------|
-| **Node.js version** | Use 24.13.0+ or 22.22.0+ (patched) |
-| **Middleware** | JSON depth limit before parsing |
+| **Node.js version** | Latest patch of a supported LTS line (`../tech-stack/version-policy.md`) |
+| **Middleware** | JSON depth check right after parsing, before any recursive processing |
 | **Zod schemas** | Depth-limited recursive types |
 | **Processing functions** | Depth parameter with guards |
 
@@ -264,4 +266,4 @@ const JsonInputSchema = z.unknown().refine(
 
 ---
 
-*Last updated: 2026-01-14*
+*Companion to: api-patterns.md, error-handling.md.*

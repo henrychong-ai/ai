@@ -1,399 +1,147 @@
-# Residual ESLint — Gap Plugins
+# Residual ESLint: Gap Plugins Only
 
-Plugins that require ESLint because oxlint doesn't cover them yet. Use `eslint-plugin-oxlint` to disable all rules that oxlint already handles.
+Add ESLint only for rules Oxlint does not have. `eslint-plugin-oxlint`, as the last config block, turns off every ESLint rule Oxlint already runs, so nothing is checked twice. Template: `templates/eslint.config.mjs` (every section below, commented out).
 
-**When is residual ESLint needed?**
+| Plugin | Add when | Why Oxlint is not enough |
+|--------|----------|--------------------------|
+| `eslint-plugin-vue` | Vue | Oxlint's `vue` plugin covers `<script>`; `<template>` needs ESLint |
+| `eslint-plugin-astro` | Astro | Oxlint does not parse `.astro` files |
+| `eslint-plugin-better-tailwindcss` | Tailwind CSS v4 | No Tailwind rules in Oxlint; also replaces `prettier-plugin-tailwindcss` class sorting |
+| `eslint-plugin-playwright` | Playwright tests | Not ported to Oxlint |
+| `eslint-plugin-compat` | Browser code with a browserslist config | No browser-compat rules in Oxlint |
 
-| Plugin | Trigger | Why Not Oxlint |
-|--------|---------|----------------|
-| `eslint-plugin-vue` | Vue detected | Oxlint: `<script>` only, no `<template>` linting |
-| `eslint-plugin-astro` | Astro detected | Oxlint: no `.astro` file support |
-| `eslint-plugin-better-tailwindcss` | Tailwind v4 detected | Oxlint: no Tailwind rules |
-| `eslint-plugin-react-refresh` | Vite + React detected | Oxlint: no react-refresh/HMR rules |
-| `eslint-plugin-playwright` | Playwright detected | Oxlint: not ported yet |
-| `eslint-plugin-obsidianmd` | Obsidian detected | Oxlint: too niche |
-| `eslint-plugin-compat` | Frontend + browserslist | Oxlint: no browser compat rules |
+Not gaps any more: React Refresh (`react/only-export-components` is built into Oxlint's `react` plugin), React hooks, Next.js, jsx-a11y, Vitest and Jest.
 
-## Core Setup (Always Required with Residual ESLint)
+Oxlint also has alpha support for running ESLint JS plugins directly (`jsPlugins` in `.oxlintrc.json`). It may remove the need for residual ESLint later; keep using ESLint for the plugins above until it is stable.
 
-```bash
-pnpm add -D eslint eslint-plugin-oxlint
-```
-
-`eslint-plugin-oxlint` automatically disables all ESLint rules that oxlint already covers, preventing duplicate checking.
-
-### TypeScript Parser Requirement
-
-**CRITICAL:** ESLint cannot parse `.ts`/`.tsx` files natively. Any residual ESLint config that lints TypeScript files **must** include `typescript-eslint` for its parser:
+## Core Setup
 
 ```bash
-pnpm add -D typescript-eslint
+pnpm add -D eslint eslint-plugin-oxlint typescript-eslint
 ```
 
-```javascript
-import tseslint from 'typescript-eslint';
-
-// In any config block with files: ['**/*.{ts,tsx}']
-languageOptions: { parser: tseslint.parser },
-```
-
-Vue and Astro configs already include `typescript-eslint` for their own parser needs. For other gap plugins (react-refresh, playwright, tailwind, compat, obsidian), add it explicitly when the plugin lints `.ts`/`.tsx` files.
-
-### Base eslint.config.mjs
+`typescript-eslint` supplies the parser ESLint needs for `.ts`/`.tsx` files (and Vue/Astro script blocks). It depends on the TypeScript compiler API, so pin TypeScript as the `/typescript` version policy says wherever it is installed.
 
 ```javascript
-import tseslint from 'typescript-eslint';
-import oxlint from 'eslint-plugin-oxlint';
+import oxlint from "eslint-plugin-oxlint";
+import tseslint from "typescript-eslint";
 
 export default [
-  { ignores: ['dist/', 'build/', 'node_modules/', '.next/', 'coverage/'] },
+  { ignores: ["dist/", "build/", "coverage/", ".next/"] },
+  { files: ["**/*.{ts,tsx,mts,cts}"], languageOptions: { parser: tseslint.parser } },
 
-  // TypeScript parser (required for .ts/.tsx files)
-  {
-    files: ['**/*.{ts,tsx}'],
-    languageOptions: { parser: tseslint.parser },
-  },
+  // ... gap-plugin blocks ...
 
-  // ... gap plugin configs go here ...
-
-  // MUST be last — disables rules oxlint covers
-  ...oxlint.buildFromOxlintConfigFile('./oxlint.json'),
+  // Must stay last
+  ...oxlint.buildFromOxlintConfigFile("./.oxlintrc.json"),
 ];
 ```
 
----
-
-## React Refresh (Vite + React)
-
-Oxlint covers `react-hooks` natively, but `eslint-plugin-react-refresh` (Vite HMR support) is not in Oxlint. Only needed for Vite + React projects (not Next.js, which has its own HMR).
-
-### Installation
-```bash
-pnpm add -D eslint eslint-plugin-oxlint eslint-plugin-react-refresh typescript-eslint
-```
-
-### ESLint Config
-```javascript
-import reactRefresh from 'eslint-plugin-react-refresh';
-import tseslint from 'typescript-eslint';
-import oxlint from 'eslint-plugin-oxlint';
-
-export default [
-  { ignores: ['dist'] },
-
-  {
-    files: ['**/*.{ts,tsx}'],
-    languageOptions: { parser: tseslint.parser },
-    plugins: { 'react-refresh': reactRefresh },
-    rules: {
-      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
-    },
-  },
-
-  // Relax for generated component libraries (e.g., shadcn/ui)
-  {
-    files: ['src/components/ui/**/*.{ts,tsx}'],
-    rules: {
-      'react-refresh/only-export-components': 'off',
-    },
-  },
-
-  ...oxlint.buildFromOxlintConfigFile('./oxlint.json'),
-];
-```
-
-### Detection
-- `vite.config.*` present AND `react` in dependencies
-- `@vitejs/plugin-react` in devDependencies
-- NOT needed for Next.js (uses its own HMR)
-
----
+Point `buildFromOxlintConfigFile` at the real Oxlint config file name.
 
 ## Vue
 
-Oxlint handles `<script>` blocks in `.vue` files but cannot lint `<template>` directives and components. Use `eslint-plugin-vue` for template linting.
-
-### Installation
 ```bash
-pnpm add -D eslint eslint-plugin-oxlint eslint-plugin-vue typescript-eslint
+pnpm add -D eslint-plugin-vue
 ```
 
-### ESLint Config
 ```javascript
-import oxlint from 'eslint-plugin-oxlint';
-import vue from 'eslint-plugin-vue';
-import tseslint from 'typescript-eslint';
+import vue from "eslint-plugin-vue";
 
-export default [
-  { ignores: ['dist/', 'node_modules/'] },
-
-  ...vue.configs['flat/recommended'],
-
-  {
-    files: ['*.vue', '**/*.vue'],
-    languageOptions: {
-      parserOptions: {
-        parser: tseslint.parser,
-        extraFileExtensions: ['.vue'],
-      },
-    },
+// inside the config array:
+...vue.configs["flat/recommended"],
+{
+  files: ["**/*.vue"],
+  languageOptions: {
+    parserOptions: { parser: tseslint.parser, extraFileExtensions: [".vue"] },
   },
-
-  {
-    rules: {
-      'vue/multi-word-component-names': 'off',
-      'vue/no-v-html': 'warn',
-    },
-  },
-
-  ...oxlint.buildFromOxlintConfigFile('./oxlint.json'),
-];
+  rules: { "vue/multi-word-component-names": "off" },
+},
 ```
 
----
+Add `"vue"` to Oxlint's `plugins` too for script-level rules.
 
 ## Astro
 
-Oxlint cannot parse `.astro` files. Use `eslint-plugin-astro` for full Astro support.
-
-### Installation
 ```bash
-pnpm add -D eslint eslint-plugin-oxlint eslint-plugin-astro typescript-eslint
+pnpm add -D eslint-plugin-astro
 ```
 
-### ESLint Config
 ```javascript
-import oxlint from 'eslint-plugin-oxlint';
-import astro from 'eslint-plugin-astro';
-import tseslint from 'typescript-eslint';
+import astro from "eslint-plugin-astro";
 
-export default [
-  { ignores: ['dist/', 'node_modules/', '.astro/', '.wrangler/'] },
-
-  ...astro.configs.recommended,
-
-  {
-    files: ['**/*.astro'],
-    languageOptions: {
-      parser: astro.parser,
-      parserOptions: {
-        parser: tseslint.parser,
-        extraFileExtensions: ['.astro'],
-        project: true,
-        tsconfigRootDir: import.meta.dirname,
-      },
-    },
-  },
-
-  ...oxlint.buildFromOxlintConfigFile('./oxlint.json'),
-];
+...astro.configs["flat/recommended"],
 ```
 
-### Browserslist Config (package.json)
-Required for `eslint-plugin-compat` if also used:
-```json
-{
-  "browserslist": ["defaults", "not op_mini all"]
-}
-```
-
----
+For type-aware parsing inside `.astro` files, set `languageOptions.parserOptions.project: true` on the `**/*.astro` block, and scope `projectService: true` to `**/*.{ts,tsx}` only.
 
 ## Tailwind CSS v4
 
-Since Prettier is removed, `prettier-plugin-tailwindcss` cannot be used for class sorting. Instead, use `eslint-plugin-better-tailwindcss` with the `sort-classes` rule enabled.
-
-### Installation
 ```bash
-pnpm add -D eslint eslint-plugin-oxlint eslint-plugin-better-tailwindcss
+pnpm add -D eslint-plugin-better-tailwindcss
 ```
 
-### ESLint Config
 ```javascript
-import oxlint from 'eslint-plugin-oxlint';
-import betterTailwindcss from 'eslint-plugin-better-tailwindcss';
+import betterTailwindcss from "eslint-plugin-better-tailwindcss";
 
-export default [
-  { ignores: ['dist/', 'node_modules/'] },
-
-  // Tailwind CSS v4 — includes sort-classes (replaces prettier-plugin-tailwindcss)
-  ...betterTailwindcss.configs['flat/recommended'],
-
-  ...oxlint.buildFromOxlintConfigFile('./oxlint.json'),
-];
-```
-
-### Available Configs
-
-| Config | Includes | Use When |
-|--------|----------|----------|
-| `recommended` | Stylistic + correctness rules | Default (most projects) |
-| `stylistic` | Class sorting, multiline only | Want sorting without validation |
-| `correctness` | Invalid classes, duplicates only | Want validation without sorting |
-
-### Key Rules
-
-| Rule | Purpose |
-|------|---------|
-| `sort-classes` | Automatic class sorting (replaces Prettier plugin) |
-| `no-duplicate-classes` | Detect duplicate classes |
-| `no-conflicting-classes` | Detect contradicting classes |
-| `no-custom-classname` | Warn on non-Tailwind classes |
-| `multiline` | Multi-line class formatting |
-
-### Detection
-Tailwind v4 projects:
-- `tailwindcss` ^4.x in dependencies
-- CSS files with `@import "tailwindcss"` or `@theme` directives
-- Absence of `tailwind.config.js` (v4 doesn't use it)
-
----
-
-## Playwright E2E Testing
-
-Oxlint hasn't ported Playwright rules yet. Use `eslint-plugin-playwright` for E2E test linting.
-
-### Installation
-```bash
-pnpm add -D eslint eslint-plugin-oxlint eslint-plugin-playwright
-```
-
-### ESLint Config
-```javascript
-import oxlint from 'eslint-plugin-oxlint';
-import playwright from 'eslint-plugin-playwright';
-
-export default [
-  { ignores: ['dist/', 'node_modules/'] },
-
-  {
-    files: ['**/e2e/**/*.ts', '**/*.e2e.ts', '**/tests/**/*.spec.ts'],
-    plugins: { playwright },
-    rules: {
-      ...playwright.configs['flat/recommended'].rules,
-      'playwright/no-focused-test': 'error',
-      'playwright/no-skipped-test': 'warn',
-    },
+{
+  files: ["src/**/*.{ts,tsx}"],
+  ...betterTailwindcss.configs.recommended,
+  settings: {
+    // the CSS file that contains @import "tailwindcss"
+    "better-tailwindcss": { entryPoint: "src/styles/globals.css" },
   },
-
-  ...oxlint.buildFromOxlintConfigFile('./oxlint.json'),
-];
+  rules: {
+    ...betterTailwindcss.configs.recommended.rules,
+    // Biome owns line layout; this rule would fight the formatter
+    "better-tailwindcss/enforce-consistent-line-wrapping": "off",
+  },
+},
 ```
 
----
-
-## Obsidian Plugin Development
-
-Too niche for oxlint to include. Use `eslint-plugin-obsidianmd` for Obsidian-specific rules.
-
-### Installation
-```bash
-pnpm add -D eslint eslint-plugin-oxlint eslint-plugin-obsidianmd
-```
-
-### ESLint Config
-```javascript
-import oxlint from 'eslint-plugin-oxlint';
-import obsidianmd from 'eslint-plugin-obsidianmd';
-
-export default [
-  { ignores: ['dist/', 'node_modules/', 'main.js'] },
-
-  ...obsidianmd.configs.recommended,
-
-  ...oxlint.buildFromOxlintConfigFile('./oxlint.json'),
-];
-```
-
-### Key Rules
+`configs.recommended` is a single config object (plugins + rules), so spread it into one block rather than into the array. Other configs: `stylistic`, `correctness`, each with `-error`/`-warn` variants.
 
 | Rule | Purpose |
 |------|---------|
-| `no-sample-code` | Disallow sample snippets from template |
-| `no-direct-dom-style` | Use CSS classes instead of inline |
-| `no-type-cast-file-folder` | Use `instanceof` for TFile/TFolder |
-| `no-view-reference` | Don't store view references (memory leaks) |
-| `prefer-file-manager-trash` | Use FileManager.trashFile() |
+| `enforce-consistent-class-order` | Sorts classes (replaces `prettier-plugin-tailwindcss`) |
+| `no-duplicate-classes` | Duplicate classes |
+| `no-conflicting-classes` | Classes that override each other |
+| `no-unknown-classes` | Classes Tailwind does not generate |
+| `no-deprecated-classes`, `enforce-canonical-classes` | v4 class names |
 
-### Detection
-- `manifest.json` with `id`, `name`, `version`, `minAppVersion` fields
-- `obsidian` in dependencies or devDependencies
+Use `eslint-plugin-better-tailwindcss`; the older `eslint-plugin-tailwindcss` needs Tailwind v3's JS config. Detect Tailwind v4 by `tailwindcss` ^4 in dependencies or `@import "tailwindcss"` in CSS. Also set Biome's `css.parser.tailwindDirectives: true`.
 
----
+## Playwright
+
+```bash
+pnpm add -D eslint-plugin-playwright
+```
+
+```javascript
+import playwright from "eslint-plugin-playwright";
+
+{
+  files: ["e2e/**/*.ts", "**/*.e2e.ts"],
+  ...playwright.configs["flat/recommended"],
+},
+```
 
 ## Browser Compatibility
 
-Oxlint doesn't have browser compatibility rules. Use `eslint-plugin-compat` for frontend projects with `browserslist`.
-
-### Installation
 ```bash
-pnpm add -D eslint eslint-plugin-oxlint eslint-plugin-compat
+pnpm add -D eslint-plugin-compat
 ```
-
-### ESLint Config
-```javascript
-import oxlint from 'eslint-plugin-oxlint';
-import compat from 'eslint-plugin-compat';
-
-export default [
-  { ignores: ['dist/', 'node_modules/'] },
-
-  {
-    plugins: { compat },
-    rules: { 'compat/compat': 'warn' },
-  },
-
-  ...oxlint.buildFromOxlintConfigFile('./oxlint.json'),
-];
-```
-
-### Browserslist (package.json)
-```json
-{
-  "browserslist": ["defaults", "not op_mini all"]
-}
-```
-
----
-
-## Combining Multiple Gap Plugins
-
-When a project needs several gap plugins:
 
 ```javascript
-import oxlint from 'eslint-plugin-oxlint';
-import vue from 'eslint-plugin-vue';
-import betterTailwindcss from 'eslint-plugin-better-tailwindcss';
-import compat from 'eslint-plugin-compat';
-import tseslint from 'typescript-eslint';
+import compat from "eslint-plugin-compat";
 
-export default [
-  { ignores: ['dist/', 'node_modules/'] },
-
-  // Vue templates
-  ...vue.configs['flat/recommended'],
-  {
-    files: ['*.vue', '**/*.vue'],
-    languageOptions: {
-      parserOptions: { parser: tseslint.parser, extraFileExtensions: ['.vue'] },
-    },
-  },
-
-  // Tailwind class validation + sorting
-  ...betterTailwindcss.configs['flat/recommended'],
-
-  // Browser compatibility
-  { plugins: { compat }, rules: { 'compat/compat': 'warn' } },
-
-  // Oxlint compat (must be last)
-  ...oxlint.buildFromOxlintConfigFile('./oxlint.json'),
-];
+compat.configs["flat/recommended"],
 ```
 
----
+Needs a browserslist config, for example in package.json: `"browserslist": ["defaults", "not op_mini all"]`.
 
-## Solidity Note
+## Scripts and Hooks
 
-Solidity uses **Solhint** (dedicated linter) and **forge fmt** (Foundry formatter) — completely separate from ESLint and Biome. See SKILL.md Solidity section for details.
-
-For Hardhat projects without Foundry, use `prettier` with `prettier-plugin-solidity` as formatter fallback.
+- `lint`: `oxlint --max-warnings=0 && eslint . --max-warnings=0`
+- lint-staged: add `"eslint --fix --max-warnings=0"` after the Oxlint command for the globs the gap plugins cover.
+- VS Code: `"eslint.validate": ["vue", "astro"]` for template languages.

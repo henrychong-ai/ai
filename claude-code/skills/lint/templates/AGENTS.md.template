@@ -1,58 +1,39 @@
 # Project Instructions - Code Quality
 
 <!--
-USAGE: Copy this file to your project root as AGENTS.md (canonical for every coding agent),
-then create CLAUDE.md whose first line is `@AGENTS.md` so Claude Code imports it.
-IMPORTANT: Delete all sections that don't apply to your project to save tokens.
-Claude Code reads this file every session - keep it minimal.
+USAGE: merge this section into the project's AGENTS.md (canonical for every coding
+agent); CLAUDE.md is a one-line `@AGENTS.md` import shim. Delete the parts that do
+not apply: this file loads every session, so keep it short.
 -->
 
 ## Linting Stack
 
-- **Linter**: Oxlint (primary) + residual ESLint (gap plugins only)
-- **Formatter**: Biome (linter disabled)
-- **Type Checker**: TypeScript
+- **Linter**: Oxlint (`.oxlintrc.json`), plus residual ESLint for gap plugins only
+- **Formatter**: Biome (`biome.json`, linter disabled; also sorts imports)
+- **Type checker**: `tsc --noEmit`
+- **Hooks**: Husky pre-commit (gitleaks secret scan, then lint-staged) and commit-msg (commitlint)
 
 ## Commands
 
 ```bash
-pnpm lint          # Oxlint check (+ residual ESLint if configured)
+pnpm lint          # Oxlint (+ residual ESLint if configured)
 pnpm lint:fix      # Oxlint auto-fix (+ residual ESLint if configured)
-pnpm format        # Biome format
-pnpm format:check  # Biome format check (CI)
-pnpm typecheck     # TypeScript check
-pnpm check         # All checks combined
+pnpm format        # Biome: format + organise imports
+pnpm format:check  # Biome check (CI)
+pnpm typecheck     # tsc --noEmit
+pnpm check         # all of the above
 ```
 
 ## Code Quality Rules
 
-- **Zero warnings policy**: All lint commands use `--max-warnings=0`
-- **Run lint after code changes**: Always run `pnpm lint` after modifying code
-- **Format before commits**: Run `pnpm format` or rely on pre-commit hooks
-- **Type safety**: No `any` types; strict null checks enabled
-
-## Troubleshooting
-
-Use `/lint` skill for:
-- Setting up linting in new projects
-- Fixing lint errors
-- Adding framework-specific plugins (React, Vue, Next.js)
-- Configuring CI/CD workflows
+- Lint commands run with `--max-warnings=0`: leave zero warnings.
+- Run `pnpm check` after changing code and before committing.
+- Use `unknown` plus narrowing instead of `any`.
 
 ## Framework Notes
 
-<!-- Uncomment relevant section -->
+<!-- Keep the lines that apply -->
 
-<!-- React/Next.js:
-- Oxlint react + jsx-a11y + nextjs plugins enabled (built-in, no npm deps)
-- React Hooks rules enforced via oxlint react plugin
--->
-
-<!-- Vue:
-- Oxlint handles <script> linting
-- Residual ESLint with eslint-plugin-vue for <template> linting
--->
-
-<!-- Node.js:
-- Oxlint node plugin enabled (built-in)
--->
+<!-- React / Next.js: Oxlint react, jsx-a11y and nextjs plugins (built in, no extra packages) -->
+<!-- Vue: Oxlint lints <script>; residual ESLint (eslint-plugin-vue) lints <template> -->
+<!-- Node.js: Oxlint node plugin (built in) -->

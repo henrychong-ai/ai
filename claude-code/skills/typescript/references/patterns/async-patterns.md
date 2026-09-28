@@ -103,20 +103,21 @@ async function fetchMultipleUsers(ids: Array<string>) {
 Return first promise to resolve/reject:
 
 ```typescript
-// Timeout pattern
-async function fetchWithTimeout<T>(
-  promise: Promise<T>,
-  timeoutMs: number
-): Promise<T> {
+// Timeout pattern: clear the timer whichever promise settles first
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_, reject) => {
-    setTimeout(() => reject(new Error('Timeout')), timeoutMs);
+    timeoutId = setTimeout(() => reject(new Error('Timeout')), timeoutMs);
   });
-
-  return Promise.race([promise, timeout]);
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
-// Usage
-const user = await fetchWithTimeout(fetchUser(id), 5000);
+// Usage (for fetch, prefer AbortSignal.timeout below: it also cancels the request)
+const user = await withTimeout(fetchUser(id), 5000);
 ```
 
 ### Promise.any (First Success)
@@ -194,29 +195,27 @@ async function processWithAccumulator<T>(
 ### Limiting Parallel Operations
 
 ```typescript
+// Results keep the input order; at most `concurrency` mappers run at once.
 async function mapWithConcurrency<T, R>(
-  items: Array<T>,
-  mapper: (item: T) => Promise<R>,
+  items: ReadonlyArray<T>,
+  mapper: (item: T, index: number) => Promise<R>,
   concurrency: number
 ): Promise<Array<R>> {
-  const results: Array<R> = [];
-  const executing: Set<Promise<void>> = new Set();
+  if (!Number.isInteger(concurrency) || concurrency < 1) {
+    throw new RangeError('concurrency must be a positive integer');
+  }
+  const results = new Array<R>(items.length);
+  let next = 0;
 
-  for (const item of items) {
-    const promise = (async () => {
-      const result = await mapper(item);
-      results.push(result);
-    })();
-
-    executing.add(promise);
-    promise.finally(() => executing.delete(promise));
-
-    if (executing.size >= concurrency) {
-      await Promise.race(executing);
+  async function worker(): Promise<void> {
+    while (next < items.length) {
+      const index = next++;
+      results[index] = await mapper(items[index] as T, index);
     }
   }
 
-  await Promise.all(executing);
+  const workers = Array.from({ length: Math.min(concurrency, items.length) }, worker);
+  await Promise.all(workers);
   return results;
 }
 
@@ -292,18 +291,21 @@ try {
 }
 ```
 
-### Timeout with AbortController
+### Timeout with AbortSignal
 
 ```typescript
+// Cancels the request itself when the timeout fires
 function fetchWithTimeout(url: string, timeoutMs: number): Promise<Response> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
+}
 
-  return fetch(url, { signal: controller.signal }).finally(() => {
-    clearTimeout(timeoutId);
-  });
+// Combine a caller's signal with a timeout
+function fetchWithSignal(url: string, signal: AbortSignal, timeoutMs: number): Promise<Response> {
+  return fetch(url, { signal: AbortSignal.any([signal, AbortSignal.timeout(timeoutMs)]) });
 }
 ```
+
+A timeout aborts with a `DOMException` named `TimeoutError`; a manual `abort()` uses `AbortError`.
 
 ### Cancellable Async Operation
 
@@ -431,34 +433,37 @@ const result = await retryWithBackoff(
 Execute only after a pause in calls:
 
 ```typescript
-function debounce<T extends (...args: Array<unknown>) => unknown>(
-  fn: T,
+// Generic over the argument tuple: a constraint like `(...args: Array<unknown>) => unknown`
+// rejects any function with typed parameters under strictFunctionTypes.
+function debounce<TArgs extends Array<unknown>>(
+  fn: (...args: TArgs) => unknown,
   delayMs: number
-): (...args: Parameters<T>) => void {
+): (...args: TArgs) => void {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
-  return (...args: Parameters<T>) => {
+  return (...args: TArgs) => {
     clearTimeout(timeoutId);
     timeoutId = setTimeout(() => fn(...args), delayMs);
   };
 }
 
 // Async version that returns a promise
-function debounceAsync<T extends (...args: Array<unknown>) => Promise<unknown>>(
-  fn: T,
+// Calls superseded within the window never settle; callers must not await them for cleanup.
+function debounceAsync<TArgs extends Array<unknown>, TResult>(
+  fn: (...args: TArgs) => Promise<TResult>,
   delayMs: number
-): (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>> {
+): (...args: TArgs) => Promise<TResult> {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
-  let pendingPromise: Promise<Awaited<ReturnType<T>>> | undefined;
+  let pendingPromise: Promise<TResult> | undefined;
 
-  return (...args: Parameters<T>) => {
+  return (...args: TArgs) => {
     clearTimeout(timeoutId);
 
-    pendingPromise = new Promise((resolve, reject) => {
+    pendingPromise = new Promise<TResult>((resolve, reject) => {
       timeoutId = setTimeout(async () => {
         try {
           const result = await fn(...args);
-          resolve(result as Awaited<ReturnType<T>>);
+          resolve(result);
         } catch (error) {
           reject(error);
         }
@@ -475,13 +480,13 @@ function debounceAsync<T extends (...args: Array<unknown>) => Promise<unknown>>(
 Execute at most once per interval:
 
 ```typescript
-function throttle<T extends (...args: Array<unknown>) => unknown>(
-  fn: T,
+function throttle<TArgs extends Array<unknown>>(
+  fn: (...args: TArgs) => unknown,
   intervalMs: number
-): (...args: Parameters<T>) => void {
+): (...args: TArgs) => void {
   let lastCall = 0;
 
-  return (...args: Parameters<T>) => {
+  return (...args: TArgs) => {
     const now = Date.now();
     if (now - lastCall >= intervalMs) {
       lastCall = now;
@@ -498,29 +503,36 @@ function throttle<T extends (...args: Array<unknown>) => unknown>(
 ### Simple Async Queue
 
 ```typescript
+// Runs tasks one at a time. A failing task is reported and does not stop the queue.
 class AsyncQueue<T> {
   private queue: Array<() => Promise<T>> = [];
   private processing = false;
   private results: Array<T> = [];
 
+  constructor(private readonly onError: (error: unknown) => void) {}
+
   add(task: () => Promise<T>): void {
     this.queue.push(task);
-    this.process();
+    void this.process(); // process() never rejects: every task error goes to onError
   }
 
   private async process(): Promise<void> {
     if (this.processing) return;
     this.processing = true;
 
-    while (this.queue.length > 0) {
-      const task = this.queue.shift();
-      if (task) {
-        const result = await task();
-        this.results.push(result);
+    try {
+      while (this.queue.length > 0) {
+        const task = this.queue.shift();
+        if (!task) continue;
+        try {
+          this.results.push(await task());
+        } catch (error) {
+          this.onError(error);
+        }
       }
+    } finally {
+      this.processing = false;
     }
-
-    this.processing = false;
   }
 
   getResults(): Array<T> {
@@ -599,4 +611,3 @@ function double(n: number): number {
 ---
 
 *Companion to: error-handling.md, api-patterns.md*
-*Last updated: 2025-12-31*

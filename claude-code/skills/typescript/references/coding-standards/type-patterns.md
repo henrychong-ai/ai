@@ -8,25 +8,7 @@ Advanced type system patterns for type-safe, maintainable code.
 
 ### Strict Mode (Required)
 
-```json
-{
-  "compilerOptions": {
-    "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "strictBindCallApply": true,
-    "strictPropertyInitialization": true,
-    "noImplicitThis": true,
-    "alwaysStrict": true,
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitOverride": true
-  }
-}
-```
+The tsconfig standard (strictness flags, module settings, TS 7-ready rules) lives in `tooling.md`; this file covers the type techniques that rely on it.
 
 ### Key Flags
 
@@ -78,7 +60,7 @@ import { z } from 'zod';
 
 const UserSchema = z.object({
   name: z.string(),
-  email: z.string().email(),
+  email: z.email(),
 });
 
 type User = z.infer<typeof UserSchema>;
@@ -105,19 +87,16 @@ type Status = 'pending' | 'active' | 'inactive';
 type UserWithRole = User & { role: Role };
 type Nullable<T> = T | null;
 
-// Use `interface` for:
-// - Object shapes that may be extended
-// - Declaration merging (rare)
-// - Class implementations
+// Use `interface` only for:
+// - Declaration merging / module augmentation
+// - A class `implements` contract
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
+interface Repository<TEntity> {
+  findById(id: string): Promise<TEntity | null>;
 }
 
-interface AdminUser extends User {
-  permissions: string[];
+class UserRepository implements Repository<User> {
+  async findById(id: string): Promise<User | null> { /* ... */ }
 }
 ```
 
@@ -376,8 +355,8 @@ type VisibleStatus = Exclude<Status, 'deleted'>;
 // Extract return type
 type ReturnOf<T> = T extends (...args: any[]) => infer R ? R : never;
 
-// Extract promise value
-type Awaited<T> = T extends Promise<infer U> ? U : T;
+// Extract promise value (built in as Awaited<T>; shown here to illustrate infer)
+type UnwrapPromise<T> = T extends Promise<infer U> ? U : T;
 
 // Extract array element type
 type ElementOf<T> = T extends Array<infer E> ? E : never;
@@ -555,9 +534,9 @@ const double = (x: number) => x * 2; // Return type inferred
 import { z } from 'zod';
 
 const UserSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   name: z.string().min(1),
-  email: z.string().email(),
+  email: z.email(),
   role: z.enum(['user', 'admin']),
   createdAt: z.date(),
 });
@@ -586,5 +565,4 @@ type CreateUserInput = z.infer<typeof CreateUserSchema>;
 
 ---
 
-*Companion to: style-guide.md, clean-code.md*
-*Last updated: 2025-12-31*
+*Companion to: style-guide.md, tooling.md*

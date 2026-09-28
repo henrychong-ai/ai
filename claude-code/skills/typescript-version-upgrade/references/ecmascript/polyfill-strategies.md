@@ -4,41 +4,15 @@ How to polyfill ES features for older runtimes using core-js and Babel.
 
 **Sources:**
 - [core-js GitHub](https://github.com/zloirock/core-js)
-- [core-js Documentation](https://www.core-js.io/v4/docs/usage)
 - [Babel preset-env](https://babeljs.io/docs/babel-preset-env)
 
 ---
 
-## Critical Understanding: Syntax vs APIs
+## Syntax vs APIs
 
-### What CAN Be Polyfilled
+Polyfills only add **missing built-in APIs** (methods and globals). **Syntax** (`?.`, `??`, `async`/`await`, classes, private `#fields`, static blocks) is not polyfilled — it is transpiled by TypeScript, SWC, esbuild or Babel when the build target is lower than the syntax level. **Engine features** (`Proxy`, `WeakRef`/`FinalizationRegistry`, BigInt arithmetic, new RegExp syntax, `SharedArrayBuffer`/`Atomics`) can be neither transpiled nor polyfilled — the runtime floor must support them. Full table: `es-version-features.md` → "Native, Transpiled, Polyfilled or Impossible".
 
-**Runtime APIs** - Methods added to built-in objects:
-- Array methods: `flat`, `flatMap`, `findLast`, `toSorted`, `at`
-- Object methods: `entries`, `fromEntries`, `groupBy`, `hasOwn`
-- String methods: `padStart`, `replaceAll`, `trimStart`
-- Promise methods: `allSettled`, `any`, `withResolvers`
-- Map, Set, WeakMap, WeakSet implementations
-
-### What CANNOT Be Polyfilled
-
-**Syntax features** - Require transpilation, not polyfilling:
-- Arrow functions: `() => {}`
-- Classes: `class Foo {}`
-- async/await: `async function() { await }`
-- Optional chaining: `obj?.prop`
-- Nullish coalescing: `value ?? default`
-- Destructuring: `const {a} = obj`
-- Template literals: `` `${expr}` ``
-- Private class fields: `#private`
-- Top-level await
-
-**Unpolyfillable APIs:**
-- `Proxy` - Cannot be shimmed in ES5
-- `WeakRef` / `FinalizationRegistry` - GC-dependent
-- `BigInt` arithmetic - Engine-level feature
-- RegExp features - Named groups, lookbehind, v flag
-- `SharedArrayBuffer` / `Atomics` - Engine-level
+Server code on a supported Node line rarely needs polyfills: raise the runtime instead. Polyfills are mainly for browser builds with an older floor.
 
 ---
 
@@ -47,11 +21,8 @@ How to polyfill ES features for older runtimes using core-js and Babel.
 ### Installation
 
 ```bash
-# core-js v3 (stable, widely used)
-pnpm add core-js@3
-
-# core-js v4 (latest, breaking changes from v3)
-pnpm add core-js@4
+<pm> add core-js@^3
+npm view core-js dist-tags    # 3.x is "latest"; 4.x is alpha only (2026-09-28) — do not use it in production
 ```
 
 ### Global Polyfilling (Simple)
@@ -87,18 +58,13 @@ import 'core-js/actual/array/to-spliced';
 import 'core-js/actual/array/with';
 ```
 
-### ES Version Bundles
+### Everything stable
 
 ```typescript
-// All ES2023 features
-import 'core-js/es/2023';
-
-// All ES2024 features
-import 'core-js/es/2024';
-
-// All stable features
-import 'core-js/stable';
+import 'core-js/stable';   // all stable features; prefer `usage` mode or selective imports below
 ```
+
+core-js has no per-edition entry points (there is no `core-js/es/2023`); use `core-js/actual/<namespace>/<method>` imports or Babel/SWC `usage` mode.
 
 ---
 
@@ -118,13 +84,13 @@ module.exports = {
 
         // Specify core-js version
         corejs: {
-          version: '3.37',
+          version: '3.50', // the installed core-js minor — check with `npm ls core-js`
           proposals: false // Set true for stage 3 proposals
         },
 
         // Target environments
         targets: {
-          node: '18',
+          node: '24',
           // Or for browsers:
           // browsers: '> 0.5%, not dead'
         }
@@ -169,10 +135,10 @@ import 'core-js/modules/es.object.group-by';
 {
   "env": {
     "targets": {
-      "node": "18"
+      "node": "24"
     },
     "mode": "usage",
-    "coreJs": "3.37"
+    "coreJs": "3.50"
   }
 }
 ```
@@ -195,7 +161,7 @@ Libraries should NOT include polyfills:
 - Avoid duplicate polyfills across dependencies
 - Specify `peerDependencies` if polyfills required
 
-```json
+```jsonc
 // Library package.json
 {
   "peerDependencies": {
@@ -210,8 +176,8 @@ Libraries should NOT include polyfills:
 ## Requirements
 
 This library uses the following ES2023+ features:
-- `Array.prototype.toSorted()` - Requires polyfill for Node < 20
-- `Object.groupBy()` - Requires polyfill for Node < 22
+- `Array.prototype.toSorted()` - native from Node 20
+- `Object.groupBy()` - native from Node 21
 ```
 
 ---
@@ -295,7 +261,7 @@ npx source-map-explorer dist/bundle.js
 ### Minimize core-js Size
 
 1. **Use `usage` mode** - Only import what's used
-2. **Set accurate targets** - Don't polyfill for ES2024 if targeting Node 22
+2. **Set accurate targets** - Don't polyfill what the runtime floor already has
 3. **Exclude unused features** - Configure `exclude` in preset-env
 4. **Use pure imports** - `core-js-pure` for libraries
 
@@ -307,7 +273,7 @@ npx source-map-explorer dist/bundle.js
   presets: [
     ['@babel/preset-env', {
       useBuiltIns: 'usage',
-      corejs: '3.37',
+      corejs: '3.50',
       // Don't polyfill these even if used
       exclude: [
         'es.promise',  // Use native Promise
@@ -334,8 +300,7 @@ console.log('Promise.withResolvers:', typeof Promise.withResolvers);
 ### Run in Target Environment
 
 ```bash
-# Test with older Node version
-nvm use 16
+# Run the built output in the oldest browser or runtime you support
 node dist/test-polyfills.js
 ```
 
@@ -368,10 +333,7 @@ node dist/test-polyfills.js
 }
 ```
 
-Or install type definitions:
-```bash
-pnpm add -D @types/core-js
-```
+Only raise `lib` if every runtime in the floor has the API (natively or through the polyfill you ship); core-js ships no types, and `@types/core-js` is not needed.
 
 ### 4. core-js Version Mismatch
 

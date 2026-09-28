@@ -4,32 +4,18 @@
 
 Unconditional `process.stderr.write('[DEBUG]...')` or `console.log('[DEBUG]...')` statements left in production code can cause critical issues:
 
-1. **Terminal Memory Exhaustion**: During test runs, thousands of debug statements flood the terminal, eventually crashing iTerm or other terminal emulators
+1. **Terminal Memory Exhaustion**: During test runs, thousands of debug statements flood the terminal and can crash the terminal emulator
 2. **Performance Degradation**: Even when not crashing, excessive output slows test execution significantly
 3. **CI/CD Timeouts**: Log buffers fill, causing pipeline failures or excessive log storage costs
 4. **Silent Production Noise**: Debug output in production logs obscures real errors
 
-## Case Study: a Node MCP server test suite (anonymised)
+## Symptoms
 
-### Symptoms
-- iTerm memory usage spiking during `npm test`
-- Tests taking 10+ seconds instead of ~7 seconds
-- Terminal becoming unresponsive
-- System memory pressure alerts
+- Terminal memory climbing during `pnpm test`, and the terminal becoming unresponsive
+- Test runs noticeably slower than the code under test explains
+- Dozens of `[DEBUG]` lines per test, written straight to `process.stderr` or `console.log` from production modules, with no log-level control
 
-### Root Cause
-30+ unconditional debug statements across production code:
-
-```typescript
-// BAD: These run unconditionally
-process.stderr.write('[DEBUG] Processing observation...\n');
-process.stderr.write(`[DEBUG] Entity: ${JSON.stringify(entity)}\n`);
-```
-
-Key files with violations:
-- a data-write handler — 9 debug statements
-- the tool-call dispatch handler — 21+ debug statements
-- the logger module — no log level control
+Typical cause: temporary `process.stderr.write('[DEBUG] ...')` lines left in hot paths such as a request dispatcher or a write handler.
 
 ### The Fix
 
@@ -42,11 +28,12 @@ const LOG_LEVELS = { debug: 0, info: 1, warn: 2, error: 3, silent: 4 };
 
 function getLogLevel(): number {
   // Silent during tests unless explicitly requested
-  if (process.env.NODE_ENV === 'test' && !process.env.LOG_LEVEL) {
+  // Bracket access: process.env is an index signature (noPropertyAccessFromIndexSignature)
+  if (process.env['NODE_ENV'] === 'test' && !process.env['LOG_LEVEL']) {
     return LOG_LEVELS.silent;
   }
-  if (process.env.DEBUG) return LOG_LEVELS.debug;
-  const level = process.env.LOG_LEVEL?.toLowerCase();
+  if (process.env['DEBUG']) return LOG_LEVELS.debug;
+  const level = process.env['LOG_LEVEL']?.toLowerCase();
   if (level && level in LOG_LEVELS) {
     return LOG_LEVELS[level as keyof typeof LOG_LEVELS];
   }
@@ -54,7 +41,7 @@ function getLogLevel(): number {
 }
 
 export const logger = {
-  debug: (msg: string, ...args: any[]) => {
+  debug: (msg: string, ...args: Array<unknown>) => {
     if (getLogLevel() <= LOG_LEVELS.debug) {
       process.stderr.write(`[DEBUG] ${msg} ${args.join(' ')}\n`);
     }
@@ -108,10 +95,10 @@ console.log('=== DEBUG ===', data);  // BAD
 Find debug statements in a codebase:
 ```bash
 # Find process.stderr.write debug statements
-grep -r "process\.stderr\.write.*DEBUG" src/
+grep -rn "process\.stderr\.write.*DEBUG" src/
 
 # Find console debug statements
-grep -r "console\.log.*DEBUG\|console\.debug" src/
+grep -rnE "console\.log.*DEBUG|console\.debug" src/
 
 # Find any hardcoded debug markers
 grep -rn "\[DEBUG\]" src/
@@ -124,7 +111,6 @@ grep -rn "\[DEBUG\]" src/
 - **Test Isolation**: Tests should have minimal stdout/stderr side effects
 - **Pre-commit Hooks**: Add grep patterns to block debug statements
 
-## Lesson
+## Standard
 
-- **Severity when it bites**: P0 — unconditional debug output in a hot path crashed the developer's terminal during routine test runs.
-- **Standard**: no unconditional debug writes in production code; route all diagnostics through a levelled logger that is silent under `NODE_ENV=test` unless `LOG_LEVEL`/`DEBUG` is set.
+No unconditional debug writes in production code. Route all diagnostics through a levelled logger that is silent under `NODE_ENV=test` unless `LOG_LEVEL` or `DEBUG` is set. To catch new `console.*` calls, enable Oxlint's `no-console` rule in the package's `.oxlintrc.json`: it is a `restriction` rule, and `/lint`'s baseline template leaves that category off.

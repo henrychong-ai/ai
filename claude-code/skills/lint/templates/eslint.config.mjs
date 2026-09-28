@@ -1,125 +1,85 @@
-// ESLint Flat Config - RESIDUAL ONLY
-// Only needed when gap plugins are required (Vue templates, Astro, Tailwind,
-// Playwright, Obsidian, Compat). Oxlint handles all primary linting.
+// ESLint flat config: RESIDUAL ONLY
+// Oxlint does the primary linting. Keep ESLint only for gap plugins Oxlint does
+// not cover: Vue <template>, .astro files, Tailwind classes, Playwright, browser
+// compatibility. Uncomment the sections the project needs and delete the rest.
 //
-// IMPORTANT: eslint-plugin-oxlint disables all rules that oxlint already covers,
-// preventing duplicate checking.
+// eslint-plugin-oxlint (last block) turns off every ESLint rule Oxlint already runs.
 
-import oxlint from 'eslint-plugin-oxlint';
+import oxlint from "eslint-plugin-oxlint";
+import tseslint from "typescript-eslint";
 
-// =============================================================================
-// CONDITIONAL IMPORTS - Uncomment based on your project type
-// =============================================================================
+// Vue (template linting; Oxlint handles <script>):
+// import vue from "eslint-plugin-vue";
 
-// Vue projects (template linting - oxlint only handles <script>):
-// import vue from 'eslint-plugin-vue';
-// import tseslint from 'typescript-eslint';
+// Astro (.astro files):
+// import astro from "eslint-plugin-astro";
 
-// Astro projects (.astro file support - oxlint can't parse):
-// import astro from 'eslint-plugin-astro';
-// import tseslint from 'typescript-eslint';
+// Tailwind CSS v4 (class order + validation; replaces prettier-plugin-tailwindcss):
+// import betterTailwindcss from "eslint-plugin-better-tailwindcss";
 
-// Tailwind CSS v4 (class validation + sorting):
-// import betterTailwindcss from 'eslint-plugin-better-tailwindcss';
+// Playwright E2E tests:
+// import playwright from "eslint-plugin-playwright";
 
-// Playwright E2E testing (not yet ported to oxlint):
-// import playwright from 'eslint-plugin-playwright';
-
-// Obsidian plugin development (too niche for oxlint):
-// import obsidianmd from 'eslint-plugin-obsidianmd';
-
-// Browser compatibility checking (oxlint doesn't have):
-// import compat from 'eslint-plugin-compat';
+// Browser compatibility (needs a browserslist config):
+// import compat from "eslint-plugin-compat";
 
 export default [
-  // =============================================================================
-  // IGNORES
-  // =============================================================================
   {
-    ignores: [
-      'dist/',
-      'build/',
-      'node_modules/',
-      '.next/',
-      'coverage/',
-    ],
+    ignores: ["dist/", "build/", "coverage/", ".next/", ".astro/", ".wrangler/"],
   },
 
-  // =============================================================================
-  // CONDITIONAL PLUGINS - Uncomment based on your project type
-  // =============================================================================
+  // TypeScript parser so ESLint can read .ts/.tsx files
+  {
+    files: ["**/*.{ts,tsx,mts,cts}"],
+    languageOptions: { parser: tseslint.parser },
+  },
 
   // ---------------------------------------------------------------------------
-  // Vue (template linting)
+  // Vue
   // ---------------------------------------------------------------------------
-  // ...vue.configs['flat/recommended'],
+  // ...vue.configs["flat/recommended"],
   // {
-  //   files: ['*.vue', '**/*.vue'],
+  //   files: ["**/*.vue"],
   //   languageOptions: {
-  //     parserOptions: {
-  //       parser: tseslint.parser,
-  //       extraFileExtensions: ['.vue'],
-  //     },
+  //     parserOptions: { parser: tseslint.parser, extraFileExtensions: [".vue"] },
   //   },
-  // },
-  // {
-  //   rules: {
-  //     'vue/multi-word-component-names': 'off',
-  //     'vue/no-v-html': 'warn',
-  //   },
+  //   rules: { "vue/multi-word-component-names": "off" },
   // },
 
   // ---------------------------------------------------------------------------
   // Astro
   // ---------------------------------------------------------------------------
-  // ...astro.configs.recommended,
+  // ...astro.configs["flat/recommended"],
+
+  // ---------------------------------------------------------------------------
+  // Tailwind CSS v4: point entryPoint at the CSS file that imports tailwindcss
+  // ---------------------------------------------------------------------------
   // {
-  //   files: ['**/*.astro'],
-  //   languageOptions: {
-  //     parser: astro.parser,
-  //     parserOptions: {
-  //       parser: tseslint.parser,
-  //       extraFileExtensions: ['.astro'],
-  //       project: true,
-  //       tsconfigRootDir: import.meta.dirname,
-  //     },
+  //   files: ["src/**/*.{ts,tsx}"],
+  //   ...betterTailwindcss.configs.recommended,
+  //   settings: {
+  //     "better-tailwindcss": { entryPoint: "src/styles/globals.css" },
   //   },
-  // },
-
-  // ---------------------------------------------------------------------------
-  // Tailwind CSS v4 (class validation + sorting)
-  // NOTE: sort-classes replaces prettier-plugin-tailwindcss
-  // ---------------------------------------------------------------------------
-  // ...betterTailwindcss.configs['flat/recommended'],
-
-  // ---------------------------------------------------------------------------
-  // Playwright E2E testing
-  // ---------------------------------------------------------------------------
-  // {
-  //   files: ['**/e2e/**/*.ts', '**/*.e2e.ts', '**/tests/**/*.spec.ts'],
-  //   plugins: { playwright },
   //   rules: {
-  //     ...playwright.configs['flat/recommended'].rules,
-  //     'playwright/no-focused-test': 'error',
-  //     'playwright/no-skipped-test': 'warn',
+  //     ...betterTailwindcss.configs.recommended.rules,
+  //     // Biome owns line layout; this rule would fight the formatter
+  //     "better-tailwindcss/enforce-consistent-line-wrapping": "off",
   //   },
   // },
 
   // ---------------------------------------------------------------------------
-  // Obsidian Plugin Development
-  // ---------------------------------------------------------------------------
-  // ...obsidianmd.configs.recommended,
-
-  // ---------------------------------------------------------------------------
-  // Browser Compatibility
+  // Playwright
   // ---------------------------------------------------------------------------
   // {
-  //   plugins: { compat },
-  //   rules: { 'compat/compat': 'warn' },
+  //   files: ["e2e/**/*.ts", "**/*.e2e.ts"],
+  //   ...playwright.configs["flat/recommended"],
   // },
 
-  // =============================================================================
-  // OXLINT COMPAT (must be last - disables rules oxlint already covers)
-  // =============================================================================
-  ...oxlint.buildFromOxlintConfigFile('./oxlint.json'),
+  // ---------------------------------------------------------------------------
+  // Browser compatibility
+  // ---------------------------------------------------------------------------
+  // compat.configs["flat/recommended"],
+
+  // Must stay last: disables ESLint rules that Oxlint covers
+  ...oxlint.buildFromOxlintConfigFile("./.oxlintrc.json"),
 ];

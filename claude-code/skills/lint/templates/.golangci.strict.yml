@@ -1,0 +1,168 @@
+# golangci-lint v2 configuration: OPT-IN STRICT PROFILE
+# Copy to the module root as .golangci.yml (replacing the baseline), then check:
+#   golangci-lint config verify
+#
+# Requires golangci-lint v2 (validated against v2.14.0). Adopt deliberately:
+# on an existing codebase, expect many findings and fix them before making the
+# lint step blocking. The recommended default is the baseline in .golangci.yml.
+#
+# Pattern follows Google Go projects and community configs:
+# - google/osv-scanner (default: all approach)
+# - google/go-github, prometheus/prometheus, etcd-io/etcd
+# - https://github.com/maratori/golangci-lint-config
+#
+# gofumpt runs as a built-in formatter; no standalone install needed.
+
+version: "2"
+
+linters:
+  default: all
+  disable:
+    - depguard          # Dependency guard: enable per project with custom deny rules
+    - exhaustruct       # Require all struct fields initialised (too strict)
+    - ireturn           # Accept interfaces, return concrete (too opinionated)
+    - varnamelen        # Variable name length (too strict for idiomatic Go)
+    - wrapcheck         # Error wrapping enforcement (handled manually)
+    - nlreturn          # Newline before return (style opinion)
+    - wsl               # Whitespace linter (deprecated in v2)
+    - wsl_v5            # Whitespace linter successor (style opinion)
+    - godox             # TODO/FIXME/BUG comments (noisy during development)
+    - err113            # Dynamic errors (too strict, conflicts with fmt.Errorf)
+    - testpackage       # Require _test package (blocks white-box testing)
+    - paralleltest      # Require t.Parallel (not always appropriate)
+    - thelper           # Require t.Helper (too strict)
+    - cyclop            # Redundant with gocyclo/gocognit
+    - forcetypeassert   # Unchecked type assertions (errcheck check-type-assertions covers it)
+    - tagliatelle       # Struct tag naming convention (too opinionated)
+    - nonamedreturns    # Named returns useful for documentation
+    - mnd               # Magic number detection (too noisy)
+    - funlen            # Function length: gocognit measures complexity instead
+    - lll               # Line length: the formatter handles layout
+    - gomodguard        # Deprecated since v2.12.0 (replaced by gomodguard_v2)
+
+  settings:
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
+
+    gocyclo:
+      min-complexity: 15
+
+    gocognit:
+      min-complexity: 20
+
+    govet:
+      enable-all: true
+      disable:
+        - fieldalignment  # Disabled in every Google project that customises govet
+      settings:
+        shadow:
+          strict: true
+
+    revive:
+      severity: warning
+      rules:
+        - name: blank-imports
+        - name: context-as-argument
+        - name: context-keys-type
+        - name: dot-imports
+        - name: early-return
+        - name: empty-block
+        - name: error-return
+        - name: error-strings
+        - name: error-naming
+        - name: errorf
+        - name: exported
+        - name: if-return
+        - name: increment-decrement
+        - name: indent-error-flow
+        - name: package-comments
+        - name: range
+        - name: receiver-naming
+        - name: redefines-builtin-id
+        - name: superfluous-else
+        - name: time-naming
+        - name: unexported-return
+        - name: unreachable-code
+        - name: unused-parameter
+        - name: var-declaration
+        - name: var-naming
+
+    gosec:
+      severity: medium
+      confidence: medium
+
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - style
+        - performance
+        - experimental
+        - opinionated
+
+    nakedret:
+      max-func-lines: 0   # Disallow naked returns entirely
+
+    staticcheck:
+      checks:
+        - all
+        - -ST1000         # Package comments (handled by revive)
+        - -ST1020         # Comment on exported method (too noisy for existing codebases)
+        - -ST1021         # Comment on exported type (too noisy for existing codebases)
+        - -ST1022         # Comment on exported const (too noisy for existing codebases)
+        - -QF1008         # Embedded field selector (style preference)
+
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+
+  exclusions:
+    generated: lax
+    # false: the generic path/test rules below would warn on every repo that
+    # has no matching files; set true while tuning repo-specific rules
+    warn-unused: false
+    presets:
+      - comments
+      - std-error-handling
+      - common-false-positives
+    rules:
+      # Relax checks in test files
+      - path: _test\.go
+        linters:
+          - errcheck
+          - gosec
+          - goconst
+          - dupl
+          - noctx
+    paths:
+      # Generated code that lacks a "Code generated" header
+      - \.pb\.go$
+      - _mock\.go$
+      - \.gen\.go$
+
+formatters:
+  enable:
+    - gofumpt           # Stricter than gofmt
+    - goimports
+  settings:
+    gofumpt:
+      extra:
+        group-params: true   # Replaces the deprecated `extra-rules: true`
+  exclusions:
+    generated: lax
+    paths:
+      - \.pb\.go$
+      - _mock\.go$
+      - \.gen\.go$
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+output:
+  formats:
+    text:
+      path: stdout
+  sort-order:
+    - linter
+    - file

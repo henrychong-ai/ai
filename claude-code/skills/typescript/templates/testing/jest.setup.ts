@@ -29,12 +29,11 @@ expect.extend({
   },
 
   /**
-   * Check if a value is a valid UUID
+   * Check if a value is a valid UUID (RFC 9562 versions 1-8, including v4 and v7)
    * @example expect(id).toBeUUID()
    */
   toBeUUID(received: string) {
-    const uuidRegex =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     const pass = uuidRegex.test(received);
     return {
       pass,
@@ -73,7 +72,7 @@ afterEach(() => {
 // ============================================================================
 
 // Set timezone for consistent date testing
-process.env.TZ = 'UTC';
+process.env["TZ"] = "UTC";
 
 // ============================================================================
 // Global Utilities
@@ -85,7 +84,7 @@ process.env.TZ = 'UTC';
 export async function waitFor(
   condition: () => boolean | Promise<boolean>,
   timeout = 5000,
-  interval = 100
+  interval = 100,
 ): Promise<void> {
   const start = Date.now();
   while (!(await condition())) {
@@ -112,6 +111,3 @@ export function createDeferred<T>(): {
   });
   return { promise, resolve, reject };
 }
-
-// Export for TypeScript module augmentation
-export {};

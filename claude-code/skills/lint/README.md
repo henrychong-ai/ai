@@ -1,94 +1,59 @@
 # Lint Skill
 
-Code quality, linting, and formatting setup across all major ecosystems.
+Linting, formatting and git-hook standards across TypeScript/JavaScript, Python, Go, .NET and Solidity.
 
 ## Supported Ecosystems
 
-| Ecosystem | Linter | Formatter | Type Checker |
+| Ecosystem | Linter | Formatter | Type checker |
 |-----------|--------|-----------|--------------|
-| TypeScript/JS | Oxlint (primary) + residual ESLint (gap plugins) | Biome | TypeScript |
+| TypeScript/JS | Oxlint (+ residual ESLint for gap plugins) | Biome | `tsc` |
 | Python | Ruff | Ruff | mypy |
-| Go | golangci-lint v2 | gofmt | Built-in |
-| .NET/C# | Roslyn Analyzers | dotnet format | Built-in |
-| Solidity | Solhint | forge fmt / Prettier | N/A |
+| Go | golangci-lint v2 | gofmt + goimports (baseline) / gofumpt (strict), via golangci-lint | compiler |
+| .NET/C# | Roslyn analyzers | `dotnet format` | compiler |
+| Solidity | Solhint | Prettier + `prettier-plugin-solidity`, or `forge fmt` | compiler |
 
-## TypeScript/JS Architecture
-
-### Oxlint (Primary Linter)
-668 built-in rules across 14 native plugins — **zero npm dependencies** for linting. Replaces ESLint + 11 plugins.
-
-### Biome (Formatter Only)
-Prettier-compatible formatter with import sorting. Linter **disabled** (oxlint handles all linting).
-
-### Residual ESLint (Gap Plugins Only)
-Only needed for Vue templates, Astro, Tailwind CSS, Playwright, Obsidian, and browser compat. Uses `eslint-plugin-oxlint` to prevent duplicate rule checking.
+Git hooks: Husky pre-commit (gitleaks secret scan, lint-staged) and commit-msg (commitlint).
 
 ## Usage
 
-**Invoke the skill:**
-```
-/lint
-```
-
-**Or ask Claude Code directly:**
+Ask the coding agent, for example:
 - "Set up linting for this project"
-- "Run lint and fix errors"
-- "Configure oxlint for React"
+- "Run lint and fix the errors"
+- "Add the pre-commit and commit-msg hooks"
+- "Migrate this repo from ESLint + Prettier to Oxlint + Biome"
+
+The agent detects the stack, installs the tools, copies the templates, adds package scripts and hooks, and verifies them.
 
 ## Directory Structure
 
 ```
 lint/
-├── SKILL.md              # Full skill instructions (for Claude Code)
-├── README.md             # This file (for humans)
-├── references/           # Detailed configuration guides
+├── SKILL.md                  # Instructions for the coding agent
+├── README.md                 # This file
+├── TODO.md                   # Open items
+├── references/
 │   ├── typescript-oxlint-biome.md
 │   ├── typescript-residual-eslint.md
 │   ├── migration-eslint-prettier-to-oxlint-biome.md
+│   ├── git-hooks.md
 │   ├── python-ruff-mypy.md
 │   ├── go-golangci-lint.md
-│   └── dotnet-roslyn.md
-└── templates/            # Ready-to-copy config files
-    ├── README.md         # Template selection guide
-    ├── AGENTS.md.template
-    ├── oxlint.json
-    ├── biome.json
-    ├── eslint.config.mjs (residual only)
-    ├── tsconfig.json
-    └── ... (15 templates total)
+│   ├── dotnet-roslyn.md
+│   └── solidity-solhint-prettier.md
+└── templates/                # Ready-to-copy configs (see templates/README.md)
 ```
-
-## Quick Start
-
-1. **Navigate to your project directory**
-2. **Invoke the skill**: `/lint`
-3. **Claude Code will**:
-   - Detect your project type (framework, testing tools)
-   - Install core deps (only 3 packages for most projects!)
-   - Copy and configure relevant templates
-   - Set up package.json scripts
-
-## Features
-
-- **Minimal Dependencies**: 3 packages for most projects (oxlint + biome + typescript)
-- **Automated Setup**: Detects framework and enables correct oxlint plugins
-- **Smart Plugin Selection**: Oxlint built-in plugins first, residual ESLint only for gaps
-- **CI/CD Ready**: GitHub Actions and Bitbucket Pipelines templates
-- **Pre-commit Hooks**: Husky + lint-staged configuration
-- **IDE Integration**: VSCode settings for Biome format-on-save + Oxlint fix-on-save
 
 ## References
 
-| File | When to Read |
+| File | When to read |
 |------|--------------|
-| `typescript-oxlint-biome.md` | Full Oxlint + Biome setup, plugin coverage, migration guide |
-| `typescript-residual-eslint.md` | Adding Vue, Astro, Tailwind, Playwright, Obsidian, Compat support |
-| `migration-eslint-prettier-to-oxlint-biome.md` | Migrating an existing ESLint + Prettier repo to Oxlint + Biome |
+| `typescript-oxlint-biome.md` | Oxlint + Biome setup, plugins, scripts, editor |
+| `typescript-residual-eslint.md` | Vue, Astro, Tailwind, Playwright, browser compat |
+| `migration-eslint-prettier-to-oxlint-biome.md` | Migrating an existing ESLint + Prettier repo |
+| `git-hooks.md` | Husky, lint-staged, gitleaks, commitlint |
 | `python-ruff-mypy.md` | Python linting with Ruff + mypy |
-| `go-golangci-lint.md` | Go linting with golangci-lint v2 |
-| `dotnet-roslyn.md` | .NET/C# Roslyn analyzers setup |
+| `go-golangci-lint.md` | Go linting with golangci-lint v2 (baseline and strict profiles) |
+| `dotnet-roslyn.md` | .NET/C# Roslyn analyzers |
+| `solidity-solhint-prettier.md` | Solidity lint and format |
 
-## See Also
-
-- **SKILL.md**: Complete skill instructions (Claude Code reads this)
-- **templates/README.md**: Which templates to copy for your project
+tsconfig and tool version policy come from the `/typescript` skill; CI pipelines are project-specific (SKILL.md has the lint step to add).

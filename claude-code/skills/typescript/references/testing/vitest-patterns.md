@@ -1,6 +1,6 @@
 # Vitest Patterns
 
-Modern testing with Vitest - the fast, native ESM test framework for TypeScript.
+Testing with Vitest, the default test runner for this stack. Target version and the Workers constraint: `../tech-stack/version-policy.md` (Vitest `^4.1`). Workers-specific setup (`cloudflareTest()`): `../tech-stack/cloudflare.md`.
 
 ---
 
@@ -77,17 +77,28 @@ export default defineConfig({
 import '@testing-library/jest-dom/vitest';
 ```
 
-### Workspace (Monorepo)
+### Projects (Monorepo)
+
+Vitest 4 removed `vitest.workspace.ts` and `defineWorkspace`. Declare projects in the root `vitest.config.ts` with `test.projects`:
 
 ```typescript
-// vitest.workspace.ts
-import { defineWorkspace } from 'vitest/config';
+// vitest.config.ts (repository root)
+import { defineConfig } from 'vitest/config';
 
-export default defineWorkspace([
-  './packages/*/vitest.config.ts',
-  './apps/*/vitest.config.ts',
-]);
+export default defineConfig({
+  test: {
+    projects: [
+      'packages/*',                       // each package's own vitest.config.ts
+      {
+        extends: true,                    // inherit root options
+        test: { name: 'ui', root: './packages/ui', environment: 'jsdom' },
+      },
+    ],
+  },
+});
 ```
+
+Run one project with `vitest --project ui`. Template: `templates/testing/vitest.config.projects.ts`.
 
 ---
 
@@ -447,9 +458,11 @@ interface CustomMatchers<R = unknown> {
   toBeWithinRange(floor: number, ceiling: number): R;
 }
 
+// One `Matchers` augmentation types expect(x).*, expect.* and expect.extend (Vitest 3.2+).
+// The `any` default must match Vitest's own declaration for the interfaces to merge.
 declare module 'vitest' {
-  interface Assertion<T = unknown> extends CustomMatchers<T> {}
-  interface AsymmetricMatchersContaining extends CustomMatchers {}
+  // oxlint-disable-next-line typescript/no-explicit-any
+  interface Matchers<T = any> extends CustomMatchers<T> {}
 }
 
 // Usage
@@ -519,12 +532,8 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
       include: ['src/**/*.ts'],
-      exclude: [
-        'src/**/*.test.ts',
-        'src/**/*.d.ts',
-        'src/types/**',
-        'src/index.ts',
-      ],
+      exclude: ['src/**/*.test.ts', 'src/**/*.d.ts'],
+      // Example floor only: the repository's approved coverage policy wins.
       thresholds: {
         lines: 80,
         functions: 80,
@@ -535,6 +544,8 @@ export default defineConfig({
   },
 });
 ```
+
+Exclude a file only after reading it: a name such as `types.ts` or `index.ts` does not prove the file has no runtime code. Vitest 4 reports only files matched by `coverage.include` (the old `coverage.all` option is gone), so keep `include` covering all owned source.
 
 ### Running Coverage
 
@@ -593,9 +604,12 @@ vitest --coverage
 # Run in specific environment
 vitest --environment jsdom
 
-# Parallel execution
+# Pool (forks is the default; threads is faster where native modules allow)
 vitest --pool threads
 vitest --pool forks
+
+# One project in a monorepo
+vitest --project ui
 
 # Debug mode
 vitest --inspect-brk
@@ -608,11 +622,9 @@ vitest --inspect-brk
 ```json
 {
   "scripts": {
-    "test": "vitest",
-    "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage",
-    "test:ui": "vitest --ui",
-    "test:watch": "vitest --watch"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   }
 }
 ```
@@ -624,8 +636,8 @@ vitest --inspect-brk
 ### Minimal Setup (Ironclad Stack)
 
 ```bash
-# Install dependencies
-pnpm add -D vitest @vitest/coverage-v8
+# Install dependencies (pinned major: see version-policy.md)
+pnpm add -D vitest@^4.1 @vitest/coverage-v8@^4.1
 
 # Create config
 cat > vitest.config.ts << 'EOF'
@@ -640,7 +652,8 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
       include: ['src/**/*.ts'],
-      exclude: ['src/**/*.test.ts', 'src/**/*.d.ts', 'src/types/**'],
+      exclude: ['src/**/*.test.ts', 'src/**/*.d.ts'],
+      // Example floor only: the repository's approved coverage policy wins.
       thresholds: {
         lines: 80,
         functions: 80,
@@ -653,10 +666,9 @@ export default defineConfig({
 EOF
 
 # Add scripts to package.json
-npm pkg set scripts.test="vitest"
-npm pkg set scripts.test:run="vitest run"
+npm pkg set scripts.test="vitest run"
+npm pkg set scripts.test:watch="vitest"
 npm pkg set scripts.test:coverage="vitest run --coverage"
-npm pkg set scripts.test:ui="vitest --ui"
 ```
 
 ### React/DOM Setup
@@ -698,13 +710,13 @@ project/
 ### Templates Available
 
 Pre-configured templates in `templates/testing/`:
-- `vitest.config.ts` - Base config with 80% coverage
+- `vitest.config.ts` - Node/backend base config (example 80% floor)
 - `vitest.config.react.ts` - React/jsdom variant
-- `vitest.workspace.ts` - Monorepo setup
+- `vitest.config.projects.ts` - Monorepo root config with `test.projects`
 - `setup.ts` - Global test setup
 - `setup.react.ts` - React Testing Library setup
+- Workers: use the `cloudflareTest()` config in `../tech-stack/cloudflare.md`
 
 ---
 
 *Companion to: testing-strategies.md, jest-patterns.md, ai-testing-protocols.md*
-*Last updated: 2026-01-15*

@@ -1,8 +1,8 @@
 # NestJS — Core Patterns & Best Practices
 
-**Scope:** core NestJS only — the framework concepts and idioms that apply to any Nest backend. NestJS is **not** part of the ironclad stack (Hono + `@hono/zod-openapi`); it is covered here for existing or inherited NestJS codebases. Conventions specific to one codebase belong in that repository's `AGENTS.md`, not here. For depth beyond this reference, use the official docs (docs.nestjs.com) via Context7.
+**Scope:** core NestJS only — the framework concepts and idioms that apply to any Nest backend. NestJS is **not** part of the ironclad stack (Hono + `@hono/zod-openapi`); it is covered here for existing or inherited NestJS codebases. Conventions specific to one codebase belong in that repository's `AGENTS.md`, not here. For depth beyond this reference, use the official NestJS documentation (docs.nestjs.com).
 
-> **Precedence note:** the skill's "functional components, no classes" rule is a **frontend/React** rule. NestJS controllers, providers, modules, guards, interceptors, pipes and filters are **classes with decorators** by design — that's idiomatic and required (DI resolves classes). Use classes for these; keep pure functions for stateless helpers.
+> **Classes are correct here:** the style guide's functional-first preference does not apply to framework-required classes. NestJS controllers, providers, modules, guards, interceptors, pipes and filters are **classes with decorators** by design — that's idiomatic and required (DI resolves classes). Use classes for these; keep pure functions for stateless helpers.
 
 ## Mental model
 NestJS = **modules** that wire up **providers** (injectable classes) via **dependency injection**, with **decorators** declaring roles. A request flows through a fixed middleware/guard/interceptor/pipe/handler/filter pipeline. Favour many small single-responsibility providers over large ones.
@@ -88,4 +88,4 @@ Middleware → Guards → Interceptors (pre) → Pipes → Route handler
 - Reaching across module boundaries instead of importing/exporting providers.
 
 ## Going deeper
-This is the core surface. For specifics (microservices, websockets/gateways, CQRS, advanced DI, caching, OpenAPI/Swagger), consult docs.nestjs.com via Context7 rather than guessing.
+This is the core surface. For specifics (microservices, websockets/gateways, CQRS, advanced DI, caching, OpenAPI/Swagger), consult the official NestJS documentation (docs.nestjs.com) rather than guessing.

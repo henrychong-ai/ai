@@ -1,375 +1,100 @@
 # Testing Protocols for Version Upgrades
 
-Comprehensive testing requirements for safe version migrations.
+A version upgrade must not change application behaviour; the tests prove it. Replace `<pm>` with the repo's package manager (table in SKILL.md). Test framework configuration belongs to the repo and your testing standards; this file covers what to run and how to compare.
 
-## Testing Philosophy
+## Baseline (before any change)
 
-**Principle:** Version upgrades must not change application behavior. Tests prove this.
-
-```
-Pre-Upgrade Tests = Post-Upgrade Tests
-Same inputs → Same outputs
-Same coverage → Same coverage
-```
-
-## Testing Phases
-
-### Phase 1: Baseline Establishment
-
-Before any upgrade work:
+Keep baselines **outside the worktree** so they are never committed:
 
 ```bash
-# Create test baseline
-mkdir -p .upgrade-baseline
+BASE="${TMPDIR:-/tmp}/upgrade-baseline-$(basename "$PWD")-$(date +%Y%m%d)"
+mkdir -p "$BASE"
 
-# Capture test results
-pnpm test 2>&1 | tee .upgrade-baseline/test-results.txt
+node --version            >  "$BASE/versions.txt"
+<pm> --version            >> "$BASE/versions.txt"
+<pm> exec tsc --version   >> "$BASE/versions.txt"
 
-# Capture coverage
-pnpm test -- --coverage 2>&1 | tee .upgrade-baseline/coverage.txt
-
-# Capture build output
-pnpm build 2>&1 | tee .upgrade-baseline/build.txt
-
-# Capture type checking
-pnpm exec tsc --noEmit 2>&1 | tee .upgrade-baseline/typecheck.txt
-
-# Document versions
-node --version > .upgrade-baseline/versions.txt
-pnpm --version >> .upgrade-baseline/versions.txt
-cat package.json | grep -A5 '"dependencies"' >> .upgrade-baseline/versions.txt
+<pm> exec tsc --noEmit 2>&1 | tee "$BASE/typecheck.txt"
+<pm> run lint          2>&1 | tee "$BASE/lint.txt"
+<pm> test              2>&1 | tee "$BASE/test.txt"
+<pm> run build         2>&1 | tee "$BASE/build.txt"
 ```
 
-### Phase 2: Continuous Validation
+Capture coverage with the repo's own coverage script (e.g. `<pm> exec vitest run --coverage --coverage.reporter=json-summary`) and keep `coverage/coverage-summary.json` in `$BASE`.
 
-After each modification:
+## During the upgrade
+
+- After each file or codemod: `<pm> exec tsc --noEmit` and the related tests (`<pm> exec vitest related <files>` or the runner's equivalent).
+- After each phase: the full suite and the build.
+
+## Gates
+
+| Gate | Requirement |
+|---|---|
+| Type check | 0 errors |
+| Lint | 0 errors; each new warning explained or fixed |
+| Unit tests | 100% pass; coverage ≥ baseline (lines, branches, functions) |
+| Integration / E2E (if present) | 100% pass on critical flows |
+| Build | Succeeds; artefact inspected |
+| Container (if deployed as one) | Image builds on the new base and the service passes its health check |
+
+## Comparing with the baseline
 
 ```bash
-# Quick validation (after each file change)
-pnpm exec tsc --noEmit  # Type checking
-pnpm test --changed     # Tests for changed files
-
-# Full validation (after each phase)
-pnpm test               # All tests
-pnpm build              # Full build
+<pm> test 2>&1 | tee "$BASE/test-after.txt"
+diff <(grep -E "passed|failed|skipped" "$BASE/test.txt") <(grep -E "passed|failed|skipped" "$BASE/test-after.txt")
 ```
 
-### Phase 3: Final Verification
-
-Before committing:
+For coverage, compare the `total` block of the two `coverage-summary.json` files:
 
 ```bash
-# Complete validation suite
-pnpm test -- --coverage
-pnpm build
-pnpm lint
-
-# Compare to baseline
-diff .upgrade-baseline/coverage.txt <(pnpm test -- --coverage 2>&1)
+node -e '
+const [a,b]=process.argv.slice(1).map(f=>require(f).total);
+for (const k of ["lines","branches","functions","statements"])
+  console.log(k, a[k].pct, "->", b[k].pct, b[k].pct < a[k].pct ? "DROP" : "ok");
+' "$BASE/coverage-summary.json" "$PWD/coverage/coverage-summary.json"
 ```
 
-## Test Categories
+## When a test fails
 
-### Category 1: Unit Tests (Required)
+1. Stop the upgrade work and identify the failing test and the most recent change.
+2. Classify it:
+   - **Version-driven output change** (error text, deprecation warning, renamed import) — allowed test edit under the SKILL.md precedence rule; list it in the report.
+   - **Behaviour change** — revert the change that caused it and investigate; report before continuing.
+   - **Flaky** — prove it by running the test on the baseline commit; report it, do not mask it.
+3. Never loosen an assertion, skip a test, or lower a coverage threshold to get green.
 
-**Must pass:** 100%
+## Performance
+
+Required when upgrading a Node major, a framework major, or TypeScript (for compile time).
 
 ```bash
-pnpm test
+/usr/bin/time -p <pm> run build 2>&1 | tail -3 | tee "$BASE/perf-build.txt"
+/usr/bin/time -p <pm> test      2>&1 | tail -3 | tee "$BASE/perf-test.txt"
 ```
 
-| Metric | Requirement |
-|--------|-------------|
-| Pass rate | 100% |
-| Coverage | ≥ baseline |
-| Duration | ≤ 150% of baseline |
-
-### Category 2: Type Checking (Required)
-
-**Must pass:** No errors
-
-```bash
-pnpm exec tsc --noEmit
-```
-
-| Metric | Requirement |
-|--------|-------------|
-| Errors | 0 |
-| Warnings | Document any new ones |
-
-### Category 3: Linting (Required)
-
-**Must pass:** No errors
-
-```bash
-pnpm lint
-```
-
-| Metric | Requirement |
-|--------|-------------|
-| Errors | 0 |
-| New warnings | Explain or fix |
-
-### Category 4: Integration Tests (If Available)
-
-```bash
-pnpm test:integration
-```
-
-| Metric | Requirement |
-|--------|-------------|
-| Pass rate | 100% |
-| API contracts | Unchanged |
-
-### Category 5: E2E Tests (If Available)
-
-```bash
-pnpm test:e2e
-```
-
-| Metric | Requirement |
-|--------|-------------|
-| Critical flows | All pass |
-| Visual regression | No changes |
-
-## Coverage Requirements
-
-### Minimum Coverage Standards
-
-| Metric | Minimum | Ideal |
-|--------|---------|-------|
-| Line coverage | ≥ baseline | ≥ baseline |
-| Branch coverage | ≥ baseline | ≥ baseline |
-| Function coverage | ≥ baseline | ≥ baseline |
-
-### Coverage Comparison Script
-
-```bash
-#!/bin/bash
-# compare-coverage.sh
-
-BASELINE=".upgrade-baseline/coverage.txt"
-CURRENT=$(pnpm test -- --coverage 2>&1)
-
-echo "Baseline coverage:"
-grep -E "All files" "$BASELINE"
-
-echo "Current coverage:"
-echo "$CURRENT" | grep -E "All files"
-
-# Extract numbers and compare
-# (implementation depends on test runner output format)
-```
-
-## Test Failure Protocol
-
-### When Tests Fail
-
-```
-1. STOP all upgrade work
-2. Identify which test(s) failed
-3. Identify most recent change
-4. Determine if failure is:
-   a) Due to upgrade (expected) → Fix the upgrade code
-   b) Due to bug introduced → Revert and investigate
-   c) Flaky test → Document and report
-5. Never modify test assertions to make them pass
-```
-
-### Acceptable Reasons for Test Changes
-
-| Reason | Example | Action |
-|--------|---------|--------|
-| API signature changed | Method renamed | Update test import |
-| Error message changed | New Node.js version | Update assertion |
-| Deprecation warning | New warning in output | Filter or acknowledge |
-
-### Unacceptable Reasons
-
-| Reason | Why Bad |
-|--------|---------|
-| "Test was wrong" | Needs separate investigation |
-| "Behavior improved" | Scope creep |
-| "Test too strict" | May catch real bugs |
-
-## Performance Testing
-
-### When Required
-
-- Upgrading to new Node.js major version
-- Upgrading framework (Next.js, etc.)
-- After TypeScript upgrade (compilation time)
-
-### Performance Baseline
-
-```bash
-# Create performance baseline
-mkdir -p .upgrade-baseline/perf
-
-# Build time
-time pnpm build 2>&1 | tee .upgrade-baseline/perf/build-time.txt
-
-# Test time
-time pnpm test 2>&1 | tee .upgrade-baseline/perf/test-time.txt
-
-# Startup time (if applicable)
-time node dist/index.js --version 2>&1 | tee .upgrade-baseline/perf/startup.txt
-```
-
-### Performance Thresholds
-
-| Metric | Acceptable Change |
-|--------|-------------------|
+| Metric | Acceptable change |
+|---|---|
 | Build time | ≤ 120% of baseline |
 | Test time | ≤ 120% of baseline |
-| Startup time | ≤ 110% of baseline |
-| Memory usage | ≤ 110% of baseline |
+| Service startup | ≤ 110% of baseline |
+| Memory (steady state) | ≤ 110% of baseline |
 
-## Vitest Configuration
+## CI
 
-### Recommended Test Configuration
+The pipeline must run the same gates with a frozen lockfile on the new runtime image before merge. Pipeline structure, images and caching: your CI/CD runbook.
 
-```typescript
-// vitest.config.ts
-import { defineConfig } from 'vitest/config';
+## After rollback
 
-export default defineConfig({
-  test: {
-    globals: true,
-    environment: 'node',
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html'],
-      exclude: [
-        'node_modules/',
-        'dist/',
-        '**/*.d.ts',
-        '**/*.test.ts',
-        'vitest.config.ts',
-      ],
-    },
-    reporters: ['verbose'],
-    include: ['**/*.test.ts', '**/*.spec.ts'],
-    watchExclude: ['node_modules/', 'dist/'],
-  },
-});
-```
-
-### Running Tests
+If you roll back (`git revert`), reinstall with the frozen lockfile and re-run the gates to confirm the baseline results return:
 
 ```bash
-# All tests with coverage
-pnpm vitest run --coverage
-
-# Watch mode (development)
-pnpm vitest
-
-# Specific file
-pnpm vitest run src/utils.test.ts
-
-# With UI
-pnpm vitest --ui
-```
-
-## Jest Configuration (Legacy)
-
-If using Jest:
-
-```javascript
-// jest.config.js
-module.exports = {
-  preset: 'ts-jest',
-  testEnvironment: 'node',
-  coverageThreshold: {
-    global: {
-      branches: 80,
-      functions: 80,
-      lines: 80,
-      statements: 80,
-    },
-  },
-  collectCoverageFrom: [
-    'src/**/*.ts',
-    '!src/**/*.d.ts',
-    '!src/**/*.test.ts',
-  ],
-};
-```
-
-## CI/CD Integration
-
-### GitHub Actions Example
-
-```yaml
-name: Upgrade Validation
-
-on:
-  pull_request:
-    branches: [main]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-
-      - run: corepack enable
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm exec tsc --noEmit
-      - run: pnpm lint
-      - run: pnpm test -- --coverage
-      - run: pnpm build
-
-      - name: Check coverage
-        run: |
-          # Compare coverage to baseline
-          # Fail if coverage decreased
-```
-
-## Rollback Testing
-
-### Verification After Rollback
-
-If rollback required:
-
-```bash
-# Restore previous state
-git checkout main
-rm -rf node_modules pnpm-lock.yaml
-pnpm install
-
-# Verify functionality
-pnpm test
-pnpm build
-
-# Confirm baseline state restored
-diff .upgrade-baseline/test-results.txt <(pnpm test 2>&1)
+<pm> install --frozen-lockfile   # npm: npm ci; Yarn 2+: yarn install --immutable
+<pm> test && <pm> run build
 ```
 
 ## Checklist
 
-### Before Upgrade
-- [ ] All tests passing
-- [ ] Coverage baseline captured
-- [ ] Performance baseline captured
-- [ ] CI/CD green
-
-### During Upgrade
-- [ ] Tests run after each change
-- [ ] No test modifications without justification
-- [ ] Coverage monitored continuously
-
-### After Upgrade
-- [ ] All tests passing
-- [ ] Coverage ≥ baseline
-- [ ] Performance ≤ 120% baseline
-- [ ] CI/CD green
-- [ ] No new warnings
-
----
-
-*Tests are the safety net. Never compromise them.*
+- Before: all tests passing, baseline captured outside the worktree, CI green.
+- During: tests after each change; every test edit justified.
+- After: gates green, coverage ≥ baseline, performance within thresholds, CI green on the new runtime.

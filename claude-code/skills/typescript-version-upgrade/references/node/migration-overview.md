@@ -1,122 +1,67 @@
 # Node.js Migration Overview
 
-General principles and patterns for Node.js version upgrades.
+General principles for Node.js upgrades. Version-specific breaking changes are in the per-step guides; version policy belongs in your TypeScript standards.
 
-## Release Schedule Understanding
+## Release model (verify live)
 
-Node.js follows a predictable release schedule:
-- **Even-numbered versions** (18, 20, 22, 24) become LTS
-- **LTS phases:** Active (18 months) → Maintenance (12 months) → EOL
-- **Security patches:** Only provided during Active/Maintenance phases
+- Lines 20–26: even-numbered majors become LTS in October after their April/May release; LTS is Active for about a year, then Maintenance, then end-of-life ~30 months after release.
+- From Node 27 (alpha October 2026, 27.0.0 April 2027) Node ships **one major per year and every release becomes LTS**; version numbers follow the calendar year. Source: nodejs.org "Evolving the Node.js Release Schedule".
+- Only Active and Maintenance lines get security fixes. An end-of-life line is a finding in its own right.
 
-## Current LTS Status (as of 2026-01)
-
-| Version | Status | EOL Date |
-|---------|--------|----------|
-| v24.x | Current LTS | ~2028 |
-| v22.x | Active LTS | ~2027 |
-| v20.x | Maintenance | ~2026-04 |
-| v18.x | EOL | 2025-04 |
-| v16.x | EOL | 2023-09 |
-
-## Migration Strategy
-
-### 1. Version Leap Policy
-
-**Recommended:** Skip one LTS version maximum.
-- v20 → v22 → v24 (ideal incremental path)
-- v20 → v24 (acceptable single leap)
-- v16 → v24 (risky, many breaking changes)
-
-### 2. Deprecation Warning Protocol
-
-Before upgrading, run with deprecation warnings:
-```bash
-NODE_OPTIONS='--pending-deprecation' node app.js
-```
-
-Address all warnings BEFORE upgrading.
-
-### 3. Native Module Considerations
-
-Native modules (node-gyp) may require rebuild:
-```bash
-# Check for native dependencies
-npm ls | grep -E "(node-gyp|native|binding)"
-
-# Force rebuild
-npm rebuild
-```
-
-## Common Breaking Changes Across Versions
-
-### V8 Engine Updates
-Each Node version ships newer V8, which may:
-- Remove deprecated JavaScript features
-- Change error message formats
-- Alter performance characteristics
-
-### OpenSSL Updates
-Security library changes affect:
-- TLS/SSL connections
-- Cryptographic operations
-- Certificate validation
-
-### Module System Evolution
-- CommonJS → ESM migration pressure
-- Import assertions → Import attributes
-- Package.json `exports` field strictness
-
-## Testing Strategy
-
-### Minimum Test Coverage for Upgrades
-
-| Test Type | Required | Rationale |
-|-----------|----------|-----------|
-| Unit tests | Yes | Core logic verification |
-| Integration tests | Yes | API contract validation |
-| E2E tests | Recommended | User flow verification |
-| Performance tests | For critical paths | Regression detection |
-
-### Pre-Upgrade Baseline
+Read the current state rather than trusting a table:
 
 ```bash
-# Capture baseline metrics
-npm test -- --coverage > test-baseline.txt
-npm run build 2>&1 > build-baseline.txt
-node --version >> baseline.txt
+# Status and dates for every line
+curl -s https://raw.githubusercontent.com/nodejs/Release/main/schedule.json | python3 -m json.tool
+
+# Latest release and latest security release per line
+curl -s https://nodejs.org/dist/index.json | python3 -c "
+import json,sys
+latest, sec = {}, {}
+for r in json.load(sys.stdin):
+    m = r['version'].split('.')[0]
+    latest.setdefault(m, r['version'])
+    if r['security']: sec.setdefault(m, (r['version'], r['date']))
+for m in list(latest)[:6]:
+    print(m, 'latest', latest[m], '| last security', *sec.get(m, ('-', '-')))"
 ```
 
-### Post-Upgrade Comparison
+Run the **latest patch** of the chosen line; never deploy one older than the line's latest security release from the script above. Cross-check the advisories at https://nodejs.org/en/blog/vulnerability for whether a given CVE affects your usage. Snapshot on 2026-09-28 (re-verify): Node 20 end-of-life since 2026-04-30; last security releases 24.18.1 and 22.23.2 (2026-07-28); Node 24 enters Maintenance 2026-10-20; Node 26 becomes LTS 2026-10-28.
+
+## Migration strategy
+
+- Move one LTS line at a time and apply the guides consecutively (20→22→24→26). A multi-line jump is fine when tests are strong, but read every intermediate guide.
+- Run the app and tests with deprecation output before and after: `NODE_OPTIONS='--pending-deprecation --trace-deprecation' <pm> test`. Fix warnings before the upgrade when the old line allows it.
+- Use the official codemods where they exist: `npx codemod run @nodejs/<recipe>` (catalogue: https://nodejs.org/en/learn/getting-started/userland-migrations). Commit or stash work first — they rewrite source.
+- Deprecation IDs and status (documentation-only, runtime, end-of-life): https://nodejs.org/api/deprecations.html.
+
+## Native modules
+
+A new major changes the ABI (`NODE_MODULE_VERSION`), so every native addon must be rebuilt or have a matching prebuild.
 
 ```bash
-# Compare results
-diff test-baseline.txt test-current.txt
-diff build-baseline.txt build-current.txt
+find node_modules -name '*.node' -type f | head      # which packages ship native code
+<pm> rebuild
 ```
 
-## Dockerfile Best Practices
+pnpm 10 blocks dependency build scripts unless allowed (`pnpm approve-builds`, or `onlyBuiltDependencies`). If a native package loads with "compiled against a different Node.js version", it was not rebuilt.
 
-### Use Specific Versions
+## `@types/node`
+
+Keep the `@types/node` major equal to the runtime major in every workspace package. A higher major lets code use APIs the runtime lacks; a lower one hides APIs and deprecations.
+
+## Docker base images
+
 ```dockerfile
-# Good: Pinned version
-FROM node:24.13.0-alpine
-
-# Bad: Floating tag
-FROM node:latest
-FROM node:lts
-```
-
-### Multi-Stage Builds
-```dockerfile
-FROM node:24.13.0-alpine AS builder
+# Major tag (or a patch tag bumped with every security release)
+FROM node:<major>-alpine AS builder
 WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
-RUN corepack enable && pnpm install --frozen-lockfile
+RUN npm install -g corepack@<pinned> && corepack enable && pnpm install --frozen-lockfile
 COPY . .
-RUN pnpm build
+RUN pnpm build && pnpm prune --prod
 
-FROM node:24.13.0-alpine AS runner
+FROM node:<major>-alpine AS runner
 WORKDIR /app
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
@@ -124,60 +69,16 @@ USER node
 CMD ["node", "dist/index.js"]
 ```
 
-## CI/CD Pipeline Updates
+- `node:lts`, `node:latest` and `node:current` change major under you; `lts` jumps on LTS promotion day. A major tag (`node:24-alpine`) tracks the line's patches, which is the recommended default; a patch literal must be bumped on every security release or it goes stale.
+- Install a pinned Corepack and enable it (Node 25+ no longer bundles it). Corepack then downloads the package manager pinned in `packageManager` and verifies its `+sha512.` hash, so a tampered or wrong download fails the build. Record the pinned Corepack version in your TypeScript standards.
+- Pipeline images, runners and registry flow: your CI/CD runbook.
 
-### GitHub Actions
-```yaml
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24.13.0'
-```
+## CI
 
-### Bitbucket Pipelines
-```yaml
-image: node:24.13.0-alpine
-pipelines:
-  default:
-    - step:
-        script:
-          - node --version
-          - pnpm install
-          - pnpm test
-```
+Update every pipeline image and `setup-node` step to the same line as `.nvmrc`. On GitHub Actions prefer `node-version-file: '.nvmrc'` over a literal. Pipeline structure and images belong in your CI/CD runbook.
 
-## Rollback Procedure
+## Rollback
 
-### Immediate Rollback
-```bash
-# Revert to previous branch
-git checkout main
-
-# Or reset to pre-upgrade commit
-git reset --hard HEAD~1
-```
-
-### Docker Rollback
-```bash
-# Revert to previous image
-docker tag myapp:previous myapp:latest
-docker compose up -d
-```
-
-## Security Considerations
-
-### CVE Monitoring
-- Subscribe to: https://nodejs.org/en/blog/vulnerability/
-- Monitor: https://github.com/nodejs/node/security/advisories
-
-### Minimum Secure Versions (CVE-2025-59466)
-- v24.13.0+ (async_hooks DoS fix)
-- v22.22.0+ (async_hooks DoS fix)
-- v20.20.0+ (async_hooks DoS fix)
-
----
-
-*See version-specific guides for detailed migration steps.*
+- Before merge: abandon the branch.
+- After merge: `git revert <merge-commit>` (restores manifests and lockfile together).
+- Deployed: your CI/CD runbook's production rollback.

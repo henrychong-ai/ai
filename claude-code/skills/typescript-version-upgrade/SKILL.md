@@ -1,368 +1,182 @@
 ---
 name: typescript-version-upgrade
-description: Upgrades Node.js, TypeScript, ECMAScript targets, and framework versions with production-grade safety protocols — CVE remediation, LTS upgrades, TypeScript migrations, ES target upgrades (ES5→ES2024), Next.js upgrades, and multi-repository version standardisation.
+description: Plans and executes runtime and toolchain upgrades for TypeScript/JavaScript repos with production-grade safety gates — Node.js major and security-patch upgrades (end-of-life lines, CVE remediation, Node 20/22/24/26, Docker base images, pipeline images, @types/node alignment), TypeScript 5→6→7 migrations, ECMAScript target/lib changes, React 19 and Next.js major upgrades. Use when asked to bump Node, fix an EOL runtime, remediate a Node CVE, upgrade TypeScript, change tsconfig target, move to React 19 or Next 16, or audit a repo's runtime versions.
 allowed-tools: Read, Grep, Glob, Bash, Edit, Write
 ---
 
-# TypeScript Version Upgrade Skill
+# TypeScript Version Upgrade
 
-Comprehensive version upgrade orchestration for Node.js, TypeScript, and framework migrations with production-grade safety protocols.
-
-## When to Use This Skill
-
-- Upgrading Node.js versions (especially for CVE remediation)
-- Legacy Node.js migrations (12.x, 14.x, 16.x EOL systems)
-- Migrating TypeScript versions (4.x → 5.x)
-- **Upgrading ECMAScript target versions (ES5 → ES2024)**
-- **Aligning tsconfig.json target/lib with Node.js version**
-- **Analyzing browser support requirements for ES targets**
-- **Configuring polyfills for runtime API support**
-- Upgrading framework versions (Next.js, React, etc.)
-- Multi-repository version standardization
-- Security-critical production application upgrades
+Upgrade procedure for Node.js, TypeScript, ES targets, React and Next.js. Version *policy* (which versions you run, pin and target) and your tsconfig standard belong in your TypeScript standards, not in this skill; this skill covers *how* to move a repo there safely. Read current per-repo versions from your organisation's repo inventory, if you keep one, instead of guessing which repos need an upgrade.
 
 ## Production Safety
 
 These upgrades may run against live production applications, including systems that move money or handle other critical data. Scope every change to what the version upgrade requires: keep business logic and function signatures unchanged unless the new version forces a change, keep every test and the coverage baseline, write the rollback plan before the first change, and commit only after the validation gates and CI/CD pipelines pass and the user approves.
 
+## Precedence: approvals and test edits
+
+This rule wins over anything in the reference files:
+- **Approval** happens at phase checkpoints — after the plan, after version-file and dependency changes, and before commit — not per file. Stop early only for the stop conditions in `references/safety/ai-guardrails.md`.
+- **Test edits** are allowed only when the new version changes observable output that the test pins (an error message, a deprecation warning, a renamed import), and each one is listed in the checkpoint report with its cause. A test that fails for any other reason is a behaviour change: stop and report it.
+
 ## Operation Modes
 
-### Mode 1: ANALYZE (Default)
-Assess repository for upgrade requirements without making changes.
+| Mode | Output |
+|---|---|
+| **ANALYZE** (default) | Current version inventory, required upgrades with rationale, risk, effort. No changes. |
+| **PLAN** | Ordered steps, file-by-file change list, test checkpoints, rollback plan. |
+| **EXECUTE** | Runs the plan through the validation gates, with the approval checkpoints above. |
 
-**Outputs:**
-- Current version inventory
-- Required upgrades with rationale
-- Risk assessment
-- Estimated effort
+## Step 0: Check live versions
 
-### Mode 2: PLAN
-Create detailed upgrade plan with specific steps.
+Version facts go stale within weeks. Before recommending a target, read them live:
 
-**Outputs:**
-- Ordered upgrade sequence
-- File-by-file change inventory
-- Testing checkpoints
-- Rollback procedures
+```bash
+curl -s https://nodejs.org/dist/index.json | python3 -c "
+import json,sys; seen=set()
+for r in json.load(sys.stdin):
+    m=r['version'].split('.')[0]
+    if m not in seen: seen.add(m); print(m, r['version'], r['date'], 'lts=',r['lts'])" | head -6
+curl -s https://raw.githubusercontent.com/nodejs/Release/main/schedule.json   # LTS / maintenance / EOL dates
+npm view typescript dist-tags
+npm view <package> version
+```
 
-### Mode 3: EXECUTE
-Perform upgrades with validation gates.
-
-**Requires:** User approval at each critical checkpoint
+Node patches: run the latest patch of the chosen line, and never one older than the line's newest `"security": true` release in `index.json` (lookup script: `references/node/migration-overview.md`). Do not carry a single-CVE "minimum floor" forward.
 
 ## Detection Matrix
 
-| Trigger | Detection Method | Action |
-|---------|------------------|--------|
-| `.nvmrc` present | Read file | Check if version < target |
-| `.node-version` present | Read file | Check if version < target |
-| `package.json engines.node` | Parse JSON | Check version constraint |
-| `Dockerfile FROM node:` | Grep pattern | Check base image version |
-| `tsconfig.json` | Parse JSON | Check TypeScript settings |
-| `tsconfig.json target` | Parse JSON | Check ES target version |
-| `tsconfig.json lib` | Parse JSON | Check lib array settings |
-| `vite.config.ts build.target` | Read file | Check Vite build target |
-| `esbuild target` | Read config | Check esbuild target |
-| `.browserslistrc` | Read file | Check browser targets |
-| `package.json browserslist` | Parse JSON | Check browser constraints |
-| `next.config.js/ts` | Read file | Check Next.js patterns |
+| Source | What to read | Flag when |
+|---|---|---|
+| `.nvmrc` / `.node-version` | Node version | Below policy, or disagrees with other sources |
+| `package.json` `engines.node` | Constraint | Allows an EOL line, or excludes the deployed line |
+| `package.json` `packageManager` | PM and pinned version | Missing, or not the policy version |
+| Dockerfile `FROM` (all stages) | Base image tag | Floating across majors (`lts`, `latest`, `current`), a different major from `.nvmrc`, or a patch literal older than the line's latest security release |
+| Pipeline images (`bitbucket-pipelines.yml` top-level and per-step `image:`, GitHub `setup-node`) | CI Node | Differs from the runtime line |
+| `@types/node` in every workspace `package.json` | Types major | Major differs from the runtime major |
+| `typescript` in every `package.json` | Compiler version and range | Below policy, or unpinned where a compiler-API tool runs |
+| `tsconfig*.json` `target` / `lib` / `module` / `moduleResolution` / `baseUrl` / `types` | Compiler config | Deprecated in TS 6 (see `references/typescript/typescript-5-to-6.md`) |
+| Bundler configs (`vite.config.*`, `tsdown.config.*`, `esbuild`, `webpack.config.*`) | Build target | Newer than the oldest runtime or browser you ship to |
+| `.browserslistrc` / `package.json` `browserslist` | Browser floor | Older than the framework's floor |
+| `next`, `react`, `react-dom` versions | Framework majors | Unsupported by the target Node, or behind policy |
+
+**`lts`/`latest`/`current` tags are a silent major upgrade:** `node:lts*` moves to the next line on the LTS promotion date (Node 26 on 2026-10-28). Use the major tag (`node:24-alpine`) or a patch tag that is bumped with every Node security release.
+
+## Package manager commands
+
+Detect from the lockfile, then confirm with `packageManager`. Use this table's commands wherever a reference shows `pnpm`.
+
+| Lockfile | PM | Install (keep lockfile) | CI install | Rebuild natives | Run binary |
+|---|---|---|---|---|---|
+| `pnpm-lock.yaml` | pnpm | `pnpm install` | `pnpm install --frozen-lockfile` | `pnpm rebuild` | `pnpm exec <bin>` |
+| `package-lock.json` | npm | `npm install` | `npm ci` | `npm rebuild` | `npx --no-install <bin>` |
+| `yarn.lock` + `.yarnrc.yml` | Yarn 2+ | `yarn install` | `yarn install --immutable` | `yarn rebuild` | `yarn <bin>` |
+| `yarn.lock` only | Yarn 1 | `yarn install` | `yarn install --frozen-lockfile` | `npm rebuild` | `yarn <bin>` |
+| `bun.lock` / `bun.lockb` | Bun | `bun install` | `bun install --frozen-lockfile` | reinstall the package | `bunx <bin>` |
+
+pnpm 10 does not run dependency build scripts unless the package is allowed (`onlyBuiltDependencies`, or `pnpm approve-builds`); a native module that "rebuilt" silently may not have. Node 25 and later do not bundle Corepack: install a pinned Corepack, then enable it (`npm install -g corepack@<pinned> && corepack enable`), so Corepack installs and hash-verifies the package manager pinned in `packageManager` (record the pinned Corepack version in your TypeScript standards). Details: `references/node/node-24-to-26.md`.
 
 ## Upgrade Execution Protocol
 
-### Phase 1: Pre-Flight Checks
+### Phase 1: Pre-flight
 
 ```bash
-# 1. Verify clean git state
-git status --porcelain
+git status --porcelain                       # must be empty
+git switch -c upgrade/node-<from>-to-<to>-$(date +%Y%m%d)
 
-# 2. Create safety branch
-git checkout -b upgrade/node-XX-to-YY-$(date +%Y%m%d)
-
-# 3. Document current state
-node --version > .upgrade-baseline
-npm test 2>&1 | tee .upgrade-test-baseline
+BASE="${TMPDIR:-/tmp}/upgrade-baseline-$(basename "$PWD")-$(date +%Y%m%d)"
+mkdir -p "$BASE"                              # outside the worktree, never committed
+node --version > "$BASE/versions.txt"
+<pm> test 2>&1 | tee "$BASE/test.txt"
+<pm> run build 2>&1 | tee "$BASE/build.txt"
 ```
 
-### Phase 2: Version File Updates
+Write the rollback plan (below) into the upgrade plan before changing anything.
 
-**Priority Order:**
-1. `.nvmrc` - Primary version specification
-2. `.node-version` - Secondary version specification
-3. `package.json engines` - Constraint validation
-4. `Dockerfile` - Container builds
-5. CI/CD pipelines - Build environments
+### Phase 2: Version files
 
-### Phase 3: Dependency Resolution
+Update every source from the Detection Matrix together so they agree: `.nvmrc`/`.node-version`, `engines`, every Dockerfile stage, every pipeline image, `@types/node` majors, `packageManager` if the PM changes.
+
+### Phase 3: Dependencies — keep the lockfile
 
 ```bash
-# Clear node_modules and lockfile
-rm -rf node_modules pnpm-lock.yaml
-
-# Reinstall with new Node version
-nvm use && pnpm install
-
-# Check for peer dependency warnings
-pnpm install 2>&1 | grep -i "peer"
+nvm use                      # or the repo's version manager
+<pm> install                 # updates only what the manifest changes require
+<pm> rebuild                 # native modules against the new ABI
+<pm> install 2>&1 | grep -i peer
 ```
 
-### Phase 4: Code Migration
+Regenerating a lockfile from scratch unpins the whole transitive tree; that is a separate, reviewed change, never part of a runtime upgrade.
 
-Load version-specific guide from `references/`:
-- Node upgrades: `references/node/node-{FROM}-to-{TO}.md`
-- TypeScript upgrades: `references/typescript/typescript-{VERSION}.md`
-- Framework upgrades: `references/frameworks/{framework}-migrations.md`
+### Phase 4: Code migration
 
-### Phase 5: Validation Gates
+Load the guide for each step of the path, applying consecutive guides in order (e.g. Node 20→22 then 22→24):
 
-**Gate 1: Compilation**
-```bash
-pnpm build
-# Must exit 0 with no errors
+| Upgrade | Guide |
+|---|---|
+| Node ≤18 → 24 | `references/node/legacy-node-to-24.md` |
+| Node 20 → 22 | `references/node/node-20-to-22.md` |
+| Node 22 → 24 | `references/node/node-22-to-24.md` |
+| Node 24 → 26 | `references/node/node-24-to-26.md` |
+| TypeScript 3.x/4.x → 5 | `references/typescript/typescript-legacy-to-5.md` |
+| TypeScript 5 → 6 | `references/typescript/typescript-5-to-6.md` |
+| TypeScript 6 → 7 | `references/typescript/typescript-6-to-7.md` |
+| React 16/17/18 → 19 | `references/react/react-to-19.md` |
+| Next.js 13 → 14 → 15 → 16 | `references/frameworks/nextjs-migrations.md` |
+| ES target / lib | `references/ecmascript/es-upgrade-checklist.md` |
+
+General Node principles, Docker and CI changes: `references/node/migration-overview.md`.
+
+### Phase 5: Validation gates
+
+Run with the repo's own scripts; each must exit 0.
+
+| Gate | Command | Pass condition |
+|---|---|---|
+| Type check | `<pm> exec tsc --noEmit` (or the repo's `typecheck` script) | 0 errors |
+| Lint | `<pm> run lint` | 0 errors; new warnings explained |
+| Unit tests | `<pm> test` | All pass; coverage ≥ baseline |
+| Build | `<pm> run build` | Succeeds; artefact inspected |
+| Integration / E2E | the repo's scripts, if present | All pass |
+| Container | `docker build` with the new base image, then start it | Starts, health check passes |
+
+Details, thresholds and baseline comparison: `references/safety/testing-protocols.md`.
+
+### Phase 6: Approval checkpoint
+
+Report: files changed (diff summary), gate results against the baseline, each test edit with its cause, new warnings or deprecations, and a proceed/rollback recommendation. Wait for explicit approval before committing.
+
+### Phase 7: Commit
+
+Stage the files you changed by path (never `git add -A`; baseline files live outside the worktree). Commit message, following the repo's convention:
+
+```
+chore: upgrade Node.js from <X> to <Y>
+
+- .nvmrc, engines, Dockerfile, pipeline image, @types/node
+- Resolved <N> deprecation warnings
+Addresses: CVE-XXXX-XXXXX (if applicable)
 ```
 
-**Gate 2: Type Checking**
-```bash
-pnpm exec tsc --noEmit
-# Must exit 0 with no errors
-```
+### Rollback
 
-**Gate 3: Linting**
-```bash
-pnpm lint
-# Must exit 0 with no errors
-```
+- **Before merge:** abandon the upgrade branch; nothing else changed.
+- **After merge:** `git revert <merge-commit>` — this restores manifests and the lockfile together. Never rewrite shared history (`reset --hard` on a shared branch).
+- **Deployed:** use your CI/CD runbook's production rollback for the service's deploy path.
 
-**Gate 4: Unit Tests**
-```bash
-pnpm test
-# Must pass all tests
-# Compare coverage to baseline
-```
+## ECMAScript target
 
-**Gate 5: Integration Tests (if applicable)**
-```bash
-pnpm test:integration
-# Must pass all tests
-```
-
-### Phase 6: User Approval Checkpoint
-
-**STOP AND REPORT:**
-- Changes made (file diff summary)
-- Test results comparison
-- Any warnings or deprecations
-- Recommendation to proceed or rollback
-
-**Wait for explicit user approval before committing.**
-
-### Phase 7: Commit and Document
-
-```bash
-git add -A
-git commit -m "chore: upgrade Node.js from X to Y
-
-- Updated .nvmrc to Y
-- Updated package.json engines constraint
-- Updated Dockerfile base image
-- Resolved [N] deprecation warnings
-- All tests passing
-
-Addresses: CVE-XXXX-XXXXX (if applicable)"
-```
-
----
-
-## ECMAScript Target Upgrade Protocol
-
-Load `references/ecmascript/es-upgrade-checklist.md` for complete step-by-step protocol.
-
-### Default Target Recommendation
-
-**ES2022 should be the target for ALL projects** unless backwards compatibility with older Node versions is not required, in which case **ES2024** can be used.
-
-| Scenario | Target | Rationale |
-|----------|--------|-----------|
-| **Default (all projects)** | ES2022 | Wide Node.js 18+ support, excellent browser coverage |
-| **Modern only (Node 22+)** | ES2024 | Latest features, smallest bundles, no legacy support needed |
-
-### ES Upgrade Pre-Flight Analysis
-
-1. **Detect Current Configuration**
-   - Read `tsconfig.json` → extract `target`, `lib`, `module`
-   - Read `.nvmrc` / `.node-version` → determine Node.js version
-   - Read bundler configs → esbuild, vite, webpack targets
-
-2. **Determine Safe ES Target**
-   - Node.js version → maximum safe ES target (see mapping table)
-   - Browser requirements → minimum common ES support
-   - TypeScript version → ES target support (ES2023+ requires TS 5.5+)
-
-3. **Analyze Breaking Change Risk**
-   - **Low Risk (syntax only):** Arrow functions, classes, async/await
-   - **Medium Risk (needs runtime):** Optional chaining, nullish coalescing
-   - **High Risk (cannot polyfill):** Private fields, Proxy, WeakRef, BigInt arithmetic
-
-### Node.js to ES Target Mapping
-
-| Node.js | Target | Lib | Module | TypeScript |
-|---------|--------|-----|--------|------------|
-| **24.x** | ES2024 | ES2024 | NodeNext | 5.6+ |
-| **22.x** | ES2023 | ES2023 | NodeNext | 5.5+ |
-| **20.x** | ES2023 | ES2023 | NodeNext | 5.5+ |
-| **18.x** | ES2022 | ES2022 | Node16 | 5.0+ |
-| **16.x** | ES2021 | ES2021 | Node16 | 4.x+ |
-| **14.x** | ES2020 | ES2020 | Node16 | 4.x+ |
-
-### ES Version Feature Summary
-
-| Target | Key Features Added |
-|--------|-------------------|
-| ES2022 | Top-level await, private class fields (#), Array.at(), Error.cause |
-| ES2023 | findLast/findLastIndex, toSorted/toReversed/toSpliced (non-mutating) |
-| ES2024 | Object.groupBy, Map.groupBy, Promise.withResolvers |
-
-### What CAN vs CANNOT Be Polyfilled
-
-| Category | ✅ Polyfillable | ❌ Cannot Polyfill |
-|----------|----------------|-------------------|
-| Array methods | map, filter, flat, findLast, toSorted | — |
-| Object methods | entries, fromEntries, groupBy | — |
-| Promise methods | allSettled, any, withResolvers | — |
-| Syntax features | — | ?., ??, async/await, class fields |
-| Private fields | — | #privateField |
-| BigInt | Comparison only | Arithmetic operations |
-| Proxy | — | Full Proxy behavior |
-| WeakRef | — | Cannot polyfill |
-| RegExp | — | Named groups, lookbehind, v flag |
-
-### ES Upgrade Validation Gates
-
-**Gate 1: Type Check**
-```bash
-pnpm exec tsc --noEmit
-# Must exit 0 with no errors
-```
-
-**Gate 2: Build**
-```bash
-pnpm build
-# Check: Build succeeds, bundle size should DECREASE
-```
-
-**Gate 3: Tests**
-```bash
-pnpm test
-# All tests must pass
-```
-
-**Gate 4: Bundle Inspection**
-```bash
-head -50 dist/index.js
-# Verify modern syntax present, no unnecessary polyfills
-```
-
-## AI Safety Guardrails
-
-**Load `references/safety/ai-guardrails.md` for detailed protocols.**
-
-### Known AI Refactoring Risks
-
-| Risk | Mitigation |
-|------|------------|
-| Hallucinated APIs | Verify every API call against official docs |
-| Context limit issues | Process files individually, not bulk |
-| Business logic drift | Compare test results against the pre-upgrade baseline |
-| Missing edge cases | Review test coverage before/after |
-| Optimistic transformations | Conservative approach, minimal changes |
+Set `target` to what the **oldest runtime you deploy to** supports, and keep `lib` aligned. Mapping, TypeScript minimums (ES2023 → TS 5.5, ES2024 → TS 5.7, ES2025 → TS 6.0) and the step-by-step protocol: `references/ecmascript/es-upgrade-checklist.md`. Your default tsconfig belongs in your TypeScript standards; do not introduce a second one here. For Next.js and Vite front ends the tsconfig target does not control emitted code (`noEmit`; SWC/esbuild/Oxc use the browser target) — see `references/ecmascript/browser-support.md`.
 
 ## Reference Files
 
-Load as needed based on upgrade type:
-
-### Node.js Migrations
-- `references/node/migration-overview.md` - General Node.js upgrade principles
-- `references/node/node-12-to-24.md` - **Node 12 → 24 (EXTREMELY CRITICAL EOL migration, 12 major versions, 3+ years EOL)**
-- `references/node/node-16-to-24.md` - **Node 16 → 24 (CRITICAL EOL migration, 8 major versions)**
-- `references/node/node-20-to-22.md` - Node 20 → 22 specific changes
-- `references/node/node-22-to-24.md` - Node 22 → 24 specific changes
-
-### React Migrations
-- `references/react/react-16-to-19.md` - **React 16 → 19 (major migration, 3 versions)**
-- `references/react/react-17-to-19.md` - React 17 → 19 (2 version jump)
-- `references/react/react-18-to-19.md` - React 18 → 19 (focused upgrade)
-
-### TypeScript Migrations
-- `references/typescript/typescript-4-to-5.md` - TS 4.x → 5.x migration
-
-### Framework Migrations
-- `references/frameworks/nextjs-migrations.md` - Next.js version upgrades
-
-### Safety Protocols
-- `references/safety/ai-guardrails.md` - AI-specific safety protocols
-- `references/safety/testing-protocols.md` - Testing requirements
-
-### ECMAScript Target Migrations
-- `references/ecmascript/es-version-features.md` - Complete ES feature list by version (ES5→ES2024)
-- `references/ecmascript/node-es-mapping.md` - Node.js to ES target mapping with tsconfig examples
-- `references/ecmascript/browser-support-matrix.md` - Browser version requirements per ES level
-- `references/ecmascript/polyfill-strategies.md` - core-js and Babel configuration
-- `references/ecmascript/bundler-configuration.md` - esbuild, Vite, Webpack ES alignment
-- `references/ecmascript/es-upgrade-checklist.md` - Step-by-step ES upgrade protocol
-
-## Quick Reference: Version Targets
-
-### Node.js (CVE-2025-59466 Compliant)
-| LTS Line | Minimum Safe Version |
-|----------|---------------------|
-| v24.x | 24.13.0+ |
-| v22.x | 22.22.0+ |
-| v20.x | 20.20.0+ |
-| v18.x | EOL - Must upgrade |
-| v16.x | EOL - Critical upgrade |
-| v14.x | EOL (Apr 2023) - Critical upgrade |
-| v12.x | EOL (Apr 2022) - EMERGENCY upgrade |
-
-### TypeScript
-| Target | Minimum Version |
-|--------|-----------------|
-| Modern | 5.0+ |
-| Legacy | 4.9.x (deprecated) |
-
-### ECMAScript Targets (Recommended)
-| Scenario | Target | Rationale |
-|----------|--------|-----------|
-| **Default (all projects)** | ES2022 | Node 18+, Chrome 94+, Safari 15+ |
-| **Modern (Node 22+ only)** | ES2024 | Latest features, no legacy support |
-| **Wide browser support** | ES2020 | 93%+ global coverage |
-| **Legacy Node 16** | ES2021 | EOL but sometimes required |
-
-### React
-| From Version | Target | Migration Complexity |
-|--------------|--------|---------------------|
-| React 16.x | 19.x | 🔴 High - Major APIs removed |
-| React 17.x | 19.x | 🟠 Medium - createRoot + defaults |
-| React 18.x | 19.x | 🟢 Low - Focused changes |
-
-## Example Usage
-
-### Analyze Repository
-```
-Use typescript-version-upgrade skill to analyze this repository for version upgrades needed.
-```
-
-### Plan Upgrade
-```
-Use typescript-version-upgrade skill to plan Node.js upgrade from 20 to 24 for this project.
-```
-
-### Execute Upgrade
-```
-Use typescript-version-upgrade skill to execute the planned Node.js upgrade with full testing.
-```
+- Node: `references/node/migration-overview.md`, `legacy-node-to-24.md`, `node-20-to-22.md`, `node-22-to-24.md`, `node-24-to-26.md`
+- TypeScript: `references/typescript/typescript-legacy-to-5.md`, `typescript-5-to-6.md`, `typescript-6-to-7.md`
+- React: `references/react/react-to-19.md`
+- Next.js: `references/frameworks/nextjs-migrations.md`
+- ECMAScript: `references/ecmascript/es-upgrade-checklist.md`, `es-version-features.md`, `browser-support.md`, `bundler-configuration.md`, `polyfill-strategies.md`
+- Safety: `references/safety/ai-guardrails.md`, `references/safety/testing-protocols.md`
 
 ## Integration Notes
 
-- Works with `/lint` skill for post-upgrade linting setup
-- References `/typescript` skill patterns for code conventions
-- Tracks multi-step upgrade progress as a checklist in the upgrade plan, marking each step as it completes
-- Creates backup branch before any modifications
+- Your TypeScript standards own version policy and the canonical tsconfig; `/lint` covers lint and format config; your CI/CD runbook owns pipeline images, deploys and rollbacks; your organisation's repo inventory holds each repo's current versions.
+- Track multi-step upgrade progress as a checklist in the upgrade plan, marking each step as it completes.

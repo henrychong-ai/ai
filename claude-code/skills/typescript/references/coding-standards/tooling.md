@@ -1,188 +1,137 @@
-# TypeScript Development Tooling
+# TypeScript Tooling — tsconfig Standard, Scripts, Editor
 
-TypeScript compiler configuration and editor integration.
+This file owns the **tsconfig standard**. Lint and format configuration (Oxlint + Biome, residual ESLint for gap plugins) and git hooks belong to `/lint`; versions to `../tech-stack/version-policy.md`.
 
-**For linting setup:** Use the `/lint` skill which is the single source of truth for ESLint flat config with 7 core plugins + framework-specific plugins, Prettier, Husky/lint-staged, and CI/CD pipelines.
+## Tool stack
 
-**Note:** The Ironclad Stack default is now **Oxlint + Biome** (see `typescript-ironclad-stack.md`). The ESLint + Prettier setup below remains valid for projects that still use it.
+| Tool | Purpose | Owner |
+|------|---------|-------|
+| TypeScript (`typescript@~6.0`) | Type checking, declaration emit | This skill |
+| Oxlint | Linting (primary) | `/lint` → `references/typescript-oxlint-biome.md` |
+| Biome | Formatting (linter disabled), import sorting | `/lint` → `references/typescript-oxlint-biome.md` |
+| Residual ESLint | Only for gap plugins (Vue templates, Astro, Tailwind class sorting, Playwright) | `/lint` → `references/typescript-residual-eslint.md` |
+| husky + lint-staged + gitleaks | Pre-commit hooks | `/lint` → `references/git-hooks.md` |
+| Migrating from ESLint + Prettier | — | `/lint` → `references/migration-eslint-prettier-to-oxlint-biome.md` |
 
----
+## tsconfig standard
 
-## Tool Stack Overview
+Every tsconfig is written to be **TypeScript 7-ready**: no `baseUrl`, no `moduleResolution: "node"`/`"node10"`/`"classic"`, `esModuleInterop` never `false`, no `downlevelIteration`, no ES5 target. TS 7 turns each of these into a hard error.
 
-| Tool | Purpose | Managed By |
-|------|---------|------------|
-| **TypeScript** | Compiler & type checking | This skill |
-| **ESLint 9** | Linting (find problems) | `/lint` skill |
-| **Prettier** | Formatting (code style) | `/lint` skill |
-| **Husky + lint-staged** | Pre-commit hooks | `/lint` skill |
+### Base (all projects)
 
----
-
-## TypeScript Configuration
-
-### Strict tsconfig.json (Ironclad Stack Standard)
-
-```json
+```jsonc
+// tsconfig.json
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-
+    // Strictness
     "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "strictBindCallApply": true,
-    "strictPropertyInitialization": true,
-    "noImplicitThis": true,
-    "useUnknownInCatchVariables": true,
     "noUncheckedIndexedAccess": true,
-
+    "exactOptionalPropertyTypes": true,
     "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
-    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "useUnknownInCatchVariables": true,
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
 
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-
-    "esModuleInterop": true,
+    // Modules
+    "verbatimModuleSyntax": true,
     "isolatedModules": true,
-    "skipLibCheck": true
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+
+    // Language level for Node 24 (TypeScript wiki Node target mapping; Node 22 → ES2023,
+    // Node 26 → ES2025). Per-line mapping and target changes: /typescript-version-upgrade
+    "target": "ES2024",
+    "lib": ["ES2024"],
+
+    // Path alias: relative `paths`, no `baseUrl`
+    "paths": { "@/*": ["./src/*"] }
   }
 }
 ```
 
-### Critical Strictness Options
+Then pick **one runtime block**:
 
-| Option | Effect |
-|--------|--------|
-| `noUncheckedIndexedAccess` | Array access returns `T \| undefined` |
-| `useUnknownInCatchVariables` | `catch(e)` is `unknown`, not `any` |
-| `noImplicitOverride` | Requires `override` keyword in subclasses |
-| `strictNullChecks` | No implicit null/undefined |
+| Runtime | `module` / `moduleResolution` | Add | Emits? |
+|---------|-------------------------------|-----|--------|
+| **Node service, CLI, library** (run with tsx, emit with `tsc`) | `"NodeNext"` / `"NodeNext"` | `"types": ["node"]`, `"rootDir": "src"`, `"outDir": "dist"`, `"declaration": true`, `"declarationMap": true`, `"sourceMap": true` | Yes |
+| **Vite SPA / React** | `"ESNext"` / `"bundler"` | `"lib": ["ES2024", "DOM", "DOM.Iterable"]` (keep it at or below the browsers you support), `"jsx": "react-jsx"`, `"noEmit": true` | No (Vite builds) |
+| **Cloudflare Workers** | `"ESNext"` / `"bundler"` | `"types": ["./worker-configuration.d.ts"]` (from `wrangler types`), `"noEmit": true` | No (Wrangler builds) |
+| **Next.js** | `"ESNext"` / `"bundler"` | Keep the keys Next.js manages (`plugins`, `jsx`, `incremental`); add the strictness block | No |
 
-### Path Aliases
+Notes:
 
-```json
-{
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"]
-    }
-  }
-}
-```
+- **`verbatimModuleSyntax`** requires `import type` for type-only imports (see `style-guide.md`). Under `NodeNext`, relative imports carry the `.js` extension of the emitted file (`import { x } from './x.js'`).
+- **`exactOptionalPropertyTypes`** and **`noPropertyAccessFromIndexSignature`** are the two flags most likely to need work in an existing codebase. Adopt them in new projects; in existing ones enable them when the error count is manageable.
+- **`noUnusedLocals`/`noUnusedParameters`** stay off: Oxlint reports unused code without blocking the type check.
+- **TypeScript 6 defaults**: `types` defaults to `[]`, so list every global types package the runtime needs (`node`, `vite/client`, `vitest/globals` when tests rely on `globals: true`); and an emitting build needs an explicit `rootDir` (`tsc` stops with TS5011 otherwise).
+- **`process.env`** is an index signature, so `noPropertyAccessFromIndexSignature` rejects `process.env.FOO`. Parse the environment once with Zod (`../tech-stack/typescript-ironclad-stack.md` → "Environment and Configuration") and read the typed result; use `process.env['FOO']` only where that is impractical.
+- Workspaces: put the base in `tsconfig.base.json` at the root and `extends` it from each package.
 
-### Project-Specific Variations
-
-| Project Type | Module | Target | Notes |
-|--------------|--------|--------|-------|
-| **Node.js backend** | NodeNext | ES2022 | Standard |
-| **Vite frontend** | ESNext | ESNext | Vite handles bundling |
-| **Next.js** | ESNext | ES2022 | Next.js manages config |
-| **Cloudflare Workers** | ESNext | ESNext | Edge runtime |
-| **Library (npm)** | NodeNext | ES2022 | For broad compatibility |
-
----
-
-## Package Scripts
-
-### Standard Script Set
+## Package scripts
 
 ```json
 {
   "scripts": {
-    "dev": "tsup --watch",
-    "build": "tsup",
-    "lint": "eslint . --max-warnings=0",
-    "lint:fix": "eslint . --fix --max-warnings=0",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
-    "test": "vitest",
-    "check": "pnpm lint && pnpm format:check && pnpm typecheck"
+    "lint": "oxlint --max-warnings=0",
+    "lint:fix": "oxlint --fix --max-warnings=0",
+    "format": "biome check --write .",
+    "format:check": "biome check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test"
   }
 }
 ```
 
-### CI-Friendly Scripts
+Adjust `dev`/`build` to the runtime (Vite, Wrangler, Next). The exact Oxlint flags (for example `-c` when the config file is not auto-discovered) and the Biome setup come from `/lint`; `biome check` (linter off) formats and organises imports, where `biome format` only formats. `check` mirrors CI: green locally means green in CI.
 
-```json
-{
-  "scripts": {
-    "ci:lint": "eslint . --max-warnings=0",
-    "ci:format": "prettier --check .",
-    "ci:typecheck": "tsc --noEmit",
-    "ci:test": "vitest run --coverage",
-    "ci": "pnpm ci:lint && pnpm ci:format && pnpm ci:typecheck && pnpm ci:test"
-  }
-}
+Optional extra gate on large codebases (TS 7 native compiler, type-check only; see `version-policy.md`):
+
+```bash
+pnpm dlx --package=typescript@^7.0 tsc --noEmit -p tsconfig.json
 ```
 
----
+## Editor integration (VS Code)
 
-## Editor Integration
-
-### VS Code Settings (TypeScript)
-
-```json
+```jsonc
 // .vscode/settings.json
 {
   "typescript.tsdk": "node_modules/typescript/lib",
-  "typescript.preferences.importModuleSpecifier": "relative",
-  "typescript.suggest.autoImports": true,
+  "typescript.preferences.importModuleSpecifier": "non-relative",
   "typescript.updateImportsOnFileMove.enabled": "always",
-
   "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[typescriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
+  "editor.defaultFormatter": "biomejs.biome",
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit",
-    "source.organizeImports": "explicit"
+    "source.organizeImports.biome": "explicit",
+    "source.fixAll.oxc": "explicit"
   }
 }
 ```
 
-### Recommended Extensions
-
-```json
+```jsonc
 // .vscode/extensions.json
 {
-  "recommendations": [
-    "dbaeumer.vscode-eslint",
-    "esbenp.prettier-vscode",
-    "ms-vscode.vscode-typescript-next"
-  ]
+  "recommendations": ["biomejs.biome", "oxc.oxc-vscode"]
 }
 ```
 
----
+`typescript.tsdk` makes the editor use the project's pinned TypeScript rather than the editor's bundled version.
 
-## Cross-References
+## Cross-references
 
 | Topic | Location |
 |-------|----------|
-| **ESLint flat config** | `/lint` skill → `references/typescript-eslint.md` |
-| **Framework plugins** | `/lint` skill → React, Next.js, Vue, Vitest, Playwright |
-| **Pre-commit hooks** | `/lint` skill → Husky + lint-staged section |
-| **CI/CD pipelines** | `/lint` skill → `templates/` directory |
-| **Ironclad Stack** | This skill → `tech-stack/typescript-ironclad-stack.md` |
-| **Type patterns** | This skill → `type-patterns.md` |
-
----
-
-*See also: type-patterns.md for advanced TypeScript patterns*
-*For comprehensive linting setup: invoke `/lint` skill*
-*Last updated: 2026-01-14*
+| Oxlint + Biome configuration | `/lint` → `references/typescript-oxlint-biome.md` |
+| Residual ESLint gap plugins | `/lint` → `references/typescript-residual-eslint.md` |
+| Pre-commit hooks | `/lint` → `references/git-hooks.md` |
+| Versions | `../tech-stack/version-policy.md` |
+| Type patterns | `type-patterns.md` |

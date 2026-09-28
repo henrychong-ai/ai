@@ -2,9 +2,9 @@
 
 Patterns for building type-safe APIs with Hono, tRPC, and REST/GraphQL.
 
-> **Full Hono/Workers setup:** See `tech-stack/cloudflare.md` for complete Cloudflare Workers configuration.
+> **TypeScript on Workers:** `tech-stack/cloudflare.md`.
 
-> **Recommended default for back-end / back-to-front projects:** the **`@hono/zod-openapi` single-source pattern** (one `createRoute()` drives request+response validation, the generated OpenAPI doc, dashboard client types, and MCP tool schemas). Hono, tRPC, REST, and GraphQL all remain documented below, but for a Worker/API that owns the contract with a dashboard and/or MCP consuming its types, default to the single-source pattern — see "@hono/zod-openapi Single-Source Pattern (Recommended Default)". The architectural rationale and the back-to-front vs front-to-back boundary live in `tech-stack/typescript-ironclad-stack.md` → "The Option-B Back-to-Front Pattern (Recommended Default)".
+> **Recommended default for back-end / back-to-front projects:** the **`@hono/zod-openapi` single-source pattern** (one `createRoute()` drives runtime request validation, compile-time response typing, documented responses in the generated OpenAPI doc, dashboard client types, and MCP tool schemas). Hono, tRPC, REST, and GraphQL all remain documented below, but for a Worker/API that owns the contract with a dashboard and/or MCP consuming its types, default to the single-source pattern — see "@hono/zod-openapi Single-Source Pattern (Recommended Default)". The architectural rationale and the back-to-front vs front-to-back boundary live in `tech-stack/typescript-ironclad-stack.md` → "The Option-B Back-to-Front Pattern (Recommended Default)".
 
 ---
 
@@ -42,7 +42,7 @@ import type { Bindings } from '../types';
 
 const CreateUserSchema = z.object({
   name: z.string().min(1),
-  email: z.string().email(),
+  email: z.email(),
 });
 
 const users = new Hono<{ Bindings: Bindings }>()
@@ -211,7 +211,7 @@ app.get('*', async (c) => {
 // src/middleware/error.ts
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
-import { ZodError } from 'zod';
+import { z, ZodError } from 'zod';
 
 export function setupErrorHandling(app: Hono) {
   app.onError((error, c) => {
@@ -226,7 +226,7 @@ export function setupErrorHandling(app: Hono) {
 
     if (error instanceof ZodError) {
       return c.json(
-        { error: 'Validation failed', details: error.flatten() },
+        { error: 'Validation failed', details: z.flattenError(error) },
         400
       );
     }
@@ -277,13 +277,14 @@ export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
 
 ```typescript
 // src/trpc/routers/users.ts
+import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { router, publicProcedure, protectedProcedure } from '../router';
 
 export const usersRouter = router({
   // Public: get user by ID
   getById: publicProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(z.object({ id: z.uuid() }))
     .query(async ({ ctx, input }) => {
       const user = await ctx.db.users.findById(input.id);
       if (!user) {
@@ -296,7 +297,7 @@ export const usersRouter = router({
   updateProfile: protectedProcedure
     .input(z.object({
       name: z.string().min(1).optional(),
-      email: z.string().email().optional(),
+      email: z.email().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       return ctx.db.users.update(ctx.userId, input);
@@ -312,9 +313,7 @@ export const usersRouter = router({
       const users = await ctx.db.users.list(input);
       return {
         items: users,
-        nextCursor: users.length === input.limit
-          ? users[users.length - 1].id
-          : undefined,
+        nextCursor: users.length === input.limit ? users.at(-1)?.id : undefined,
       };
     }),
 });
@@ -443,7 +442,7 @@ async function paginateWithCursor<T extends { id: string }>(
 
   return {
     items: items.slice(0, limit),
-    nextCursor: items.length > limit ? items[limit - 1].id : undefined,
+    nextCursor: items.length > limit ? items.at(limit - 1)?.id : undefined,
     hasMore: items.length > limit,
   };
 }
@@ -499,7 +498,7 @@ app.use('/api/*', async (c, next) => {
 
 ## @hono/zod-openapi Single-Source Pattern (Recommended Default)
 
-The recommended API approach for back-end / back-to-front projects. **One** shared Zod route definition (`createRoute()` + `.openapi()`) is the single source of truth for **all four** of: request+response validation, the generated OpenAPI doc, the dashboard/client types, and the MCP tool input schemas. Architectural rationale + the back-to-front vs front-to-back boundary: `tech-stack/typescript-ironclad-stack.md`.
+The recommended API approach for back-end / back-to-front projects. **One** shared Zod route definition (`createRoute()` + `.openapi()`) is the single source of truth for **all four** of: runtime request validation plus compile-time response typing, the generated OpenAPI doc, the dashboard/client types, and the MCP tool input schemas. Architectural rationale + the back-to-front vs front-to-back boundary: `tech-stack/typescript-ironclad-stack.md`.
 
 `OpenAPIHono` **extends `Hono`** — adoption is an incremental, strangler-safe per-router conversion. Converted `.openapi()` routers mount alongside plain Hono routers on the same instance; `.route()` / `.use()` / `.onError()` / `.request()` all behave identically.
 
@@ -510,12 +509,15 @@ import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
 
 const app = new OpenAPIHono();
 
+const UserSchema = z.object({ id: z.uuid(), name: z.string() });
+const ErrorSchema = z.object({ error: z.string() });
+
 const getUserRoute = createRoute({
   method: 'get',
   path: '/users/{id}',
   request: {
     params: z.object({
-      id: z.string().uuid().openapi({ example: '123e4567-e89b-12d3-a456-426614174000' }),
+      id: z.uuid().openapi({ example: '123e4567-e89b-12d3-a456-426614174000' }),
     }),
   },
   responses: {
@@ -566,9 +568,8 @@ These surface during real per-router migrations to `@hono/zod-openapi`. Preserve
   ```typescript
   const app = new OpenAPIHono({
     defaultHook: (result, c) => {
-      if (!result.success) {
-        return c.json(apiError('VALIDATION_FAILED', result.error.issues), 400);
-      }
+      if (result.success) return undefined; // valid: continue to the handler
+      return c.json(apiError('VALIDATION_FAILED', result.error.issues), 400);
     },
   });
   ```
@@ -578,7 +579,7 @@ These surface during real per-router migrations to `@hono/zod-openapi`. Preserve
 - **Repeated query keys become `string[]`.** The query validator surfaces `?x=a&x=b` as an array, which scalar schemas reject with a 400 — unlike `c.req.query()` first-value semantics. Wrap query objects in a `repeatTolerantQuery` preprocess (array → first element) to preserve the old behaviour.
 
   ```typescript
-  const repeatTolerantQuery = <T extends z.ZodTypeAny>(schema: T) =>
+  const repeatTolerantQuery = <T extends z.ZodType>(schema: T) =>
     z.preprocess((v) => {
       if (v && typeof v === 'object') {
         const out: Record<string, unknown> = {};
@@ -589,19 +590,19 @@ These surface during real per-router migrations to `@hono/zod-openapi`. Preserve
     }, schema);
   ```
 
-- **Keep `z.coerce` on MCP tool schemas.** MCP tool args may arrive as strings, so keep `z.coerce.number()` / `z.coerce.boolean()` on the shared tool schemas. Footgun to preserve deliberately: `z.coerce.boolean("false") === true` — coercion is truthiness-based, not string-value-based.
+- **Accept string-typed scalars on MCP and query input.** MCP tool args and query parameters may arrive as strings: keep `z.coerce.number()` for numbers, and parse booleans with Zod 4's `z.stringbool()` (`"true"/"1"/"yes"/"on"` → `true`, `"false"/"0"/"no"/"off"` → `false`, anything else fails). `z.stringbool()` rejects a real JSON boolean, so MCP schemas that may receive either use `z.union([z.boolean(), z.stringbool()])`. Never use `z.coerce.boolean()` for these: it is truthiness-based, so `"false"` becomes `true`.
 
 - **`.refine()` does NOT serialise to an OpenAPI `enum`.** An allow-list built with `.refine()` (e.g. a domain allow-list) loses its enum in the generated doc — and the doc feeds API Shield. Use `z.enum([...])`, or inject the enum onto the generated doc post-hoc.
 
 - **Opaque content types can't be Zod-bound.** multipart/form-data uploads, binary / octet-stream, text/markdown, `204 No Content`, and slash-bearing path params (`:key{.+}` — an OpenAPI `{key}` param is single-segment and drops the `.+` match) cannot be route-def-validated. Keep these as plain-Hono methods on the same `OpenAPIHono` instance, and document them via `app.openAPIRegistry.registerPath()` so they still appear in the spec (required for API Shield parity).
 
-- **Only requests are runtime-validated.** `@hono/zod-openapi` validates requests but only *documents* response schemas. Binding a response schema is therefore **zero-runtime-risk** — it drives the doc and the client types without adding a runtime failure mode.
+- **Only requests are runtime-validated.** `@hono/zod-openapi` runs validators for the request parts (`query`, `param`, `header`, `cookie`, `json`, `form`) and never parses responses. Response schemas type-check each handler's `c.json(body, status)` at compile time and document the response in the spec. Binding a response schema therefore adds no runtime failure mode; when a response genuinely needs runtime checking (for example a proxied upstream payload), call `Schema.parse()` yourself or assert it in tests.
 
 ### API Shield Integration (Cloudflare)
 
 The *generated* OpenAPI doc feeds **Cloudflare API Shield** schema validation in **BLOCK mode** on the zone. This makes spec freshness a production concern, not a docs nicety:
 
-- **A path absent from the uploaded spec 403s ALL traffic to it.** Dropping a path from the generated doc is an outage. (This is why opaque-content-type routes must still be `registerPath()`-documented.)
+- **A path absent from the uploaded spec 403s ALL traffic to it** when the zone's API Shield fallthrough/default action is block. Dropping a path from the generated doc is then an outage. (This is why opaque-content-type routes must still be `registerPath()`-documented.)
 - Gate the spec upload inside each environment's deploy step, uploading the schema for **that environment's host**, then sync the schema's operations into **Endpoint Management** — API Shield validates only managed operations, so a schema upload alone leaves unmanaged paths silently unvalidated.
 
 Two guards protect this:
@@ -648,14 +649,15 @@ function createApiClient(config: RequestConfig) {
         ...config.headers,
         ...options.headers,
       },
-      body: options.body ? JSON.stringify(options.body) : undefined,
+      ...(options.body === undefined ? {} : { body: JSON.stringify(options.body) }),
     });
 
     if (!response.ok) {
       throw new ApiError(response.status, await response.text());
     }
 
-    return response.json();
+    // Unchecked: T is the caller's claim. Parse with a Zod schema where the data matters.
+    return (await response.json()) as T;
   }
 
   return {
@@ -700,29 +702,22 @@ app.get('/users', zValidator('query', ListUsersSchema), async (c) => {
 });
 
 // Validate path params
-app.get('/users/:id', zValidator('param', z.object({ id: z.string().uuid() })), async (c) => {
+app.get('/users/:id', zValidator('param', z.object({ id: z.uuid() })), async (c) => {
   const { id } = c.req.valid('param');
   return c.json(await getUser(id));
 });
 ```
 
-### Response Validation (Optional)
+### Response Checks
+
+Neither `zValidator` nor `@hono/zod-openapi` validates responses at runtime. Check response shapes in tests, where a failure costs nothing in production:
 
 ```typescript
-// Validate responses in development/testing
-async function validateResponse<T>(
-  schema: z.ZodSchema<T>,
-  data: unknown
-): Promise<T> {
-  if (process.env.NODE_ENV === 'development') {
-    return schema.parse(data);
-  }
-  return data as T;
-}
+const res = await app.request('/users/123e4567-e89b-12d3-a456-426614174000');
+expect(res.status).toBe(200);
+expect(UserSchema.safeParse(await res.json()).success).toBe(true);
 ```
 
 ---
 
-*Companion to: error-handling.md, async-patterns.md*
-*See also: tech-stack/cloudflare.md for Hono/Workers setup; tech-stack/typescript-ironclad-stack.md for the Option-B back-to-front canonical definition*
-*Last updated: 2026-06-05 (@hono/zod-openapi single-source promoted to recommended default; API Shield guards + migration gotchas added)*
+*Companion to: error-handling.md, async-patterns.md. See also: tech-stack/cloudflare.md (TypeScript on Workers); tech-stack/typescript-ironclad-stack.md (the Option-B canonical definition).*

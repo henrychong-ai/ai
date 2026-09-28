@@ -12,9 +12,10 @@
  * - DOM cleanup
  * - Custom React testing utilities
  */
-import '@testing-library/jest-dom/vitest';
-import { cleanup } from '@testing-library/react';
-import { afterEach, vi } from 'vitest';
+// oxlint-disable-next-line import/no-unassigned-import -- registers the jest-dom matchers
+import "@testing-library/jest-dom/vitest";
+import { cleanup } from "@testing-library/react";
+import { afterEach, vi } from "vitest";
 
 // ============================================================================
 // React Testing Library Setup
@@ -31,7 +32,7 @@ afterEach(() => {
 // ============================================================================
 
 // Mock matchMedia (for responsive components)
-Object.defineProperty(window, 'matchMedia', {
+Object.defineProperty(window, "matchMedia", {
   writable: true,
   value: vi.fn().mockImplementation((query: string) => ({
     matches: false,
@@ -45,19 +46,27 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
-// Mock ResizeObserver
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+// Mock ResizeObserver / IntersectionObserver.
+// Vitest 4: a vi.fn() with an arrow-function implementation is not constructible,
+// so components calling `new ResizeObserver()` need a class.
+class ResizeObserverMock {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+globalThis.ResizeObserver = ResizeObserverMock as unknown as typeof ResizeObserver;
 
-// Mock IntersectionObserver
-global.IntersectionObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+class IntersectionObserverMock {
+  readonly root = null;
+  readonly rootMargin = "";
+  readonly thresholds: ReadonlyArray<number> = [];
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+  takeRecords = vi.fn(() => []);
+}
+globalThis.IntersectionObserver =
+  IntersectionObserverMock as unknown as typeof IntersectionObserver;
 
 // Mock scrollTo
 window.scrollTo = vi.fn();
@@ -74,8 +83,7 @@ window.scrollTo = vi.fn();
 // ============================================================================
 
 // Set test environment variables
-process.env.NODE_ENV = 'test';
-process.env.TZ = 'UTC';
+process.env["TZ"] = "UTC"; // Vitest already sets NODE_ENV=test
 
 // ============================================================================
 // Console Suppression (Optional)
@@ -85,11 +93,8 @@ process.env.TZ = 'UTC';
 // Useful for reducing noise from expected errors/warnings
 const originalError = console.error;
 console.error = (...args: unknown[]) => {
-  // Ignore React act() warnings in tests
-  if (
-    typeof args[0] === 'string' &&
-    args[0].includes('Warning: An update to')
-  ) {
+  // Ignore React act() warnings (React 19 dropped the old "Warning: " prefix)
+  if (typeof args[0] === "string" && args[0].includes("not wrapped in act(")) {
     return;
   }
   originalError.apply(console, args);

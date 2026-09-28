@@ -1,6 +1,6 @@
 # Jest Patterns
 
-Testing with Jest for legacy TypeScript projects. Use for existing projects with Jest infrastructure; prefer Vitest for new projects.
+Testing with Jest where a codebase already uses it — NestJS services (the Nest CLI scaffolds Jest) and existing suites not yet migrated. New projects use Vitest (`vitest-patterns.md`). ts-jest requires TypeScript below 7: keep `typescript@~6.0` (`../tech-stack/version-policy.md`).
 
 ---
 
@@ -9,7 +9,7 @@ Testing with Jest for legacy TypeScript projects. Use for existing projects with
 | Use Jest When | Use Vitest When |
 |---------------|-----------------|
 | Existing Jest test suite | New projects |
-| Create React App (CRA) | Vite-based projects |
+| NestJS codebase | Vite-based projects |
 | Jest-specific plugins required | Native ESM needed |
 | Team familiar with Jest | TypeScript-first priority |
 | Migration cost too high | Speed is critical |
@@ -34,6 +34,8 @@ Testing with Jest for legacy TypeScript projects. Use for existing projects with
 
 ### Basic Setup
 
+ts-jest compiles tests as CommonJS, which the team tsconfig (`NodeNext`, `verbatimModuleSyntax`, no `rootDir` for tests) does not allow. Pair the config with `templates/testing/tsconfig.jest.json` (extends the project tsconfig; `module`/`moduleResolution` `Node16`, `verbatimModuleSyntax` off, `rootDir: "."`) and point ts-jest at it, as `templates/testing/jest.config.ts` does. Verified with Jest 30 and ts-jest 29.4 on TypeScript 6.0.
+
 ```typescript
 // jest.config.ts
 import type { Config } from 'jest';
@@ -50,8 +52,8 @@ const config: Config = {
     'src/**/*.ts',
     '!src/**/*.d.ts',
     '!src/**/*.test.ts',
-    '!src/types/**',
   ],
+  // Example floor only: the repository's approved coverage policy wins
   coverageThreshold: {
     global: {
       branches: 80,
@@ -419,9 +421,8 @@ const config: Config = {
     'src/**/*.ts',
     '!src/**/*.test.ts',
     '!src/**/*.d.ts',
-    '!src/types/**',
-    '!src/index.ts',
   ],
+  // Example floor only: the repository's approved coverage policy wins
   coverageThreshold: {
     global: {
       branches: 80,
@@ -533,7 +534,7 @@ node --inspect-brk node_modules/.bin/jest --runInBand
 
 ```bash
 pnpm remove jest ts-jest @types/jest
-pnpm add -D vitest @vitest/coverage-v8
+pnpm add -D vitest@^4.1 @vitest/coverage-v8@^4.1   # pinned major: ../tech-stack/version-policy.md
 ```
 
 ### Step 2: Convert Config
@@ -584,8 +585,8 @@ import { describe, it, expect, vi } from 'vitest';
 ```json
 {
   "scripts": {
-    "test": "vitest",
-    "test:run": "vitest run",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
   }
 }
@@ -643,4 +644,3 @@ jest --maxWorkers=4
 ---
 
 *Companion to: vitest-patterns.md, testing-strategies.md, ai-testing-protocols.md*
-*Last updated: 2026-01-15*

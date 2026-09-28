@@ -6,9 +6,9 @@ Testing requirements and protocols for AI-driven TypeScript development across a
 
 ## Core Principle
 
-**Testing is non-negotiable for AI-generated code.**
+**Code produced with a coding agent ships with tests.**
 
-AI systems can generate syntactically correct code that contains subtle logic errors. Tests serve as:
+Generated code can be syntactically correct code that contains subtle logic errors. Tests serve as:
 1. **Executable specifications** - Define expected behavior before/during implementation
 2. **Validation gates** - Catch errors before they reach production
 3. **Refactoring safety nets** - Enable confident code changes
@@ -161,9 +161,7 @@ Never commit:
 
 When using `@cloudflare/vitest-pool-workers`, each vitest invocation spawns `workerd` child processes. In multi-agent sessions where several agents run tests in parallel, these processes accumulate and are not cleaned up when agents finish, causing memory exhaustion.
 
-**Rule: Agents write tests only, never execute them in parallel.**
-
-In team/multi-agent workflows:
+**In parallel agent sessions, one coordinator runs the Workers test suite:**
 1. Each agent writes and modifies test files but does **not** run `pnpm test` or `vitest`
 2. The coordinating agent runs the full test suite once after all agents complete: `pnpm run check`
 3. Before heavy test sessions, kill stale processes: `pkill -f workerd 2>/dev/null`
@@ -385,16 +383,13 @@ it('should show morning greeting at 9am', () => {
 
 Before merging any PR:
 
-- [ ] All tests pass (`pnpm test:run`)
+- [ ] All tests pass (`pnpm test`, which runs `vitest run`)
 - [ ] Coverage meets the approved repository policy (use its canonical coverage command)
 - [ ] No skipped tests without justification
 - [ ] No `console.log` in test files
 - [ ] Runtime meets the repository's measured budget; investigate regressions without weakening coverage or assertions
 
 ---
-
-*Companion to: vitest-patterns.md, jest-patterns.md, testing-strategies.md*
-*Last updated: 2026-01-15*
 
 ## Behavioural evidence and review
 
@@ -424,3 +419,7 @@ DOM tests establish state and request contracts. Use a real browser for browser
 capabilities such as canvas pixel output and important real control interactions;
 use actual SDK transport tests for protocol startup/dispatch/shutdown. Controlled
 identity fixtures do not prove a live identity-provider login or deployment.
+
+---
+
+*Companion to: vitest-patterns.md, jest-patterns.md, testing-strategies.md*
