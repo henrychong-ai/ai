@@ -48,11 +48,13 @@ Claude Code loads instructions in this order (later overrides earlier):
 - Integration of other instruction sources
 
 **Sizing Guidelines:**
-| Type | Recommended Size | Maximum |
+| Type | Recommended Size | When it grows past that |
 |------|-----------------|---------|
-| Global CLAUDE.md | 800-1200 lines | ~1500 lines |
-| Project CLAUDE.md | 100-300 lines | ~500 lines |
-| CLAUDE.local.md | 50-150 lines | ~300 lines |
+| Global CLAUDE.md | under ~200 lines | Move detail into rules files, `paths:`-scoped rules, or skill references |
+| Project CLAUDE.md | under ~200 lines | Move reference material into skills or docs the file points to |
+| CLAUDE.local.md | 50-150 lines | Keep to personal overrides |
+
+Claude Code's official guidance is under about 200 lines per file: files load in full up to 4 MiB, so every extra line costs context on every turn and dilutes adherence.
 
 ### Rules Files
 
@@ -230,12 +232,12 @@ Since CLAUDE.md and rules always load, budget carefully:
 
 | Component | Budget | Notes |
 |-----------|--------|-------|
-| Global CLAUDE.md | 800-1200 lines | Core identity only |
-| Global rules (total) | 300-500 lines | Split across files |
-| Project CLAUDE.md | 100-300 lines | Project context only |
+| Global CLAUDE.md | under ~200 lines | Core identity only |
+| Global rules (total) | 300-500 lines | Split across files; scope with `paths:` where possible |
+| Project CLAUDE.md | under ~200 lines | Project context only |
 | Project rules (total) | 100-200 lines | Project patterns |
 
-**Total auto-load target:** <2000 lines
+**Total auto-load target:** under ~1,100 lines (the sum of the budgets above), with each file under ~200 lines
 
 ### On-Demand Budget
 

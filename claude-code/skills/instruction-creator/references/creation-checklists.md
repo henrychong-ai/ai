@@ -2,7 +2,7 @@
 
 Comprehensive checklists for file type selection, integration requirements, model selection, skill directory behaviour mapping, and sanitisation.
 
-**Updated:** 2026-09-24b (agent MUST list: contract + leaf-worker spawn bar replace TodoWrite). 2026-09-24 (Model × Effort section: Opus 5.5, harness vs recommended default, built-in agent models)
+**Updated:** 2026-09-29 (Model × Effort section: Sonnet 5.5, routing ladder, `sonnet` + `effort: medium` recommended default). 2026-09-24b (agent MUST list: contract + leaf-worker spawn bar replace TodoWrite). 2026-09-24 (Model × Effort section: Opus 5.5, harness vs recommended default, built-in agent models)
 
 ---
 
@@ -44,7 +44,7 @@ Detailed guidance for choosing where content belongs. Each entry shows what SHOU
 
 ### All Agents MUST:
 - [ ] Reference appropriate project-instructions.md for business context
-- [ ] State the operating contract: inputs, approval boundary, and the report returned to the caller
+- [ ] State the operating contract: inputs, approval boundary (including what the brief cannot authorise), and the report returned to the caller
 - [ ] Leaf workers: bar `Agent`/`Task` via `disallowedTools`, or list an explicit `tools:` allowlist
 - [ ] Specify MCP token limit strategies
 - [ ] Define escalation criteria for human review
@@ -95,7 +95,7 @@ Detailed guidance for choosing where content belongs. Each entry shows what SHOU
 
 ## Model × Effort Selection Analysis Framework
 
-Model and effort are **one joint decision**, not two — effort labels are model-relative (Opus 5.5 at `medium`, its default, matches or beats Opus 5 at `high`; Fable 5.1 at `medium` scores about level with Fable 5 at `xhigh` on FrontierCode at roughly half the cost per task). **Recommended default:** `model: opus` on agents and `context: fork` skills; no `model` on main-thread skills and commands; omit `effort` unless a specific level is needed. The **harness default** when `model` is omitted is the main conversation's model (subagents) or the session model (skills), not a fixed tier.
+Model and effort are **one joint decision**, not two — effort labels are model-relative (Opus 5.5 at `medium`, its default, matches or beats Opus 5 at `high`; Sonnet 5.5's levels are recalibrated against Sonnet 5; Fable 5.1 at `medium` scores about level with Fable 5 at `xhigh` on FrontierCode at roughly half the cost per task). **Recommended default:** `model: sonnet` + `effort: medium` on agents and `context: fork` skills (rung 1 of the routing ladder in `model-compatibility-index.md`); step up to `model: opus` at `medium`, then `high`, rather than raising Sonnet's effort; no `model` or `effort` on main-thread skills and commands. The **harness default** when `model` is omitted is the main conversation's model (subagents) or the session model (skills), not a fixed tier.
 
 ### 5-Point Analysis
 For each new agent/skill, evaluate:
@@ -103,23 +103,23 @@ For each new agent/skill, evaluate:
 2. **Decision-Making Needs**: Rule-based vs judgment-based
 3. **Context Requirements**: Small focused tasks vs large context analysis
 4. **Performance Needs**: Speed-critical vs quality-critical (Fable's first token can still take ~a minute on 5.1 — capability and latency trade off explicitly)
-5. **Cost Considerations**: Usage frequency and budget (Opus 5.5 is $4/$20 with cache reads $0.20; Fable 5.1 is $10/$50, 2.5× Opus 5.5 per token, with cache reads $0.25. Fable 5.1 was measured cheaper per task than Opus 5 at low to high effort on coding; that comparison predates Opus 5.5, so measure cost per task, not per token)
+5. **Cost Considerations**: Usage frequency and budget (Sonnet 5.5 is $2/$10 with cache reads $0.20, the same read rate as Opus 5.5, so it saves on output and cache writes rather than cached input; Opus 5.5 is $4/$20 with cache reads $0.20; Fable 5.1 is $10/$50, 2.5× Opus 5.5 per token, with cache reads $0.25. Fable 5.1 was measured cheaper per task than Opus 5 at low to high effort on coding; that comparison predates Opus 5.5, so measure cost per task, not per token)
 
 ### Model Capabilities
 | Model | Strengths | Use When |
 |-------|-----------|----------|
 | `fable` | Frontier reasoning, hardest long-horizon/agentic work, first-shot correctness on complex problems | Genuinely hard, latency-tolerant work where capability dominates; 2.5× Opus 5.5 per token (measured cheaper per task than Opus 5 at low to high effort on coding; re-measure against Opus 5.5); cache reads $0.25/MTok on 5.1; slow first token |
-| `opus` | Complex reasoning, strategic analysis, nuanced judgment, multi-step workflows, agentic coding and review (Opus 5.5 from CC 2.1.280) | **Recommended default for authored agents and forked skills**; compliance analysis, strategic planning, architectural decisions; routine traffic that still needs depth |
-| `sonnet` | General-purpose, balanced performance, most technical tasks | Code generation, code review, general technical work |
-| `haiku` | Fast responses, simple patterns, rule-based operations, high-volume | File format detection, batch processing, quick lookups |
+| `opus` | The step-up tier (Opus 5.5 from CC 2.1.280): complex reasoning, nuanced judgement, long-context codebase work, open-ended work that needs sustained judgement | `medium` when Sonnet 5.5 falls short (the best cost/quality balance); `high` for in-depth work; `xhigh` normally only as the main thread or advisor over large runs with pinned Opus workers (those workers belong inside runs that already warrant Opus `xhigh` oversight; a standalone implementation agent stays on `sonnet`). Go straight to Opus for unattended broad-permission workers and uncheckable factual answers |
+| `sonnet` | Sonnet 5.5 (Anthropic API, CC 2.1.284+): well-scoped everyday coding, terminal work, bug fixes, documents, agentic tool use | **The recommended default at `medium` for almost all work**: sessions, authored agents, and forked skills; when quality falls short, step the model up rather than the effort |
+| `haiku` | Fast responses, simple patterns, rule-based operations, high-volume | File format detection, batch processing, the cheapest lookups |
 
 ### Joint Model × Effort Routing
 | Dominant constraint | Pick |
 |---|---|
 | Capability ceiling, latency-tolerant | Fable 5.1 at `high` (default) — and note `fable` at `medium`/`low` can beat `opus` at `xhigh`, often at lower cost per task |
-| Latency-sensitive / interactive | `opus` or smaller — Opus 5.5 outputs over 30% faster than Opus 5; Fable 5.1 is still slow to first token at any effort |
-| Routine high-volume | `opus` / `sonnet` / `haiku` per the rows above — official routing: hard, long-horizon jobs → Fable 5.1; routine traffic → Opus-or-smaller. Opus 5.5 at `low`/`medium` is the cost-efficient workhorse point; Fable 5.1 at `low`/`medium` still belongs in the cost-per-task comparison |
-| **Cache safety (mid-session)** | Pins are cache-safe only in subagent contexts — the CC cache is keyed by model and, on most models, effort, so a main-thread skill/command pin double cache-busts the session (an effort-only change keeps the cache on Opus 5.5 and Fable 5.1 on first-party auth; a model change never does). Agents: safe by construction. Pinned skills/commands: MUST set `context: fork`. Detail: `cache-and-token-efficiency.md` |
+| Latency-sensitive / interactive | `sonnet` at `medium` or `low` — Sonnet 5.5 outputs over 30% faster than Sonnet 5, and Anthropic rates its latency "Fast" against Opus 5.5's "Moderate"; `haiku` for the lowest latency; Fable 5.1 is still slow to first token at any effort |
+| Routine high-volume | The routing ladder in `model-compatibility-index.md`: `sonnet` at `medium` by default, `haiku` for the cheapest lookups; step up to `opus` at `medium`, then `high`, when quality falls short; hard, long-horizon jobs → Fable 5.1 |
+| **Cache safety (mid-session)** | Pins are cache-safe only in subagent contexts — the CC cache is keyed by model and, on most models, effort, so a main-thread skill/command pin double cache-busts the session (an effort-only change keeps the cache on Opus 5.5, Sonnet 5.5, and Fable 5.1 on first-party auth; a model change never does). Agents: safe by construction. Pinned skills/commands: MUST set `context: fork`. Detail: `cache-and-token-efficiency.md` |
 
 ### Model Priority Order (highest to lowest)
 1. **Per-invocation `model` parameter** (Agent tool) - explicit override at invocation
@@ -137,13 +137,15 @@ For each new agent/skill, evaluate:
 | statusline-setup | Sonnet | `/statusline` |
 | claude-code-guide | Haiku | Claude Code feature questions |
 
+Explore, Plan, and general-purpose inherit the main model (general-purpose only when `CLAUDE_CODE_SUBAGENT_MODEL` is unset), so under a Sonnet session they run on Sonnet.
+
 Built-in definitions are not editable. To pin a built-in's model or effort, define a user or project agent of the same name, which overrides it (documented for Explore).
 
 ### Best Practices
-- Use aliases (`opus`, `fable`, `sonnet`, `haiku`) not version numbers; `opus` is the recommended default for authored agents
-- Aliases automatically use latest model version
+- Use aliases (`opus`, `fable`, `sonnet`, `haiku`) not version numbers; `sonnet` + `effort: medium` is the recommended default for authored agents; `opus` is the step-up
+- Aliases track each provider's target for the family, not always the latest model: `sonnet` is Sonnet 5.5 only on the Anthropic API (provider caveat in `model-compatibility-index.md`)
 - Document model selection rationale in design notes
-- When a pin is justified, record the effort decision with it (joint decision — see routing table above)
+- Record the effort decision with every model pin (joint decision — see routing table above)
 - Note: If agent specifies `model: opus`/`model: fable` but the user lacks access to that tier, behaviour may be inconsistent
 
 ---

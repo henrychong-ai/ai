@@ -14,18 +14,18 @@
 ---
 name: agent-name
 description: [Domain] specialist. [Capabilities]. Use PROACTIVELY for [triggers].
-model: opus
-# effort: omitted; pin only when a specific level is needed
+model: sonnet                   # recommended default; `opus` to step up (SKILL.md routing ladder)
+effort: medium                  # pinned with the model
 disallowedTools: Agent, Task    # leaf worker: no nested fan-out
 ---
 
 [One paragraph: role, domain owned, outcome it is accountable for.]
 
 ## Contract
-- **Inputs:** [what the brief supplies]
+- **Inputs:** [what the caller's brief supplies; on a blocking ambiguity, state the assumption and proceed; if the task cannot be done as specified, report what is missing and stop]
 - **Does:** [work, tools, checks before returning]
-- **Boundary:** [actions it stops and reports instead of performing]
-- **Returns:** [report to the caller: results, verification, failures, decisions needed]
+- **Boundary:** [destructive, outward-facing, or approval-gated actions it stops and reports instead of performing; what the brief cannot authorise, such as credentials, user consent, or access to external systems; permission questions go back to the user, never answered on the user's behalf]
+- **Returns:** [the report to the caller: results, what was verified and how (read in full or sampled), failures, decisions needed]
 
 ## Domain Knowledge
 [Only what the agent cannot load from a skill or reference]
@@ -414,9 +414,9 @@ references/guide-to-x.md: [Detailed guide loaded as needed]
 ### Quick Validation Checklist
 ```markdown
 Agent Validation:
-- ✅ YAML front matter complete (`model: opus` unless another tier is warranted; `effort` omitted unless needed)
+- ✅ YAML front matter complete (`model: sonnet` + `effort: medium` unless the routing ladder calls for a step up to `opus`)
 - ✅ "Use PROACTIVELY" in description where auto-delegation is wanted
-- ✅ Contract defined: inputs, approval boundary, report returned to the caller
+- ✅ Contract defined: inputs (with an exit when the task cannot be done as specified), approval boundary (including what the brief cannot authorise), report returned to the caller
 - ✅ Leaf workers bar `Agent`/`Task` or list an explicit `tools:` allowlist
 
 Skill Validation:
@@ -434,5 +434,5 @@ Command Validation:
 
 ---
 
-**Last Updated:** 2026-09-24 (agent patterns moved to the lean role + contract template)
+**Last Updated:** 2026-09-29 (Domain Specialist contract wording matches SKILL.md's Agent Template Structure). 2026-09-24 (agent patterns moved to the lean role + contract template)
 **Use Case:** Reference templates and patterns for instruction file creation
