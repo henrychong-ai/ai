@@ -6,6 +6,7 @@ The MCP server stores a temporally versioned graph. Direct Cypher must respect i
 
 - **Entities:** `(:Entity {id, name, entityType, domain, observations, version, createdAt, updatedAt, validFrom, validTo, embedding})`. `observations` is usually stored as a JSON-encoded string, not a list. The **live** version of a name has `validTo IS NULL`; older versions stay in the graph as history.
 - **Relations:** one relationship type, `[:RELATES_TO {relationType, strength, confidence, metadata, validFrom, validTo}]`. The semantic type lives in the `relationType` property, so match on `r.relationType`, never on a Neo4j relationship label such as `[:USES]`.
+- **Vector index:** `semantic_search` queries the Neo4j vector index on `Entity.embedding`, named `entity_embeddings` by default; the server's `NEO4J_VECTOR_INDEX` setting overrides the name (server source checked 2026-10-01).
 - **Every query** filters `validTo IS NULL` on entities and relations, otherwise it counts history as duplicates.
 
 **Write through the MCP tools only.** A direct Cypher write skips version closing, relationship carry-over and embedding generation, which corrupts history and leaves the entity invisible to `semantic_search`. Use Cypher for read-only diagnostics. For damaged version history (duplicate live versions, duplicated relationships) see the package README section "Versioning safety & graph repair".
@@ -63,6 +64,13 @@ RETURN n.name, n.entityType LIMIT 25;
 MATCH (n:Entity {name: $name})-[r:RELATES_TO]-(m:Entity)
 WHERE n.validTo IS NULL AND r.validTo IS NULL AND m.validTo IS NULL
 RETURN startNode(r).name AS source, r.relationType AS type, endNode(r).name AS target;
+
+// Live relations of one type, both spellings ($type in lowercase-kebab, e.g. 'depends-on')
+// Interim pattern from SKILL.md Data Conventions (2026-10-01) until the UPPER_SNAKE migration
+MATCH (a:Entity)-[r:RELATES_TO]->(b:Entity)
+WHERE a.validTo IS NULL AND b.validTo IS NULL AND r.validTo IS NULL
+  AND toLower(replace(r.relationType, '_', '-')) = $type
+RETURN a.name AS source, r.relationType AS type, b.name AS target ORDER BY source, target;
 ```
 
 ### Graph health
@@ -70,12 +78,12 @@ RETURN startNode(r).name AS source, r.relationType AS type, endNode(r).name AS t
 ```cypher
 // Isolated live entities (no live relations)
 MATCH (n:Entity) WHERE n.validTo IS NULL
-  AND NOT EXISTS { MATCH (n)-[r:RELATES_TO]-() WHERE r.validTo IS NULL }
+  AND NOT EXISTS { MATCH (n)-[r:RELATES_TO]-(m:Entity) WHERE r.validTo IS NULL AND m.validTo IS NULL }
 RETURN n.name, n.entityType ORDER BY n.name LIMIT 50;
 
 // Lowest-degree live entities
 MATCH (n:Entity) WHERE n.validTo IS NULL
-OPTIONAL MATCH (n)-[r:RELATES_TO]-() WHERE r.validTo IS NULL
+OPTIONAL MATCH (n)-[r:RELATES_TO]-(m:Entity) WHERE r.validTo IS NULL AND m.validTo IS NULL
 RETURN n.name, count(r) AS degree ORDER BY degree ASC LIMIT 20;
 
 // Names with more than one live version (repair: package README)
@@ -84,8 +92,9 @@ WITH n.name AS name, count(*) AS live WHERE live > 1
 RETURN name, live;
 
 // Near-duplicate names differing only by case or surrounding spaces
+// (exact-name duplicates are the live-version query above)
 MATCH (n:Entity) WHERE n.validTo IS NULL
-WITH toLower(trim(n.name)) AS key, collect(n.name) AS names WHERE size(names) > 1
+WITH toLower(trim(n.name)) AS key, collect(DISTINCT n.name) AS names WHERE size(names) > 1
 RETURN key, names;
 
 // entityType values breaking the lowercase-kebab convention
@@ -101,6 +110,7 @@ MATCH (a:Entity {name: $start}), (b:Entity {name: $end})
 WHERE a.validTo IS NULL AND b.validTo IS NULL
 MATCH p = shortestPath((a)-[:RELATES_TO*..5]-(b))
 WHERE all(r IN relationships(p) WHERE r.validTo IS NULL)
+  AND all(x IN nodes(p) WHERE x.validTo IS NULL)
 RETURN [x IN nodes(p) | x.name] AS path;
 
 // Common live neighbours of two entities

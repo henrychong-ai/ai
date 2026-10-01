@@ -3,7 +3,7 @@
 Open items, unverified facts and pending decisions. Last reviewed 2026-10-01.
 
 ## Verify
-- [ ] Run every query in `references/cypher-patterns.md` against a Neo4j 5 instance populated by the server; not executed on 2026-10-01 (no instance available to the author at the time).
+- [x] Run every query in `references/cypher-patterns.md` against a Neo4j 5 instance: checked 2026-10-01 against neo4j:5.26 in Docker (synthetic graph). All queries ran without error; the isolated-entity, lowest-degree and shortest-path queries now also exclude closed (historical) neighbour nodes, and the near-duplicate query no longer repeats exact-name duplicates.
 - [ ] Walk through the Setup section on a clean machine and confirm the minimal `env` block is sufficient for keyword and semantic search.
 
 ## Re-check on each server release
