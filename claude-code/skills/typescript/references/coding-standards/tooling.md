@@ -44,7 +44,7 @@ Every tsconfig is written to be **TypeScript 7-ready**: no `baseUrl`, no `module
     "skipLibCheck": true,
 
     // Language level for Node 24 (TypeScript wiki Node target mapping; Node 22 → ES2023,
-    // Node 26 → ES2025). Per-line mapping and target changes: /typescript-version-upgrade
+    // Node 26 → ES2025). Mapping and target changes: /typescript references/version-upgrade/ecmascript/es-upgrade-checklist.md
     "target": "ES2024",
     "lib": ["ES2024"],
 

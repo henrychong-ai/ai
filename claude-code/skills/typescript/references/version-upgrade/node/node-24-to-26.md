@@ -14,7 +14,7 @@ Primary sources: the 26.0.0 changelog (https://github.com/nodejs/node/blob/main/
 
 ## Corepack is gone
 
-Node 25 and later do not ship Corepack, so a bare `corepack enable` / `corepack install` fails in `node:26` images and fresh Node 26 installs. Install a pinned Corepack from npm first, then enable it; Corepack keeps doing its job — it installs the package manager pinned in `packageManager` (e.g. `"pnpm@10.x.y+sha512.<hash>"`) and refuses a download whose hash does not match. Record the pinned Corepack version in your TypeScript standards.
+Node 25 and later do not ship Corepack, so a bare `corepack enable` / `corepack install` fails in `node:26` images and fresh Node 26 installs. Install a pinned Corepack from npm first, then enable it; Corepack keeps doing its job — it installs the package manager pinned in `packageManager` (e.g. `"pnpm@10.x.y+sha512.<hash>"`) and refuses a download whose hash does not match. The pinned form is set in `../../tech-stack/version-policy.md`.
 
 ```dockerfile
 FROM node:26-alpine AS builder

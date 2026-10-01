@@ -1,6 +1,6 @@
 # Version Policy — Node, TypeScript, pnpm and JS/TS Tooling
 
-This file is the **single owner** of version policy for TypeScript/JavaScript work. `/typescript-version-upgrade` (upgrade procedures) and `/lint` (lint and format configs) link here instead of keeping their own version tables.
+This file is the **single owner** of version policy for TypeScript/JavaScript work. The upgrade procedure (`../version-upgrade/upgrade-protocol.md`) and `/lint` (lint and format configs) link here instead of keeping their own version tables.
 
 The policy names **target majors and rules**, not "latest" patch numbers. Patch numbers go stale; the rules below do not. Before writing a version into a file, check the live registry.
 
@@ -33,7 +33,7 @@ npm's `latest` tag is not always a stable major: for example, `prisma`'s `latest
 | **24.x** | LTS; enters Maintenance 2026-10-20; end of life 2028-04-30 | **Default runtime today** |
 | **26.x** | Current; becomes LTS 2026-10-28 | **New projects move to 26 once it is LTS** |
 | 22.x | Maintenance LTS; end of life 2027-04-30 | Existing projects only; plan the move to 24 |
-| 20.x | **End of life 2026-04-30** | Upgrade now (`/typescript-version-upgrade`) |
+| 20.x | **End of life 2026-04-30** | Upgrade now (`../version-upgrade/upgrade-protocol.md`) |
 
 Rules:
 
@@ -52,7 +52,7 @@ Pipeline images, runners and deployment follow the same rules; keep CI images on
 |------|------------------------------|-----------------|
 | **6.0** | Latest 6.x is 6.0.3 | **Default: `typescript@~6.0`** |
 | 7.0 | npm `latest` (7.0.2, 2026-07-08); native (Go) compiler; **no programmatic API until 7.1** | Optional type-check-only lane |
-| 5.x | Existing projects | Upgrade to 6.0 with `/typescript-version-upgrade` |
+| 5.x | Existing projects | Upgrade to 6.0 with `../version-upgrade/typescript/typescript-5-to-6.md` |
 
 Rules:
 
@@ -62,7 +62,7 @@ Rules:
   ```bash
   pnpm dlx --package=typescript@^7.0 tsc --noEmit -p tsconfig.json
   ```
-  TS 7 treats `baseUrl`, `moduleResolution: "node"`/`"node10"`/`"classic"`, `esModuleInterop: false`, `downlevelIteration`, `target: "es5"` and `module: "amd"|"umd"|"system"|"none"` as hard errors. Keep every tsconfig free of them now (see `coding-standards/tooling.md`), so the switch is a version bump. When a project adopts 7.x as primary, `@typescript/typescript6` provides the 6.0 API side by side.
+  TS 7 treats `baseUrl`, `moduleResolution: "node"`/`"node10"`/`"classic"`, `esModuleInterop: false`, `downlevelIteration`, `target: "es5"` and `module: "amd"|"umd"|"system"|"none"` as hard errors. Keep every tsconfig free of them now (see `../coding-standards/tooling.md`), so the switch is a version bump. When a project adopts 7.x as primary, `@typescript/typescript6` provides the 6.0 API side by side.
 
 ## pnpm
 
@@ -82,8 +82,8 @@ Rules:
 
 | Framework | New projects | Existing projects |
 |-----------|--------------|-------------------|
-| Next.js | 16 | 15 receives security fixes only; plan the move to 16 |
-| React | 19 | 18 → 19 via `/typescript-version-upgrade` |
+| Next.js | 16 | 15 receives security fixes only until its support ends on 2026-10-21 (nextjs.org support policy); move to 16 before then |
+| React | 19 | 18 → 19 via `../version-upgrade/react/react-to-19.md` |
 | Tailwind CSS | 4 | 3 only where legacy browsers require it |
 | Vue | 3 | — |
 | Astro | current major (see `astro.md`) | — |
@@ -105,7 +105,7 @@ Rules:
 | tsx | `^4` | Runs TypeScript directly (dev, scripts, Node services) |
 | tsdown | caret on the current `0.x` minor | Bundling libraries and CLIs |
 | tsup | existing projects only | Upstream says it is not actively maintained; use tsdown for new bundling |
-| Fastify | `^5` | See `patterns/node-services.md` |
+| Fastify | `^5` | See `../patterns/node-services.md` |
 | Temporal TypeScript SDK | `^1` | Temporal's TypeScript SDK docs |
 
 ## How to pin

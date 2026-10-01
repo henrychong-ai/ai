@@ -54,4 +54,4 @@ Run `typecheck:native` as an extra step and compare with the 6.0 result for a fe
 
 ## When to move fully to 7.x
 
-Move `typescript` itself to 7.x only when every API consumer in the repo supports it (typescript-eslint, test transformers, declaration bundlers, framework plugins) — expected from 7.1, which ships the new API. Record the decision in your TypeScript standards first.
+Move `typescript` itself to 7.x only when every API consumer in the repo supports it (typescript-eslint, test transformers, declaration bundlers, framework plugins) — expected from 7.1, which ships the new API. Record the decision in `../../tech-stack/version-policy.md` first.

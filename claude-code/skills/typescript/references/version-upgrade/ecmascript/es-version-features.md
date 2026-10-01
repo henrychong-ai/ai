@@ -293,4 +293,4 @@ Transpiling syntax costs bundle size and sometimes semantics (class field define
 
 ## Choosing a target
 
-Choose from the runtime, not from this list: use the Node mapping in `es-upgrade-checklist.md` for server code and the browser floor in `browser-support.md` for front ends. Record your default in your TypeScript standards.
+Choose from the runtime, not from this list: use the Node mapping in `es-upgrade-checklist.md` for server code and the browser floor in `browser-support.md` for front ends. The recommended default target is in `../../coding-standards/tooling.md` (tsconfig `target`/`lib`).

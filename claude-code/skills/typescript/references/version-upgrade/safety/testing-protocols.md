@@ -1,6 +1,6 @@
 # Testing Protocols for Version Upgrades
 
-A version upgrade must not change application behaviour; the tests prove it. Replace `<pm>` with the repo's package manager (table in SKILL.md). Test framework configuration belongs to the repo and your testing standards; this file covers what to run and how to compare.
+A version upgrade must not change application behaviour; the tests prove it. Replace `<pm>` with the repo's package manager (table in `../upgrade-protocol.md`). Test framework configuration belongs to the repo and to the testing standards (`../../testing/testing-strategies.md`); this file covers what to run and how to compare.
 
 ## Baseline (before any change)
 
@@ -59,7 +59,7 @@ for (const k of ["lines","branches","functions","statements"])
 
 1. Stop the upgrade work and identify the failing test and the most recent change.
 2. Classify it:
-   - **Version-driven output change** (error text, deprecation warning, renamed import) — allowed test edit under the SKILL.md precedence rule; list it in the report.
+   - **Version-driven output change** (error text, deprecation warning, renamed import) — allowed test edit under the `../upgrade-protocol.md` precedence rule; list it in the report.
    - **Behaviour change** — revert the change that caused it and investigate; report before continuing.
    - **Flaky** — prove it by running the test on the baseline commit; report it, do not mask it.
 3. Never loosen an assertion, skip a test, or lower a coverage threshold to get green.

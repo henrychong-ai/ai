@@ -1,6 +1,6 @@
 # Guardrails for Agent-Run Upgrades
 
-How the coding agent keeps a version upgrade scoped and verifiable in production systems. The approval and test-edit precedence rule in SKILL.md wins over anything here.
+How the coding agent keeps a version upgrade scoped and verifiable in production systems. The approval and test-edit precedence rule in `../upgrade-protocol.md` wins over anything here.
 
 ## Known failure modes
 
@@ -30,7 +30,7 @@ For each non-mechanical change, record in the checkpoint report: file and lines,
 ## Stop conditions
 
 Stop, report and wait for the user when:
-1. A test fails and the cause is not one of the allowed test edits in SKILL.md.
+1. A test fails and the cause is not one of the allowed test edits in `../upgrade-protocol.md`.
 2. A change would touch payment processing, balance or fee calculation, transaction signing, key handling or other cryptographic operations, authentication or authorisation. Explain the required change and ask for explicit approval; consider having a human implement it.
 3. The only fix available is a workaround that weakens security (`--openssl-legacy-provider`, lowering the OpenSSL security level, disabling TLS verification, `--legacy-peer-deps` in production builds).
 4. The official documentation does not cover an API you need to replace, or two sources disagree.
@@ -38,7 +38,7 @@ Stop, report and wait for the user when:
 
 ## Approval
 
-Approval comes at the phase checkpoints in SKILL.md. Treat only an explicit go-ahead ("approved", "proceed", "go ahead", "LGTM", "commit it") as approval; ask again if the reply is ambiguous. Silence is never approval.
+Approval comes at the phase checkpoints in `../upgrade-protocol.md`. Treat only an explicit go-ahead ("approved", "proceed", "go ahead", "LGTM", "commit it") as approval; ask again if the reply is ambiguous. Silence is never approval.
 
 ## Checkpoints
 

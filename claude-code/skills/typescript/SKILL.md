@@ -1,18 +1,17 @@
 ---
 name: typescript
-description: "TypeScript development standards — strict tsconfig, style and type patterns, Zod 4 validation, async and error handling, Vitest/Jest testing, and the single owner of Node, TypeScript, pnpm and JS/TS tool version policy. Owns an opinionated back-to-front ironclad stack, the recommended default for services and internal tools: the Option-B @hono/zod-openapi pattern where ONE createRoute() drives runtime request validation, compile-time response typing, the generated OpenAPI doc (documented responses, API Shield guards), dashboard client types and MCP tool schemas. Also covers the ORM standard (Drizzle for internal tools and Workers, Prisma 7 for product apps incl. SQL Server), Fastify + Temporal Node services, Next.js front-to-back apps, TypeScript on Cloudflare Workers, Astro content sites and NestJS codebases. Use when writing, reviewing or testing TypeScript, choosing versions or a stack, or designing an API."
+description: "TypeScript development standards — strict tsconfig, style and type patterns, Zod 4 validation, async/error handling, Vitest/Jest testing, and the single owner of Node, TypeScript, pnpm and JS/TS tool version policy and upgrade protocol. Owns a back-to-front ironclad stack, default for services and internal tools: the Option-B @hono/zod-openapi pattern where ONE createRoute() drives runtime request validation, compile-time response typing, the OpenAPI doc (documented responses, API Shield guards), dashboard client types and MCP tool schemas. Also covers the ORM standard (Drizzle for internal tools/Workers, Prisma 7 for product apps), Fastify + Temporal services, Next.js apps, Cloudflare Workers, Astro sites and NestJS. Use when writing, reviewing or testing TypeScript, choosing versions or a stack, designing an API, or upgrading: bump Node, end-of-life runtime, Node CVE/security patch, Node Docker/CI images, TypeScript 5→6→7, React 19, Next.js 16, ES target/lib, or auditing runtime versions."
 ---
 
 # TypeScript Development Standards
 
-How to write, structure, version and test TypeScript across repositories. Repository-specific facts belong in each repository's own `AGENTS.md`, not here.
+How to write, structure, version, upgrade and test TypeScript across repositories. Repository-specific facts belong in each repository's own `AGENTS.md`, not here.
 
 ## Related skills
 
 | Need | Skill |
 |------|-------|
 | Lint, format and git-hook configuration (Oxlint, Biome, residual ESLint, husky, lint-staged, gitleaks) | `/lint` |
-| Upgrading Node, TypeScript, React, Next.js or the ES target | `/typescript-version-upgrade` |
 
 ## Reference files
 
@@ -43,6 +42,15 @@ Load what the task needs.
 - `references/testing/testing-strategies.md` — test pyramid, integration and E2E (Playwright), CI gate
 - `references/testing/ai-testing-protocols.md` — testing requirements for agent-assisted work, behavioural evidence
 - `references/testing/jest-patterns.md` — Jest for NestJS and unmigrated suites
+
+### Upgrades
+- `references/version-upgrade/upgrade-protocol.md` — **the upgrade protocol**: production safety, approval and test-edit precedence, modes, live checks, detection matrix, package-manager commands, phases 1–7, rollback, ES target
+- Node: `references/version-upgrade/node/` — `migration-overview.md`, `legacy-node-to-24.md`, `node-20-to-22.md`, `node-22-to-24.md`, `node-24-to-26.md`
+- TypeScript: `references/version-upgrade/typescript/` — `typescript-legacy-to-5.md`, `typescript-5-to-6.md`, `typescript-6-to-7.md`
+- React: `references/version-upgrade/react/react-to-19.md`
+- Next.js: `references/version-upgrade/frameworks/nextjs-migrations.md`
+- ECMAScript: `references/version-upgrade/ecmascript/` — `es-upgrade-checklist.md`, `es-version-features.md`, `browser-support.md`, `bundler-configuration.md`, `polyfill-strategies.md`
+- Safety: `references/version-upgrade/safety/ai-guardrails.md`, `references/version-upgrade/safety/testing-protocols.md`
 
 ### Debugging
 - `references/debug/debug-statements.md` — unconditional debug output: symptoms, levelled-logger fix, detection
@@ -102,6 +110,13 @@ const user = User.parse(await response.json());
 const Status = { Pending: 'pending', Active: 'active' } as const;
 type Status = (typeof Status)[keyof typeof Status];
 ```
+
+## Upgrading
+
+For any Node, TypeScript, React, Next.js or ES target upgrade — including a Node security patch or an end-of-life runtime — follow `references/version-upgrade/upgrade-protocol.md` and load the per-step guide it names. Two rules win over anything in the guides:
+
+- **Approval** comes at phase checkpoints: after the plan, after version-file and dependency changes, and before commit.
+- **Test edits** are allowed only when the new version changes observable output that a test pins (an error message, a deprecation warning, a renamed import); list each one with its cause. Any other failing test is a behaviour change: stop and report it.
 
 ## Reviewing TypeScript
 

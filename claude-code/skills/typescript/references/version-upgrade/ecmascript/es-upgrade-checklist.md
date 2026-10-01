@@ -1,6 +1,6 @@
 # ECMAScript Target Upgrade
 
-Protocol for changing `target`/`lib` in tsconfig and the matching bundler target. Your default tsconfig belongs in your TypeScript standards; this file covers how to move a repo safely.
+Protocol for changing `target`/`lib` in tsconfig and the matching bundler target. The default tsconfig is owned by `../../tech-stack/version-policy.md` and `../../coding-standards/tooling.md`; this file covers how to move a repo safely.
 
 ## Rule
 

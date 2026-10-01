@@ -51,5 +51,5 @@ npx codemod run @nodejs/crypto-createcipheriv-migration
 2. `grep -rn "createCipher(\|createDecipher(" .` — plan the crypto data migration if found.
 3. Update `.nvmrc`, `engines`, Dockerfile stages, pipeline images, `@types/node@^22` together.
 4. `<pm> install`, `<pm> rebuild` (keep the lockfile).
-5. Run all gates from SKILL.md Phase 5.
+5. Run all gates from `../upgrade-protocol.md` Phase 5.
 6. Continue with `node-22-to-24.md` — 22 is in Maintenance and 24 is the current LTS line.

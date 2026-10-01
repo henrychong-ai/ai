@@ -1,6 +1,6 @@
 # TypeScript 3.x / 4.x → 5.9
 
-Bring an old codebase to the last 5.x release (5.9) first, then continue with `typescript-5-to-6.md`. TypeScript 5 needs Node ≥14.17 — on older Node, upgrade Node first (`../node/legacy-node-to-24.md`). Converge on the tsconfig in your TypeScript standards; do not invent a new one here.
+Bring an old codebase to the last 5.x release (5.9) first, then continue with `typescript-5-to-6.md`. TypeScript 5 needs Node ≥14.17 — on older Node, upgrade Node first (`../node/legacy-node-to-24.md`). Converge on the tsconfig in `../../coding-standards/tooling.md` (versions: `../../tech-stack/version-policy.md`); do not invent a new one here.
 
 Primary sources: the "Announcing TypeScript 4.x / 5.x" posts at https://devblogs.microsoft.com/typescript/ and the breaking-changes wiki https://github.com/microsoft/TypeScript/wiki/Breaking-Changes.
 

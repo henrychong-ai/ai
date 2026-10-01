@@ -1,6 +1,6 @@
 # Node.js Migration Overview
 
-General principles for Node.js upgrades. Version-specific breaking changes are in the per-step guides; version policy belongs in your TypeScript standards.
+General principles for Node.js upgrades. Version-specific breaking changes are in the per-step guides; version policy is in `../../tech-stack/version-policy.md`.
 
 ## Release model (verify live)
 
@@ -70,7 +70,7 @@ CMD ["node", "dist/index.js"]
 ```
 
 - `node:lts`, `node:latest` and `node:current` change major under you; `lts` jumps on LTS promotion day. A major tag (`node:24-alpine`) tracks the line's patches, which is the recommended default; a patch literal must be bumped on every security release or it goes stale.
-- Install a pinned Corepack and enable it (Node 25+ no longer bundles it). Corepack then downloads the package manager pinned in `packageManager` and verifies its `+sha512.` hash, so a tampered or wrong download fails the build. Record the pinned Corepack version in your TypeScript standards.
+- Install a pinned Corepack and enable it (Node 25+ no longer bundles it). Corepack then downloads the package manager pinned in `packageManager` and verifies its `+sha512.` hash, so a tampered or wrong download fails the build. The pinned form is set in `../../tech-stack/version-policy.md`.
 - Pipeline images, runners and registry flow: your CI/CD runbook.
 
 ## CI
