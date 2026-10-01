@@ -14,7 +14,7 @@ cp -r claude-code/skills/typescript ~/.claude/skills/
 cp claude-code/agents/file-converter.md ~/.claude/agents/
 
 # Copy a command
-cp claude-code/commands/kg.md ~/.claude/commands/
+cp claude-code/commands/push.md ~/.claude/commands/
 
 # Copy a plugin
 cp -r claude-code/plugins/statusline ~/.claude/plugins/
@@ -46,9 +46,9 @@ Bundled knowledge packages with reference materials. Copy entire folder to `~/.c
 | [gemini-gem-creator](claude-code/skills/gemini-gem-creator/) | Create and convert Gemini Custom Gems |
 | [images](claude-code/skills/images/) | Image processing and manipulation |
 | [instruction-creator](claude-code/skills/instruction-creator/) | Create Claude instruction files (agents, skills, commands, MCP servers) and package skills for Claude Desktop upload (skill zips, linked Desktop Projects, sanitization, fork subagents, cross-platform conversion) |
+| [kg](claude-code/skills/kg/) | Neo4j knowledge graph via the [@henrychong-ai/mcp-neo4j-knowledge-graph](https://www.npmjs.com/package/@henrychong-ai/mcp-neo4j-knowledge-graph) MCP server — setup, search strategy, deduplicated writes, session capture, and read-only Cypher diagnostics |
 | [lint](claude-code/skills/lint/) | Linting and formatting across ecosystems — TypeScript/JavaScript (Oxlint + Biome, residual ESLint), Python (Ruff), Go (golangci-lint v2), .NET (Roslyn), Solidity — with gitleaks pre-commit secret scanning and copy-ready templates |
-| [typescript](claude-code/skills/typescript/) | TypeScript development — strict type patterns, Vitest testing, Hono/tRPC/`@hono/zod-openapi` single-source APIs, Cloudflare Workers, NestJS core, Astro content sites |
-| [typescript-version-upgrade](claude-code/skills/typescript-version-upgrade/) | Node.js/TypeScript version upgrade protocols |
+| [typescript](claude-code/skills/typescript/) | TypeScript development — strict type patterns, Vitest testing, Hono/tRPC/`@hono/zod-openapi` single-source APIs, Cloudflare Workers, NestJS core, Astro content sites, and Node.js/TypeScript/React/Next.js version upgrade protocols |
 
 ### Plugins
 
@@ -64,7 +64,6 @@ Custom slash commands for common workflows. Copy to `~/.claude/commands/`.
 
 | Command | Description |
 |---------|-------------|
-| [/kg](claude-code/commands/kg.md) | Capture the current session into a knowledge graph with deduplication (requires a knowledge-graph MCP server, e.g. [@henrychong-ai/mcp-neo4j-knowledge-graph](https://www.npmjs.com/package/@henrychong-ai/mcp-neo4j-knowledge-graph)) |
 | [/push](claude-code/commands/push.md) | Git commit and push with validation, generated commit messages, and an approval step |
 
 ### Gemini Custom Gems
@@ -117,7 +116,6 @@ Use the file-converter agent to convert document.pdf to markdown
 Commands are invoked with `/command-name`:
 
 ```
-/kg          # Capture this session into the knowledge graph
 /push
 ```
 
