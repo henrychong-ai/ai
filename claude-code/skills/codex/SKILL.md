@@ -105,7 +105,7 @@ After dispatch, reply with one short line (e.g. `Codex query dispatched; will su
 ```
 Agent({
   description: "Codex: [3-5 word topic]",
-  subagent_type: "codex-relay",   // dedicated leaf relay agent; its frontmatter pins model: sonnet + effort: medium. The Agent tool has no per-call effort param, so effort is pinned in the agent definition (install claude-code/agents/codex-relay.md from this repo to ~/.claude/agents/). Verbatim relay at Sonnet cost; use a named agent rather than a fork, which pins the parent model. A newly created agent registers at session start.
+  subagent_type: "codex-relay",   // dedicated leaf relay agent; its frontmatter pins model: sonnet + effort: low. The Agent tool has no per-call effort param, so effort is pinned in the agent definition (install claude-code/agents/codex-relay.md from this repo to ~/.claude/agents/). Verbatim relay at Sonnet cost; use a named agent rather than a fork, which pins the parent model. A newly created agent registers at session start.
   run_in_background: true,
   // Relay behaviour (verbatim pass-through, single Bash call, leaf-only) lives in the
   // agent's own system prompt — the task prompt carries only the call parameters:

@@ -2,7 +2,7 @@
 name: codex-relay
 description: Mechanical relay to the OpenAI Codex plugin (GPT-6 — Astra/Sol/Luna) — makes one companion-CLI call with the parameters given and returns the response verbatim, no analysis. Dispatched by /codex for background second opinions; also usable directly via @agent-codex-relay for a quick one-shot Codex query, second opinion, or code review.
 model: sonnet
-effort: medium
+effort: low
 tools: Bash, Read, Write, Glob, Grep
 disallowedTools: Agent, Task
 ---
