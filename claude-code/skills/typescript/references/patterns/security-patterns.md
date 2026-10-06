@@ -227,6 +227,50 @@ const JsonInputSchema = z.unknown().refine(
 
 ---
 
+## Storage and Remote Reads Are Trust Boundaries
+
+Data read back from storage or from another service is input, even when your own code wrote it. Typed reads hide that:
+
+- `kv.get<T>(key, 'json')`, `(await object.json()) as T`, `(await res.json()) as T` and `JSON.parse(text) as T` are unchecked casts. TypeScript trusts the type argument, and type-aware lint rules such as `no-unsafe-assignment` do not flag them, because the call already returns `T`.
+- A runtime JSON parser's `SyntaxError` can quote part of the stored value. If stored values hold secrets or personal data, a parse failure copies them into logs.
+
+Pattern:
+
+1. Read as text (or `unknown`), parse locally inside `try`/`catch`, and validate with a Zod schema, or a small hand-written guard on hot paths (keep it in step with the schema with a parity test).
+2. Return a three-way result so every caller handles each case deliberately:
+
+```typescript
+type BoundaryRead<T> =
+  | { status: 'missing' }
+  | { status: 'ok'; value: T }
+  | { status: 'invalid' };
+
+export async function readKvJson<T>(
+  kv: KVNamespace,
+  key: string,
+  schema: z.ZodType<T>,
+): Promise<BoundaryRead<T>> {
+  const text = await kv.get(key); // text read, never 'json'
+  if (text === null) return { status: 'missing' };
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text);
+  } catch {
+    return { status: 'invalid' }; // the parser's message may quote the value: drop it
+  }
+  const parsed = schema.safeParse(raw);
+  return parsed.success ? { status: 'ok', value: parsed.data } : { status: 'invalid' };
+}
+```
+
+3. Log an invalid record with fixed text and the key's category, never the stored value or the parser's message.
+4. Decide what `invalid` means at each call site. A record that carries authorisation, such as an access-restricted entry overlaying a broader public rule, must fail closed: refuse the request rather than fall through to the broader rule.
+5. Enforce the rule with a small CI gate script that rejects the typed-read patterns above in production code, with a `// boundary-ok: <reason>` escape hatch for vetted cases. Lint rules alone do not catch them.
+
+Tests: for each boundary, store an invalid value and assert the documented behaviour, and that no stored content reaches a log line or an error response.
+
+---
+
 ## Best Practices Summary
 
 ### Always Apply These Patterns When:
