@@ -341,6 +341,8 @@ done
 
 **Key:** Always `cd` to the **parent directory** before zipping so the skill name becomes the wrapper folder in the zip.
 
+**A hand-built zip skips the packaging scripts' built-in checks** (single top-level folder, literal frontmatter, filename charset, 30 MB cap) and their exclusions (tool caches, database binaries, maintainer files). Run the manual checks in `claude-desktop-packaging-guide.md` before uploading, or use `package_skill.py` for a verbatim zip that is checked.
+
 **Symlink handling:** If a skill in `~/.claude/skills/` is a symlink to a skill-source repo, `cd` to the physical target path before zipping.
 
 ### Method 2: Convert Script (Content Transformation)
@@ -349,14 +351,15 @@ Use when you need YAML field stripping (`allowed-tools` removal) and CC-specific
 
 ```bash
 # Single skill
-uv run --with pyyaml python ~/.claude/skills/instruction-creator/scripts/convert_to_claudeai.py \
-    ~/.claude/skills/<skill-name> \
+uv run <ic>/scripts/convert_to_claudeai.py \
+    <skills-dir>/<skill-name> \
     <output-dir>/
+# <ic> = this skill's base directory; see claude-desktop-packaging-guide.md § Invocation patterns
 
 # Options: --dry-run, --verbose, --keep-tools, --inline-refs, --team
 ```
 
-**Note:** The convert script transforms content (strips CC-specific fields), excludes `.DS_Store`, `__pycache__/`, `*.pyc`, and maintainer files (`TODO.md`, `README.md`, `CHANGELOG.md`), and keeps `scripts/` (Claude.ai mounts the full skill and its code-execution tool can run them). For pure knowledge skills that don't need content transformation, Method 1 is simpler.
+**Note:** The convert script transforms content (strips CC-specific fields), excludes `.DS_Store`, `__pycache__/`, `*.pyc`, tool caches, database binaries, maintainer files (`TODO.md`, `README.md`, `CHANGELOG.md`), and anything listed in the skill's optional `.claudeai-exclude` file (full list: `claude-desktop-packaging-guide.md` § What the packagers leave out), and keeps `scripts/` (Claude.ai mounts the full skill and its code-execution tool can run them). For pure knowledge skills that don't need content transformation, Method 1 is simpler.
 
 ---
 

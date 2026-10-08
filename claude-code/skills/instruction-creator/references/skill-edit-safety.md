@@ -23,10 +23,10 @@ For a **bulk** edit, `git diff --stat` is the tripwire: a description-only chang
 
 ## Automated guard
 
-`scripts/quick_validate.py` **fails on an empty body** (and also enforces `description ≤ 1024 chars` and, when `pyyaml` is installed, a strict YAML parse that catches unquoted-colon descriptions). Run it on every edited skill; an empty-body failure means a wipe:
+`scripts/quick_validate.py` **fails on an empty body**. Run it on every edited skill; a "body is EMPTY (frontmatter-only)" failure means a wipe. It also enforces `description ≤ 1024 chars` and a strict YAML parse that catches unquoted-colon descriptions. Run from the command line, it always has PyYAML: it declares it in a PEP 723 header and re-runs itself through uv when started without it (imported as a library, the strict parse still runs only if PyYAML is present).
 
 ```bash
-python3 scripts/quick_validate.py <skill-dir>
+uv run <ic>/scripts/quick_validate.py <skill-dir>   # <ic> = this skill's base directory
 ```
 
 ## Bulk-edit protocol (the safe way to touch many skills)
@@ -35,3 +35,4 @@ python3 scripts/quick_validate.py <skill-dir>
 2. After writing, **re-read and assert the body-line-count is unchanged** per file; collect any file where it dropped.
 3. `git diff --stat` review gate — eyeball for outsized deletions.
 4. Run `quick_validate.py` across the batch; **zero failures** before staging.
+5. Only then commit. If recovery is ever needed, the body is in git at `<wipe-commit>~1`.

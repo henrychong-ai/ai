@@ -169,6 +169,8 @@ Opt-in **allowlist** (`name:mode`). Mechanics: staging copy (symlink-resolving) 
 
 For skills that are CC-shaped (approval/orchestration mechanics the guard rejects), MCP-dependent, or have no clean CC source. Author **directly** in `~/.codex/skills/<name>/` (NOT pipeline-managed; not allowlisted). Maintain a trimmed, Codex-approval-flow version directly; sync only harness-neutral data and engines from the CC source.
 
+**Maintaining a Tier-B twin (both directions).** A hand-authored Codex skill and its Claude Code counterpart are twins, not source and copy: an edit to either side must be ported to the other in the same session. The test for whether a twin needs hand-porting is on disk, not in a manifest — a same-name skill directory exists in the other tree and its `SKILL.md` carries no pipeline provenance banner. (Banner present = Tier-A: edit the CC source only and let the pipeline regenerate.) Port the substantive change, then re-apply the harness mechanic map in the direction you are going: CC → Codex per the table above; Codex → CC by re-introducing the CC mechanics the Codex side had to remove (deferred-tool loading, `mcp__` tool names, subagent or `AskUserQuestion` flows where the CC skill relies on them, and pointers to Claude Code configuration where the Codex side points to Codex configuration). Record deliberate divergence in both `SKILL.md` headers so a later editor does not "fix" it.
+
 **Tier-B authoring checklist:**
 - [ ] SKILL.md frontmatter = `name` + `description` only.
 - [ ] Every mechanic from Step 3 mapped/generalised/re-architected (no surviving CC tokens — run the guard pattern as a self-check).
@@ -218,6 +220,7 @@ For a multi-skill reformat, run a **read-only assessment first**: read each skil
 - [ ] Tier-A (verbatim/transform-clean) vs Tier-B (hand-author) decided; grep guard passes.
 - [ ] Verification table green; drift `--check` clean.
 - [ ] Allowlist entry added (Tier-A) or `~/.codex/skills/<name>` authored (Tier-B); distribution manifest and provenance map updated, if you keep them.
+- [ ] Tier-B only: the other-side twin updated in the same session (or the divergence recorded in both headers).
 
 ---
 

@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.9"
+# dependencies = ["pyyaml>=6"]
+# ///
 """
 Convert Claude Code skills to Claude.ai ecosystem format.
 
@@ -6,19 +10,22 @@ This script transforms skills from the Claude Code filesystem format
 to a zip file suitable for upload to Claude.ai (Desktop, iOS, Android, Web).
 
 Usage:
-    uv run --with pyyaml python convert_to_claudeai.py <skill_path> [output_dir] [options]
+    uv run convert_to_claudeai.py <skill_path> [output_dir] [options]
 
 Examples:
-    uv run --with pyyaml python convert_to_claudeai.py ~/.claude/skills/cooking
-    uv run --with pyyaml python convert_to_claudeai.py ~/.claude/skills/cooking ~/Desktop/
-    uv run --with pyyaml python convert_to_claudeai.py ~/.claude/skills/cooking ~/Desktop/ --verbose
+    uv run convert_to_claudeai.py path/to/skills/cooking
+    uv run convert_to_claudeai.py path/to/skills/cooking ~/Desktop/
+    uv run convert_to_claudeai.py path/to/skills/cooking ~/Desktop/ --verbose
 
 Output:
     Creates a zip file ready for upload to Claude.ai Settings > Capabilities
 
 Dependencies:
-    - pyyaml (provided via uv run --with pyyaml)
+    - pyyaml, declared in the PEP 723 header above. `uv run` supplies it; a plain
+      `python3` run without it re-runs itself via uv (see _script_deps.py).
 """
+
+from __future__ import annotations
 
 import argparse
 import re
@@ -29,7 +36,11 @@ from pathlib import Path
 from typing import Optional
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from packaging_checks import run_checks, check_zip_size, report as checks_report
+from packaging_checks import run_checks, check_zip_size, check_archive_layout, StagedZip, report as checks_report
+
+if __name__ == "__main__":
+    from _script_deps import ensure_modules
+    ensure_modules(__file__, any_of=("ruamel.yaml", "yaml"), pip_name="pyyaml")
 
 # YAML handling - try ruamel.yaml first (preserves formatting), fall back to PyYAML
 try:
@@ -42,7 +53,7 @@ except ImportError:
         import yaml as pyyaml
         USE_RUAMEL = False
     except ImportError:
-        print("Error: No YAML library found. Install with: pip install pyyaml")
+        print("Error: No YAML library found. Run via `uv run convert_to_claudeai.py ...`")
         sys.exit(1)
 
 
@@ -85,6 +96,25 @@ class SkillConverter:
         # Claude.ai). The "Scripts won't execute" assumption was outdated.
         '*.pyc',
         '__pycache__/',
+        # Tool-generated cache dirs. These self-ignore for git by writing their
+        # own internal .gitignore containing '*', so `git status` stays clean
+        # and they are invisible during review — but the packager does not read
+        # .gitignore, so without an explicit rule the cache contents ship while
+        # the .gitignore itself is excluded. (Caught 2026-07-22 when a
+        # .ruff_cache leaked files into a freshly built zip.)
+        '.ruff_cache/',
+        '.mypy_cache/',
+        '.pytest_cache/',
+        '.venv/',
+        # Database binaries — always derived/regenerable caches in skills, and
+        # they carry full data even when gitignored (git-invisible ≠
+        # package-invisible: the packager walks the filesystem, not the index,
+        # so a gitignored database cache would otherwise ship inside the zip.)
+        '*.duckdb',
+        '*.sqlite',
+        '*.sqlite3',
+        # The per-skill exclude manifest itself never ships
+        '.claudeai-exclude',
         '.DS_Store',
         '*.env',
         '*.key',
@@ -129,6 +159,24 @@ class SkillConverter:
         self.warnings: list[str] = []
         self.changes: list[str] = []
 
+        # Per-skill packaging excludes: optional `.claudeai-exclude` at the
+        # skill root, one pattern per line (same syntax as EXCLUDE_PATTERNS:
+        # `dir/` prefix, `*` glob on filename, or exact relative path).
+        # Lets a skill ship a curated subset (e.g. summary CSVs) while keeping
+        # bulk data out of the zip, without hardcoding skill names here.
+        self.extra_excludes: list[str] = []
+        exclude_file = self.skill_path / '.claudeai-exclude'
+        if exclude_file.exists():
+            for line in exclude_file.read_text().splitlines():
+                line = line.strip()
+                if line and not line.startswith('#'):
+                    self.extra_excludes.append(line)
+            if self.extra_excludes:
+                self.changes.append(
+                    f"Applied {len(self.extra_excludes)} per-skill exclude "
+                    f"pattern(s) from .claudeai-exclude"
+                )
+
     def log(self, message: str) -> None:
         """Log message if verbose mode enabled."""
         if self.verbose:
@@ -158,10 +206,11 @@ class SkillConverter:
         converted_dir = temp_dir / self.skill_name
 
         try:
-            # Clean up any previous temp
-            if temp_dir.exists():
-                shutil.rmtree(temp_dir)
-            converted_dir.mkdir(parents=True)
+            # Clean up any previous temp (a dry run touches nothing on disk)
+            if not self.dry_run:
+                if temp_dir.exists():
+                    shutil.rmtree(temp_dir)
+                converted_dir.mkdir(parents=True)
 
             # Convert SKILL.md
             self.convert_skill_md(converted_dir)
@@ -185,16 +234,34 @@ class SkillConverter:
                     print(f"Packaging checks failed ({len(errors)} error(s)) — zip not created.")
                     return None
 
-            # Create zip
-            zip_path = self.create_zip(temp_dir)
+            # Create zip. The archive is built to a temporary sibling of the
+            # output path and moved into place only after every post-zip check
+            # passes, so a failed build never touches a zip that is already
+            # there (a rebuild that failed the size cap used to delete it).
+            zip_path = self.output_dir / f"{self.skill_name}.zip"
+            if self.dry_run:
+                self.create_zip(temp_dir, zip_path)
+            else:
+                with StagedZip(zip_path) as staged_zip:
+                    self.create_zip(temp_dir, staged_zip.tmp_path)
 
-            # 30 MB Claude Desktop upload cap
-            if not self.dry_run and zip_path is not None:
-                size_err = check_zip_size(zip_path)
-                if size_err:
-                    print(f"Error: {size_err}")
-                    zip_path.unlink()
-                    return None
+                    # 30 MB Claude Desktop upload cap
+                    size_err = check_zip_size(staged_zip.tmp_path)
+                    if size_err:
+                        print(f"Error: {size_err}")
+                        return None
+
+                    # Archive layout: one top-level folder named for the skill,
+                    # nothing at the root ("All files must be inside the
+                    # top-level folder")
+                    with zipfile.ZipFile(staged_zip.tmp_path) as zf:
+                        layout_errors = check_archive_layout(zf.namelist(), expected_wrapper=self.skill_name)
+                    if layout_errors:
+                        checks_report(layout_errors, [])
+                        print(f"Archive layout rejected ({len(layout_errors)} error(s)) — zip not created; any existing zip is unchanged.")
+                        return None
+
+                    staged_zip.commit()
 
             # Report
             self.report()
@@ -228,29 +295,34 @@ class SkillConverter:
         return True
 
     def convert_skill_md(self, output_dir: Path) -> None:
-        """Convert and write the SKILL.md file."""
+        """Convert and write the SKILL.md file.
+
+        The frontmatter is NEVER re-serialised through a YAML dumper. Fields
+        are removed textually and the remaining frontmatter text is written
+        back byte-for-byte. A dump round-trip (PyYAML without allow_unicode,
+        default 80-col width) turns an em-dash into "\u2014" and folds a long
+        description with "\" line continuations — Claude Desktop's skill
+        validator rejects that ("hex/unicode escape or an escaped line break
+        in its SKILL.md frontmatter ... Write the text literally", observed
+        2026-09-10). packaging_checks enforces this.
+        """
         skill_md = self.skill_path / "SKILL.md"
         content = skill_md.read_text(encoding='utf-8')
 
-        # Parse frontmatter and body
-        frontmatter, body = self.parse_frontmatter(content)
+        # Parse frontmatter (raw text + parsed dict for logging) and body
+        frontmatter_text, frontmatter, body = self.parse_frontmatter(content)
 
-        # Clean frontmatter
-        cleaned_frontmatter = self.clean_frontmatter(frontmatter)
+        # Clean frontmatter TEXTUALLY — the surviving lines stay verbatim
+        cleaned_frontmatter_text = self.clean_frontmatter_text(frontmatter_text, frontmatter)
 
         # Clean body content
         cleaned_body = self.clean_content(body)
 
-        # Reconstruct
-        if USE_RUAMEL:
-            import io
-            stream = io.StringIO()
-            yaml.dump(cleaned_frontmatter, stream)
-            frontmatter_str = stream.getvalue()
+        # Reconstruct (no YAML dump — literal text only)
+        if cleaned_frontmatter_text.strip():
+            new_content = f"---\n{cleaned_frontmatter_text.rstrip()}\n---\n{cleaned_body}"
         else:
-            frontmatter_str = pyyaml.dump(cleaned_frontmatter, default_flow_style=False)
-
-        new_content = f"---\n{frontmatter_str}---\n{cleaned_body}"
+            new_content = cleaned_body
 
         # Write
         output_file = output_dir / "SKILL.md"
@@ -258,8 +330,12 @@ class SkillConverter:
             output_file.write_text(new_content, encoding='utf-8')
         self.log(f"Converted SKILL.md")
 
-    def parse_frontmatter(self, content: str) -> tuple[dict, str]:
-        """Parse YAML frontmatter and body from content."""
+    def parse_frontmatter(self, content: str) -> tuple[str, dict, str]:
+        """Split content into (raw frontmatter text, parsed dict, body).
+
+        The raw text is what gets written back; the dict is only used to
+        decide which fields to drop and to report their values.
+        """
         pattern = r'^---\n(.*?)\n---\n(.*)$'
         match = re.match(pattern, content, re.DOTALL)
 
@@ -273,22 +349,45 @@ class SkillConverter:
             else:
                 frontmatter = pyyaml.safe_load(frontmatter_str)
 
-            return frontmatter or {}, body
+            return frontmatter_str, frontmatter or {}, body
         else:
             # No frontmatter
-            return {}, content
+            return "", {}, content
 
-    def clean_frontmatter(self, frontmatter: dict) -> dict:
-        """Remove Claude Code specific YAML fields."""
-        cleaned = dict(frontmatter)
+    def clean_frontmatter_text(self, frontmatter_text: str, frontmatter: dict) -> str:
+        """Remove Claude Code specific fields from the RAW frontmatter text.
 
-        for field in self.REMOVE_YAML_FIELDS:
-            if field in cleaned and not self.keep_tools:
-                removed_value = cleaned.pop(field)
-                self.changes.append(f"Removed YAML field: {field}={removed_value}")
-                self.log(f"Removed field: {field}")
+        A top-level field is the `key:` line plus any following indented or
+        list-item continuation lines. Everything else is returned untouched,
+        so non-ASCII characters, quoting, and line breaks ship exactly as the
+        author wrote them.
+        """
+        if self.keep_tools:
+            return frontmatter_text
 
-        return cleaned
+        lines = frontmatter_text.split("\n")
+        out: list[str] = []
+        skipping = False
+        for line in lines:
+            m = re.match(r'^([A-Za-z0-9_-]+):', line)
+            if m:
+                key = m.group(1)
+                if key in self.REMOVE_YAML_FIELDS:
+                    skipping = True
+                    self.changes.append(
+                        f"Removed YAML field: {key}={frontmatter.get(key)!r}")
+                    self.log(f"Removed field: {key}")
+                    continue
+                skipping = False
+            elif skipping and (line.startswith((" ", "\t")) or line.strip() == ""):
+                # continuation line of the field being removed
+                if line.strip() == "" and not skipping:
+                    out.append(line)
+                continue
+            else:
+                skipping = False
+            out.append(line)
+        return "\n".join(out)
 
     def clean_content(self, content: str) -> str:
         """Clean body content of CC-specific patterns.
@@ -376,7 +475,7 @@ class SkillConverter:
         """Check if path should be excluded from bundle."""
         path_str = str(path)
 
-        for pattern in self.EXCLUDE_PATTERNS:
+        for pattern in list(self.EXCLUDE_PATTERNS) + self.extra_excludes:
             if pattern.endswith('/'):
                 # Directory pattern
                 if path_str.startswith(pattern[:-1]):
@@ -393,31 +492,31 @@ class SkillConverter:
 
         return False
 
-    def create_zip(self, temp_dir: Path) -> Path:
-        """Create the final zip file."""
+    def create_zip(self, temp_dir: Path, target: Path) -> Path:
+        """Write the archive to `target`.
+
+        `target` is the caller's temporary build path, never the final output
+        path: the caller verifies the archive and then moves it into place.
+        Under --dry-run nothing is written.
+        """
         zip_name = f"{self.skill_name}.zip"
-        zip_path = self.output_dir / zip_name
 
         if self.dry_run:
-            self.log(f"Would create: {zip_path}")
-            return zip_path
-
-        # Remove existing zip
-        if zip_path.exists():
-            zip_path.unlink()
+            self.log(f"Would create: {target}")
+            return target
 
         # Create zip with correct structure
-        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:
+        with zipfile.ZipFile(target, 'w', zipfile.ZIP_DEFLATED) as zf:
             skill_dir = temp_dir / self.skill_name
             for file_path in skill_dir.rglob("*"):
                 if file_path.is_file():
                     arc_name = file_path.relative_to(temp_dir)
                     zf.write(file_path, arc_name)
 
-        zip_size = zip_path.stat().st_size
+        zip_size = target.stat().st_size
         self.changes.append(f"Created zip: {zip_name} ({zip_size / 1024:.1f}KB)")
 
-        return zip_path
+        return target
 
     def report(self) -> None:
         """Print conversion report."""
@@ -441,9 +540,9 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-    %(prog)s ~/.claude/skills/cooking
-    %(prog)s ~/.claude/skills/cooking ~/Desktop/
-    %(prog)s ~/.claude/skills/cooking ~/Desktop/ --verbose --dry-run
+    %(prog)s path/to/skills/cooking
+    %(prog)s path/to/skills/cooking ~/Desktop/
+    %(prog)s path/to/skills/cooking ~/Desktop/ --verbose --dry-run
 
 The output zip can be uploaded to Claude.ai via Settings > Capabilities.
 Skills uploaded to any Claude.ai platform will sync to all others automatically.
@@ -497,8 +596,9 @@ Skills uploaded to any Claude.ai platform will sync to all others automatically.
 
     args = parser.parse_args()
 
-    # Ensure output directory exists
-    args.output_dir.mkdir(parents=True, exist_ok=True)
+    # Ensure output directory exists (a dry run creates nothing)
+    if not args.dry_run:
+        args.output_dir.mkdir(parents=True, exist_ok=True)
 
     # Convert
     converter = SkillConverter(

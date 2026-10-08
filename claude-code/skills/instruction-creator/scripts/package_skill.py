@@ -18,7 +18,7 @@ import sys
 import zipfile
 from pathlib import Path
 from quick_validate import validate_skill
-from packaging_checks import run_checks, check_zip_size, report
+from packaging_checks import run_checks, check_zip_size, check_archive_layout, StagedZip, report
 
 # Build artifacts / OS cruft never shipped in a skill zip. Mirrors the
 # exclusions in convert_to_claudeai.py so a verbatim package is still clean
@@ -33,8 +33,15 @@ EXCLUDE_NAMES = {
     "cd-project-recipe.md",
     ".gitignore",
 }
-EXCLUDE_SUFFIXES = {".pyc", ".pyo"}
-EXCLUDE_DIRS = {"__pycache__", ".git", ".ipynb_checkpoints", "todo"}
+# .duckdb/.sqlite: derived database caches carry full data even when
+# gitignored — the packager walks the filesystem, not the git index.
+EXCLUDE_SUFFIXES = {".pyc", ".pyo", ".duckdb", ".sqlite", ".sqlite3"}
+# Tool-generated cache dirs self-ignore for git (they write an internal
+# .gitignore containing '*'), so they stay invisible to `git status` while the
+# packager — which does not read .gitignore — would otherwise ship their
+# contents. Excluded explicitly. (Caught 2026-07-22 via a .ruff_cache leak.)
+EXCLUDE_DIRS = {"__pycache__", ".git", ".ipynb_checkpoints", "todo",
+                ".ruff_cache", ".mypy_cache", ".pytest_cache", ".venv"}
 
 
 def _excluded(path: Path) -> bool:
@@ -107,18 +114,31 @@ def package_skill(skill_path, output_dir=None, team=False):
         print(f"❌ Packaging checks failed ({len(errors)} error(s)) — zip not created.")
         return None
 
-    # Create the zip file
+    # Create the zip file. It is built to a temporary sibling of the output
+    # path and moved into place only after every post-zip check passes, so a
+    # failed build never touches a zip that is already there.
     try:
-        with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            for file_path, arcname in included:
-                zipf.write(file_path, arcname)
-                print(f"  Added: {arcname}")
+        with StagedZip(zip_filename) as staged:
+            with zipfile.ZipFile(staged.tmp_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                for file_path, arcname in included:
+                    zipf.write(file_path, arcname)
+                    print(f"  Added: {arcname}")
 
-        size_err = check_zip_size(zip_filename)
-        if size_err:
-            print(f"❌ {size_err}")
-            zip_filename.unlink()
-            return None
+            size_err = check_zip_size(staged.tmp_path)
+            if size_err:
+                print(f"❌ {size_err}")
+                return None
+
+            # Archive layout: one top-level folder named for the skill, nothing
+            # at the root (Claude.ai: "All files must be inside the top-level folder")
+            with zipfile.ZipFile(staged.tmp_path) as zipf:
+                layout_errors = check_archive_layout(zipf.namelist(), expected_wrapper=skill_path.name)
+            if layout_errors:
+                report(layout_errors, [])
+                print(f"❌ Archive layout rejected ({len(layout_errors)} error(s)) — zip not created; any existing zip is unchanged.")
+                return None
+
+            staged.commit()
 
         print(f"\n✅ Successfully packaged skill to: {zip_filename}")
         return zip_filename

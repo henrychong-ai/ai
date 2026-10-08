@@ -22,7 +22,7 @@ Claude Code loads instructions in this order (later overrides earlier):
 |-------|--------|-------|---------|
 | 1 | `~/.claude/CLAUDE.md` | Global | Always |
 | 2 | `~/.claude/rules/**/*.md` | Global | Always |
-| 3 | `./CLAUDE.md` | Project | In project |
+| 3 | `./CLAUDE.md` → imports `./AGENTS.md` (canonical) | Project | In project |
 | 4 | `./.claude/rules/**/*.md` | Project | In project |
 | 5 | `./CLAUDE.local.md` | Personal | In project |
 | 6 | `./subdir/CLAUDE.md` | Subdirectory | When navigated |
@@ -32,6 +32,7 @@ Claude Code loads instructions in this order (later overrides earlier):
 - **`@import` fully loads content** - it is NOT lazy, the entire imported file loads
 - **Only nested subdirectory CLAUDE.md** provides conditional loading (when you navigate to that directory)
 - Rules load alphabetically within directories
+- **Directory instructions live in `AGENTS.md`**; `CLAUDE.md` is an `@AGENTS.md` import shim plus any Claude-only addenda. Wherever this guide says "Project CLAUDE.md", the content goes in the project's `AGENTS.md`. Standard, native-reading behaviour, and migration: `agents-md-and-claude-md-guide.md`
 
 ---
 
@@ -51,7 +52,7 @@ Claude Code loads instructions in this order (later overrides earlier):
 | Type | Recommended Size | When it grows past that |
 |------|-----------------|---------|
 | Global CLAUDE.md | under ~200 lines | Move detail into rules files, `paths:`-scoped rules, or skill references |
-| Project CLAUDE.md | under ~200 lines | Move reference material into skills or docs the file points to |
+| Project CLAUDE.md (or the AGENTS.md it imports) | under ~200 lines | Move reference material into skills or docs the file points to |
 | CLAUDE.local.md | 50-150 lines | Keep to personal overrides |
 
 Claude Code's official guidance is under about 200 lines per file: files load in full up to 4 MiB, so every extra line costs context on every turn and dilutes adherence.
@@ -310,6 +311,17 @@ Where should this content go?
 - Reference documentation
 - Load when working in that language
 - Team-shareable
+
+**Scope rule — language skills hold team-wide standards only.** A language or stack skill states how the team writes that language across every repository: conventions, the default stack, patterns, testing and tooling standards. Keep repository-specific knowledge out of it — named repos and systems, their as-built stacks, release or version history, migration records, and case studies tied to one codebase. Put that content in its owning home instead:
+
+| Repo-specific content | Home |
+|---|---|
+| How one repository is built, changed and released | That repo's `AGENTS.md` (Scenario 4) |
+| A system's engineering notes spanning several repos | The system/domain skill that owns it (e.g. a product platform skill's `references/`) |
+| A reference project's evidence (as-built stack, milestones, proven-in-production facts) | The project catalogue of the skill that tracks those projects |
+| Per-repo as-built facts (stack, deploy target, environments, branch model) | That repo's entry in the team's repository catalogue, if it keeps one; a platform or system skill keeps its patterns plus a lightweight registry linking those entries |
+
+A standard may say it has been proven in production; the proof itself (which repo, which version, which test count) lives in the owning home. When reviewing a language skill, sweep it for repository and product names, and move each hit or delete it.
 
 ### Scenario 4: Project-Specific Tech Stack Context
 **Decision:** Project CLAUDE.md

@@ -3,6 +3,10 @@
 # anthropics/skills repository (https://github.com/anthropics/skills/tree/main/skills/skill-creator),
 # licensed under the Apache License, Version 2.0 (see LICENSE-APACHE-2.0.txt in this folder).
 # Modified by Henry Chong.
+# /// script
+# requires-python = ">=3.9"
+# dependencies = ["pyyaml>=6"]
+# ///
 """
 Quick validation script for skills - minimal version.
 
@@ -86,8 +90,12 @@ def validate_skill(skill_path):
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Usage: python quick_validate.py <skill_directory>")
+        print("Usage: uv run quick_validate.py <skill_directory>")
         sys.exit(1)
+    # Run with PyYAML so the strict frontmatter parse is never silently skipped.
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from _script_deps import ensure_modules
+    ensure_modules(__file__, any_of=("yaml",), pip_name="pyyaml")
     valid, message = validate_skill(sys.argv[1])
     print(message)
     sys.exit(0 if valid else 1)

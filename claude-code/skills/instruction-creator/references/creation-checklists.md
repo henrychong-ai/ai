@@ -14,6 +14,10 @@ Detailed guidance for choosing where content belongs. Each entry shows what SHOU
 - **DO**: Cross-session technical preferences, universal tool policies, MCP token limit strategies, agent creation standards, directory structures
 - **DON'T**: Business-specific context, domain expertise, identity/philosophy (belongs in master instruction file)
 
+### Directory Instructions (`./AGENTS.md` + `./CLAUDE.md` shim)
+- **DO**: Put project architecture, conventions, workflows, and commands in `AGENTS.md`, harness-neutral; make `CLAUDE.md` a first-line `@AGENTS.md` import with only Claude-only addenda below; align any existing `CLAUDE.md` you touch (`agents-md-and-claude-md-guide.md`)
+- **DON'T**: Prose pointers or symlinks between the two files, substantive content in both, reliance on Claude Code's native `AGENTS.md` fallback alone
+
 ### Rules (`~/.claude/rules/**/*.md`)
 - **DO**: Small cross-cutting config, environment credentials, language conventions, tool-specific patterns
 - **DON'T**: Large documentation (use skill references), core identity (use CLAUDE.md)
@@ -103,7 +107,7 @@ For each new agent/skill, evaluate:
 2. **Decision-Making Needs**: Rule-based vs judgment-based
 3. **Context Requirements**: Small focused tasks vs large context analysis
 4. **Performance Needs**: Speed-critical vs quality-critical (Fable's first token can still take ~a minute on 5.1 — capability and latency trade off explicitly)
-5. **Cost Considerations**: Usage frequency and budget (Sonnet 5.5 is $2/$10 with cache reads $0.20, the same read rate as Opus 5.5, so it saves on output and cache writes rather than cached input; Opus 5.5 is $4/$20 with cache reads $0.20; Fable 5.1 is $10/$50, 2.5× Opus 5.5 per token, with cache reads $0.25; Haiku 5.5 is $0.10/$0.50 for prompts up to 100,000 tokens and $0.50/$2.50 above, with cache reads $0.01/$0.05. Fable 5.1 was measured cheaper per task than Opus 5 at low to high effort on coding; that comparison predates Opus 5.5, so measure cost per task, not per token)
+5. **Cost Considerations**: Usage frequency and budget (Sonnet 5.5 is $2/$10 with cache reads $0.10 (lowered from $0.20 on 2026-10-07), half of every Opus 5.5 rate, so it saves on cached input as well as output and cache writes; Opus 5.5 is $4/$20 with cache reads $0.20; Fable 5.1 is $10/$50, 2.5× Opus 5.5 per token, with cache reads $0.25; Haiku 5.5 is $0.10/$0.50 for prompts up to 100,000 tokens and $0.50/$2.50 above, with cache reads $0.01/$0.05. Fable 5.1 was measured cheaper per task than Opus 5 at low to high effort on coding; that comparison predates Opus 5.5, so measure cost per task, not per token)
 
 ### Model Capabilities
 | Model | Strengths | Use When |

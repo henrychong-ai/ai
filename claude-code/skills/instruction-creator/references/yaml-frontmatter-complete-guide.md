@@ -195,6 +195,7 @@ hooks:                              # Optional: lifecycle hooks scoped to skill
 - **Purpose:** What skill does and when to use it (Claude uses this for auto-discovery)
 - **Pattern:** "This skill should be used when [use cases]. [Capabilities]. [Special triggers]."
 - **Voice:** Always third-person ("This skill should be used when...")
+- **⚠️ Write it literally (Claude Desktop zips):** keep the value on one line and type non-ASCII characters (em-dashes, curly quotes) as themselves. Claude Desktop's skill validator rejects a frontmatter containing `\u`/`\x` escapes or a `\` line continuation — the output of any YAML dumper round-trip. Never regenerate SKILL.md frontmatter through a YAML library; `packaging_checks.py` enforces this at build time.
 
 #### `allowed-tools` (Optional)
 - **Format:** Comma-separated string or YAML list

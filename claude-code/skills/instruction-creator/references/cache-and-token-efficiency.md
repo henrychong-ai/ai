@@ -85,7 +85,7 @@ Figures from "What a task costs on Opus 5.5" (claude.dev, 2026-09-25, https://cl
 - **"One write costs as much as 25 reads."** A read is 5% of input and a 5-minute write 1.25× input (1-hour 2×); at 120K tokens a 5-minute write is about $0.60 and a read about $0.02. So one avoidable cache-bust costs roughly as much as 25 cached turns (inference from the post's figures).
 - **Compaction at 150K pays back in about ten turns.** It costs about $0.25, and each later turn saves about $0.025 in reads.
 - **Agent teams in plan mode use "about seven times the tokens of a standard session".**
-- **Sonnet 5.5 cache reads cost the same as Opus 5.5** ($0.20/MTok). Switching a cache-read-dominated loop to Sonnet 5.5 saves on output ($10 vs $20) and cache writes ($2.50 vs $5 for 5 minutes, $4 vs $8 for 1 hour), not on cached input.
+- **Sonnet 5.5 cache reads cost $0.10/MTok, half of Opus 5.5's $0.20** (lowered from $0.20 on 2026-10-07; 0.05× its $2 input, the same multiplier as Opus 5.5). Every Sonnet 5.5 rate is now half the Opus 5.5 rate, so switching a cache-read-dominated loop to Sonnet 5.5 halves the cached-input cost as well as output ($10 vs $20) and cache writes ($2.50 vs $5 for 5 minutes, $4 vs $8 for 1 hour). Re-reading a 200K-token cached history costs about $0.02 a turn on Sonnet 5.5 against $0.04 on Opus 5.5.
 
 ## Sources
 
@@ -98,4 +98,5 @@ Figures from "What a task costs on Opus 5.5" (claude.dev, 2026-09-25, https://cl
 - CC v2.1.170 binary — `"ttl": "1h"` cache_control; "cache_control changed (scope or TTL)" miss reason
 - claude.dev/blog/what-a-task-costs-on-opus-5-5 (2026-09-25) — Opus 5.5 write-vs-read and compaction arithmetic, agent-team token multiple
 - platform.claude.com/docs/en/about-claude/pricing (checked 2026-10-08) — Haiku 5.5 prices by prompt length and its 0.1x cache-read multiplier
-- platform.claude.com/docs/en/models/sonnet-5-5/overview — Sonnet 5.5 cache pricing ($2.50 5-minute write, $4 1-hour write, $0.20 read)
+- platform.claude.com/docs/en/models/sonnet-5-5/overview — Sonnet 5.5 cache pricing ($2.50 5-minute write, $4 1-hour write)
+- platform.claude.com/docs/en/release-notes/overview — 2026-10-07: Sonnet 5.5 cache reads lowered from $0.20 to $0.10 per MTok
