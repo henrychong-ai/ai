@@ -282,6 +282,7 @@ All read 2026-09-29.
 # Related References in This Skill
 
 - `claude-opus-5-5-compatibility.md`: Part 1 holds the API breaks shared with Sonnet 5.5; 2.3 the authorisation carve-out; Part 3 the CLAUDE.md-not-skill doctrine for keep-going rules and § "Safety classifiers during authoring sessions"; Part 3A the Opus fallback map
+- `claude-haiku-5-5-compatibility.md`: the low-cost tier below rung 1; its Part 3 holds the Haiku-against-Sonnet effort and cost comparison
 - `claude-fable-5-1-compatibility.md`: the escalation tier; its Part 2A harness split and Part 2D system-card findings are the format this file follows
 - `model-compatibility-index.md`: which compatibility file to load when, and the joint model-and-effort routing
 - `cache-and-token-efficiency.md`: the cache key, the effort-change exception (now including Sonnet 5.5), and the subagent-only rule for pins

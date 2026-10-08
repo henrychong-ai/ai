@@ -6,7 +6,7 @@
 **Last updated:** 2026-09-29 (Opus 5.5 system card and the "What a task costs" post folded in; Sonnet 5.5 cross-references)
 **Model ID:** `claude-opus-5-5` (no date suffix; Bedrock `anthropic.claude-opus-5-5`). **Claude Code alias:** `opus` resolves to Opus 5.5 from Claude Code 2.1.280 on the Anthropic API, Claude Platform on AWS, Amazon Bedrock, and Google Cloud's Agent Platform; on Microsoft Foundry `opus` still resolves to Opus 4.6. Opus 5.5 requires Claude Code 2.1.280 or later. `default` also resolves to Opus 5.5 on Pro, Max, Team, Enterprise, and the API.
 **Pricing:** $4 / $20 per MTok (down from Opus 5's $5 / $25). Cache reads $0.20 / MTok (0.05x input); 5-minute cache write $5, 1-hour write $8; Batch half price.
-**Specs:** 1M context (default, no beta header), 128K max output, knowledge cutoff June 2026, prompt-cache minimum 512 tokens. Adaptive thinking always on. Five effort levels, **default `medium`** (on the API every other effort-capable model defaults to `high`, Sonnet 5.5 included; in Claude Code Sonnet 5.5 also defaults to `medium`).
+**Specs:** 1M context (default, no beta header), 128K max output, knowledge cutoff June 2026, prompt-cache minimum 512 tokens. Adaptive thinking always on. Five effort levels, **default `medium`** (on the API every other effort-capable model except Haiku 5.5 defaults to `high`, Sonnet 5.5 included; in Claude Code Sonnet 5.5 also defaults to `medium`).
 
 Anthropic's position: "Existing Claude Opus 5 prompts should perform well without changes, and the patterns in Prompting Claude Opus 5 remain a reasonable starting point." So **Parts 1 to 3 of the Opus 5 file remain the base**: removal-first (verification scaffolds, self-correction nudges, review severity pre-filters), explicit length calibration, scope boundaries, and delegation criteria. The 8 Core Rules in SKILL.md apply unchanged. Opus 5.5 also runs faster (over 30% more output tokens per second than Opus 5) and tends to finish the same task in fewer tokens.
 
@@ -122,7 +122,7 @@ Failure patterns from Anthropic's internal use and alignment evaluations, with t
 
 | Mechanic | Consequence |
 |---|---|
-| Changing effort **keeps the prompt cache** on Opus 5.5, Sonnet 5.5, and Fable 5.1 with an API key or a Claude subscription. It does not on Amazon Bedrock, Google Cloud's Agent Platform, a Claude apps gateway, with `CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS`, or under a HIPAA configuration | An effort-only pin on these models no longer double-busts the cache on first-party auth. A **model** pin still does. Keep the subagent-only rule for portable skills (`cache-and-token-efficiency.md`) |
+| Changing effort **keeps the prompt cache** on Opus 5.5, Sonnet 5.5, Haiku 5.5, and Fable 5.1 with an API key or a Claude subscription. It does not on Amazon Bedrock, Google Cloud's Agent Platform, a Claude apps gateway, with `CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS`, or under a HIPAA configuration | An effort-only pin on these models no longer double-busts the cache on first-party auth. A **model** pin still does. Keep the subagent-only rule for portable skills (`cache-and-token-efficiency.md`) |
 | Unpinned skills and agents inherit session effort, which defaults to **`medium`** on Opus 5.5 | Main-thread skills and commands carry no pin; any agent or forked skill that pins `model` pins `effort` with it (routing ladder in `model-compatibility-index.md`). `medium` is now the baseline an unpinned instruction runs at |
 | A top-level `effortLevel` in the **user** settings file is ignored for Opus 5.5; `/effort` saves per model under `modelSettings` | Never document "set `effortLevel` to change Opus 5.5 effort". Project, local, managed, and `--settings` `effortLevel` still apply to every model |
 | `alwaysThinkingEnabled` and `MAX_THINKING_TOKENS=0` do nothing on Opus 5.5 | Remove thinking-toggle advice from Opus-targeted docs; `ultrathink` still adds a one-turn in-context instruction, while "think hard" is ordinary text |
@@ -289,5 +289,5 @@ Read 2026-09-24 unless marked.
 - `claude-fable-5-1-compatibility.md`: shares three of the four API breaks; its Part 2A harness-injected list still applies
 - `claude-sonnet-5-5-compatibility.md`: rung 1 of the routing ladder, one step below Opus 5.5; standalone guide whose Sonnet-only add-backs stay out of Opus-targeted instructions
 - `model-compatibility-index.md`: which compatibility file to load when, and the recommended routing ladder
-- `cache-and-token-efficiency.md`: the cache key, and the effort-change exception on Opus 5.5, Sonnet 5.5, and Fable 5.1
+- `cache-and-token-efficiency.md`: the cache key, and the effort-change exception on Opus 5.5, Sonnet 5.5, Haiku 5.5, and Fable 5.1
 - `yaml-frontmatter-complete-guide.md`: `model:` and `effort:` fields, harness default versus recommended default

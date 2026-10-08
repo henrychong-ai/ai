@@ -1,10 +1,10 @@
 # Cache Safety & Token Efficiency (Claude Code)
 
-*How instruction-file design decisions interact with Claude Code's prompt cache. Verified 2026-06-10 against the official CC docs (code.claude.com: prompt-caching, model-config, skills frontmatter reference), the platform API caching docs, and the CC v2.1.170 binary. Fork rows re-verified 2026-08-14 against the current sub-agents / skills / prompt-caching docs plus a live fork test. Effort-key exception and Opus 5.5 notes verified 2026-09-24 against the prompt-caching and model-config docs; Sonnet 5.5 added to the effort-key exception, re-verified 2026-09-29.*
+*How instruction-file design decisions interact with Claude Code's prompt cache. Verified 2026-06-10 against the official CC docs (code.claude.com: prompt-caching, model-config, skills frontmatter reference), the platform API caching docs, and the CC v2.1.170 binary. Fork rows re-verified 2026-08-14 against the current sub-agents / skills / prompt-caching docs plus a live fork test. Effort-key exception and Opus 5.5 notes verified 2026-09-24 against the prompt-caching and model-config docs; Sonnet 5.5 added to the effort-key exception, re-verified 2026-09-29; Haiku 5.5 added, 2026-10-08.*
 
 ## The cache model in one paragraph
 
-Every CC turn re-sends the full context (system prompt → project context → conversation); the API caches by **exact prefix match**, so on a normal turn only the newest exchange is processed. Two settings sit outside the prompt text but ARE part of the cache key: **model** ("each model has its own cache") and, **on most models, effort** ("each effort level has its own cache"). Changing either mid-session recomputes the entire request — this is why `/model` and `/effort` show confirmation dialogs once a conversation has prior output. **Exception:** on Opus 5.5, Sonnet 5.5, and Fable 5.1 with an API key or a Claude subscription, changing effort keeps the cache and Claude Code applies it without asking; this does not hold on Amazon Bedrock, Google Cloud's Agent Platform, a Claude apps gateway, with `CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS`, or under a HIPAA configuration (Fable 5.1 from v2.1.260). A model change always recomputes. TTL: **1 hour** on the main thread under a Claude subscription (5 minutes on API keys / third-party providers); **subagents always use the 5-minute TTL** and build their own cache.
+Every CC turn re-sends the full context (system prompt → project context → conversation); the API caches by **exact prefix match**, so on a normal turn only the newest exchange is processed. Two settings sit outside the prompt text but ARE part of the cache key: **model** ("each model has its own cache") and, **on most models, effort** ("each effort level has its own cache"). Changing either mid-session recomputes the entire request — this is why `/model` and `/effort` show confirmation dialogs once a conversation has prior output. **Exception:** on Opus 5.5, Sonnet 5.5, Haiku 5.5, and Fable 5.1 with an API key or a Claude subscription, changing effort keeps the cache and Claude Code applies it without asking; this does not hold on Amazon Bedrock, Google Cloud's Agent Platform, a Claude apps gateway, with `CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS`, or under a HIPAA configuration (Fable 5.1 from v2.1.260). A model change always recomputes. TTL: **1 hour** on the main thread under a Claude subscription (5 minutes on API keys / third-party providers); **subagents always use the 5-minute TTL** and build their own cache.
 
 ## Main-thread model/effort pins: the double cache-bust
 
@@ -20,7 +20,7 @@ A skill's or command's `model:` / `effort:` frontmatter overrides the **main con
 
 Nuances:
 
-- **Effort-only pins are not the cheap version** (except on Opus 5.5, Sonnet 5.5, and Fable 5.1 on first-party auth, where an effort change keeps the cache) — elsewhere the same double bust, and the entry re-read bills at the *active* model's rate (in a Fable 5 session, an `effort: low`-only pin re-reads at $10/M — twice what the opus-pin's entry costs for the same mistake).
+- **Effort-only pins are not the cheap version** (except on Opus 5.5, Sonnet 5.5, Haiku 5.5, and Fable 5.1 on first-party auth, where an effort change keeps the cache) — elsewhere the same double bust, and the entry re-read bills at the *active* model's rate (in a Fable 5 session, an `effort: low`-only pin re-reads at $10/M — twice what the opus-pin's entry costs for the same mistake).
 - **A pin that resolves to the already-active level keeps the cache** (documented no-op) — e.g. `effort: high` in a session already at the default.
 - **Fable 5.x's automatic safety fallback (Opus 4.8 for cyber, Opus 5 for bio) is also a model switch** (full re-read) — outside the author's control, but it explains surprise slow turns in security-/bio-adjacent sessions.
 
@@ -33,7 +33,7 @@ Nuances:
 | **Pinned skill forced into a subagent** (`context: fork` + `agent:`) | parent cache untouched; the skill body seeds a FRESH subagent with NO conversation history (official: "It won't have access to your conversation history"), so the pin runs against a short cold prefix — no exit re-read, no parent pollution | the standard home for a pinned skill |
 | **Pinned skill/command on the main thread** | double cache-bust per invocation (table above) | the anti-pattern — avoid |
 
-**Rule: a skill or command with a hardcoded `model:` or `effort:` must always run as a subagent.** The effort exception on Opus 5.5, Sonnet 5.5, and Fable 5.1 does not relax this: a skill cannot know its user's model or route, and a `model:` pin busts the cache everywhere. Either author it as an agent, or set `context: fork` (+ `agent:`) in the same frontmatter so the pin can never touch the main conversation's cache. A main-thread pin is never "free": it taxes the entire session to discount one skill.
+**Rule: a skill or command with a hardcoded `model:` or `effort:` must always run as a subagent.** The effort exception on Opus 5.5, Sonnet 5.5, Haiku 5.5, and Fable 5.1 does not relax this: a skill cannot know its user's model or route, and a `model:` pin busts the cache everywhere. Either author it as an agent, or set `context: fork` (+ `agent:`) in the same frontmatter so the pin can never touch the main conversation's cache. A main-thread pin is never "free": it taxes the entire session to discount one skill.
 
 (`CLAUDE_CODE_SUBAGENT_MODEL` is the operator-side equivalent — it overrides all subagent models without touching the main thread.)
 
@@ -67,9 +67,16 @@ All verified against the CC prompt-caching doc:
 ## Opus 5.5 notes (2026-09-24)
 
 - **Cache reads are $0.20/MTok on Opus 5.5** (0.05× its $4 input; 5-minute write $5, 1-hour write $8), against $0.50 on Opus 5 and $0.25 on Fable 5.1. On the worked example above, an `opus` pin now resolves to Opus 5.5 and its entry re-read costs about 200K × $4/M = $0.80 rather than $1.00; the doctrine is unchanged.
-- **Effort changes keep the cache** on first-party auth (see the cache model above). Unpinned skills and agents inherit the session effort, which defaults to `medium` on Opus 5.5 and Sonnet 5.5. Main-thread skills and commands carry no pin; any agent or forked skill that pins `model` pins `effort` with it (routing ladder in `model-compatibility-index.md`), or it inherits the session's level, `xhigh` under an Opus oversight session.
+- **Effort changes keep the cache** on first-party auth (see the cache model above). Unpinned skills and agents inherit the session effort, which defaults to `medium` on Opus 5.5, Sonnet 5.5, and Haiku 5.5. Main-thread skills and commands carry no pin; any agent or forked skill that pins `model` pins `effort` with it (routing ladder in `model-compatibility-index.md`), or it inherits the session's level, `xhigh` under an Opus oversight session.
 - **Subagent `opus` under an Opus-family session** resolves to the main model's exact ID, including `[1m]`, so the subagent keeps the 1M window; it still builds its own cold cache.
 - **Cache minimum is 512 tokens** (API; relevant to short system prompts in hand-built integrations).
+
+## Haiku 5.5 notes (2026-10-08)
+
+- **Prices depend on prompt length.** For prompts up to 100,000 tokens: input $0.10/MTok, cache reads $0.01 (the standard 0.1x multiplier; Opus 5.5 and Sonnet 5.5 use 0.05x), 5-minute write $0.125, 1-hour write $0.20. For prompts over 100,000 tokens every rate is 5x higher (input $0.50, cache reads $0.05, writes $0.625 and $1). Anthropic's sources do not say whether cached tokens count towards the 100,000.
+- **Give a pinned Haiku agent a bounded input.** A subagent starts on its own cold cache and loads the user's instruction files into every prompt, so a large brief or read sweep can cross the threshold and pay the higher rate on the whole request (Haiku 5.5 file Part 3).
+- **Effort changes keep the cache** on Haiku 5.5 with an API key or a Claude subscription, as on Opus 5.5, Sonnet 5.5, and Fable 5.1 (see the cache model above). The `haiku` alias is Haiku 5.5 only on the Anthropic API, so the exception never applies to a `haiku` pin on other providers.
+- **Cache minimum is 512 tokens.** `DISABLE_PROMPT_CACHING_HAIKU` "applies to the default Haiku model, the model the `haiku` alias resolves to".
 
 ## Cache economics (Opus 5.5, claude.dev cost post)
 
@@ -82,7 +89,7 @@ Figures from "What a task costs on Opus 5.5" (claude.dev, 2026-09-25, https://cl
 
 ## Sources
 
-- code.claude.com/docs/en/prompt-caching (re-verified 2026-09-29; effort-change exception on Opus 5.5, Sonnet 5.5, and Fable 5.1) — the (model, effort) cache keys, full invalidation/keep lists, TTL policy (1h subscription main thread / 5m subagents), subagent-vs-fork cache behaviour
+- code.claude.com/docs/en/prompt-caching (re-verified 2026-09-29; effort-change exception on Opus 5.5, Sonnet 5.5, and Fable 5.1; Haiku 5.5 added to it, checked 2026-10-08) — the (model, effort) cache keys, full invalidation/keep lists, TTL policy (1h subscription main thread / 5m subagents), subagent-vs-fork cache behaviour
 - code.claude.com/docs/en/sub-agents — conversation-fork definition ("inherits the entire conversation so far"), fork-vs-named comparison table, "cheaper than spawning a fresh subagent for tasks that need the same context", fork-mode defaults + `Agent(fork)` deny rule
 - code.claude.com/docs/en/skills — `context: fork` runs the skill body in a fresh subagent with no conversation history; `background:` field (v2.1.218+)
 - code.claude.com/docs/en/skills — frontmatter reference: `model:` override is turn-scoped on the main thread, reverts next prompt
@@ -90,4 +97,5 @@ Figures from "What a task costs on Opus 5.5" (claude.dev, 2026-09-25, https://cl
 - platform.claude.com/docs/en/build-with-claude/prompt-caching — prefix matching, model-bound cache, 1.25×/2× write and 0.1× read multipliers
 - CC v2.1.170 binary — `"ttl": "1h"` cache_control; "cache_control changed (scope or TTL)" miss reason
 - claude.dev/blog/what-a-task-costs-on-opus-5-5 (2026-09-25) — Opus 5.5 write-vs-read and compaction arithmetic, agent-team token multiple
+- platform.claude.com/docs/en/about-claude/pricing (checked 2026-10-08) — Haiku 5.5 prices by prompt length and its 0.1x cache-read multiplier
 - platform.claude.com/docs/en/models/sonnet-5-5/overview — Sonnet 5.5 cache pricing ($2.50 5-minute write, $4 1-hour write, $0.20 read)

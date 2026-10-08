@@ -1,7 +1,7 @@
 # YAML Frontmatter Complete Guide
 
 **Comprehensive reference for all instruction file YAML frontmatter fields**
-**Updated: 2026-09-29 (Claude Code v2.1.284+; Sonnet 5.5, `sonnet` + `effort: medium` recommended agent default). 2026-09-24 (v2.1.280+; `model`/`effort` defaults, Opus 5.5)**
+**Updated: 2026-10-08 (v2.1.293+; Haiku 5.5: `haiku` + `effort: medium` for the low-cost tier, effort levels and cache exception). 2026-09-29 (Claude Code v2.1.284+; Sonnet 5.5, `sonnet` + `effort: medium` recommended agent default). 2026-09-24 (v2.1.280+; `model`/`effort` defaults, Opus 5.5)**
 
 ---
 
@@ -73,7 +73,7 @@ hooks:                              # Optional: lifecycle hooks scoped to agent
 - **Purpose:** Specifies Claude model for agent execution
 - **Values:** `opus`, `fable`, `sonnet`, `haiku`, a full model ID such as `claude-opus-5-5`, or `inherit` (the main conversation's model)
 - **Harness default (when omitted):** the subagent model order below ends at the **main conversation's model**; there is no fixed `sonnet` default
-- **Recommended default for authored agents:** `model: sonnet` with `effort: medium` pinned (rung 1 of the routing ladder in `model-compatibility-index.md`; `sonnet` is Sonnet 5.5 on the Anthropic API from CC 2.1.284). Step up to `model: opus` with `effort: medium` for quality or `high` for in-depth work; `haiku` for the cheapest mechanical lookups; `fable` only for frontier-hard work. On Bedrock, Agent Platform, Foundry, and Claude Platform on AWS, `sonnet` resolves to an older Sonnet (provider caveat in the index)
+- **Recommended default for authored agents:** `model: sonnet` with `effort: medium` pinned (rung 1 of the routing ladder in `model-compatibility-index.md`; `sonnet` is Sonnet 5.5 on the Anthropic API from CC 2.1.284). Step up to `model: opus` with `effort: medium` for quality or `high` for in-depth work; `haiku` with `effort: medium` (Haiku 5.5 on the Anthropic API from CC 2.1.293; Haiku 4.5, which has no effort levels, on other providers) for narrowly scoped, checkable, high-volume work below rung 1; `fable` only for frontier-hard work. On Bedrock, Agent Platform, Foundry, and Claude Platform on AWS, `sonnet` resolves to an older Sonnet (provider caveat in the index)
 - **Alias inheritance:** when the main conversation is already in the alias's family, `sonnet` or `opus` resolves to the main model's exact ID, including any `[1m]` suffix
 - **Best Practice:** Use aliases, not version IDs. Aliases track each provider's target for the family, not always the latest model: `sonnet` is Sonnet 5.5 only on the Anthropic API (provider caveat in `model-compatibility-index.md`)
 
@@ -88,8 +88,8 @@ hooks:                              # Optional: lifecycle hooks scoped to agent
 #### `effort` (Optional)
 - **Format:** String enum
 - **Purpose:** Override model effort level during agent execution
-- **Values:** `low` (○), `medium` (◐), `high` (●), `xhigh` (◉ — Fable 5.x / Opus 5.5 / Opus 5 / Opus 4.8/4.7 / Sonnet 5.5/5), `max` (◎ — Fable 5.x / Opus 5.5 / Opus 5 / Opus 4.8/4.7/4.6 / Sonnet 5.5/5/4.6; effort values are model-relative, see `model-compatibility-index.md`)
-- **Default:** Inherits session effort level (Opus 5.5 and Sonnet 5.5 sessions default to `medium` in Claude Code)
+- **Values:** `low` (○), `medium` (◐), `high` (●), `xhigh` (◉ — Fable 5.x / Opus 5.5 / Opus 5 / Opus 4.8/4.7 / Sonnet 5.5/5 / Haiku 5.5), `max` (◎ — Fable 5.x / Opus 5.5 / Opus 5 / Opus 4.8/4.7/4.6 / Sonnet 5.5/5/4.6 / Haiku 5.5; effort values are model-relative, see `model-compatibility-index.md`)
+- **Default:** Inherits session effort level (Opus 5.5, Sonnet 5.5, and Haiku 5.5 sessions default to `medium` in Claude Code)
 - **When to pin (agents):** with every model pin — any agent that pins `model` pins `effort` with it (routing ladder in `model-compatibility-index.md`). An unpinned agent under an Opus `xhigh` session runs at `xhigh`, where a Sonnet worker loses its cost case. Agent pins are cache-safe (own context)
 - **Behaviour:** Overrides session effort while agent is active; reverts when complete
 - **Note:** Cannot override `CLAUDE_CODE_EFFORT_LEVEL` env var
@@ -223,11 +223,11 @@ hooks:                              # Optional: lifecycle hooks scoped to skill
 #### `effort` (Optional)
 - **Format:** String enum
 - **Purpose:** Override model effort level when skill is invoked
-- **Values:** `low` (○), `medium` (◐), `high` (●), `xhigh` (◉ — Fable 5.x / Opus 5.5 / Opus 5 / Opus 4.8/4.7 / Sonnet 5.5/5), `max` (◎ — Fable 5.x / Opus 5.5 / Opus 5 / Opus 4.8/4.7/4.6 / Sonnet 5.5/5/4.6; effort values are model-relative, see `model-compatibility-index.md`)
-- **Default:** Inherits session effort level (Opus 5.5 and Sonnet 5.5 sessions default to `medium`). Main-thread skills carry no pin; a forked skill that pins `model` pins `effort` with it (routing ladder in `model-compatibility-index.md`)
+- **Values:** `low` (○), `medium` (◐), `high` (●), `xhigh` (◉ — Fable 5.x / Opus 5.5 / Opus 5 / Opus 4.8/4.7 / Sonnet 5.5/5 / Haiku 5.5), `max` (◎ — Fable 5.x / Opus 5.5 / Opus 5 / Opus 4.8/4.7/4.6 / Sonnet 5.5/5/4.6 / Haiku 5.5; effort values are model-relative, see `model-compatibility-index.md`)
+- **Default:** Inherits session effort level (Opus 5.5, Sonnet 5.5, and Haiku 5.5 sessions default to `medium`). Main-thread skills carry no pin; a forked skill that pins `model` pins `effort` with it (routing ladder in `model-compatibility-index.md`)
 - **Behaviour:** Overrides session effort while skill is active; reverts when complete
 - **Note:** Cannot override `CLAUDE_CODE_EFFORT_LEVEL` env var
-- **⚠️ Cache:** on most models the same (model, effort) cache-key rule as `model` — a main-thread effort pin double cache-busts the session, with the entry re-read billed at the active model's rate. On Opus 5.5, Sonnet 5.5, and Fable 5.1 with an API key or subscription an effort change keeps the cache (not on Bedrock, Agent Platform, a Claude apps gateway, disabled experimental betas, or HIPAA). Pin only with `context: fork` so the skill stays safe on every model and route; a pin equal to the already-active level keeps the cache. Detail: `cache-and-token-efficiency.md`
+- **⚠️ Cache:** on most models the same (model, effort) cache-key rule as `model` — a main-thread effort pin double cache-busts the session, with the entry re-read billed at the active model's rate. On Opus 5.5, Sonnet 5.5, Haiku 5.5, and Fable 5.1 with an API key or subscription an effort change keeps the cache (not on Bedrock, Agent Platform, a Claude apps gateway, disabled experimental betas, or HIPAA). Pin only with `context: fork` so the skill stays safe on every model and route; a pin equal to the already-active level keeps the cache. Detail: `cache-and-token-efficiency.md`
 
 #### `context` (Optional)
 - **Format:** String
@@ -343,10 +343,10 @@ hooks:                                  # Optional: lifecycle hooks
 #### `effort` (Optional)
 - **Format:** String enum
 - **Purpose:** Override model effort level when command is invoked
-- **Values:** `low` (○), `medium` (◐), `high` (●), `xhigh` (◉ — Fable 5.x / Opus 5.5 / Opus 5 / Opus 4.8/4.7 / Sonnet 5.5/5), `max` (◎ — Fable 5.x / Opus 5.5 / Opus 5 / Opus 4.8/4.7/4.6 / Sonnet 5.5/5/4.6; effort values are model-relative, see `model-compatibility-index.md`)
-- **Default:** Inherits session effort level (Opus 5.5 and Sonnet 5.5 sessions default to `medium`). Main-thread commands carry no pin; a forked command that pins `model` pins `effort` with it (routing ladder in `model-compatibility-index.md`)
+- **Values:** `low` (○), `medium` (◐), `high` (●), `xhigh` (◉ — Fable 5.x / Opus 5.5 / Opus 5 / Opus 4.8/4.7 / Sonnet 5.5/5 / Haiku 5.5), `max` (◎ — Fable 5.x / Opus 5.5 / Opus 5 / Opus 4.8/4.7/4.6 / Sonnet 5.5/5/4.6 / Haiku 5.5; effort values are model-relative, see `model-compatibility-index.md`)
+- **Default:** Inherits session effort level (Opus 5.5, Sonnet 5.5, and Haiku 5.5 sessions default to `medium`). Main-thread commands carry no pin; a forked command that pins `model` pins `effort` with it (routing ladder in `model-compatibility-index.md`)
 - **Behaviour:** Overrides session effort while command is active; reverts when complete
-- **⚠️ Cache:** same rule as the skill `effort` field — main-thread pins double cache-bust on most models (the effort exception on Opus 5.5, Sonnet 5.5, and Fable 5.1 aside); pin only with `context: fork`. Detail: `cache-and-token-efficiency.md`
+- **⚠️ Cache:** same rule as the skill `effort` field — main-thread pins double cache-bust on most models (the effort exception on Opus 5.5, Sonnet 5.5, Haiku 5.5, and Fable 5.1 aside); pin only with `context: fork`. Detail: `cache-and-token-efficiency.md`
 
 #### `context` (Optional)
 - **Format:** String

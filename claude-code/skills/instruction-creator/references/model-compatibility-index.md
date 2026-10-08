@@ -2,7 +2,7 @@
 
 *Router for the per-model compatibility references. SKILL.md keeps the durable Core Rules and the Claude Code "don't duplicate" list; this file holds the model catalogue, the delta chain, the per-model headline deltas, and the joint model-and-effort routing ladder.*
 
-**Last updated:** 2026-09-29 (Sonnet 5.5 added; routing ladder). 2026-09-24 (Opus 5.5 added; index split out of SKILL.md)
+**Last updated:** 2026-10-08 (Haiku 5.5 added as the low-cost tier below the ladder). 2026-09-29 (Sonnet 5.5 added; routing ladder). 2026-09-24 (Opus 5.5 added; index split out of SKILL.md)
 
 ---
 
@@ -11,12 +11,14 @@
 | Model | Role | CC alias | Default effort | Reference |
 |---|---|---|---|---|
 | **Sonnet 5.5** (`claude-sonnet-5-5`, rel. 2026-09-28) | The recommended default for almost all work (rung 1 of the routing ladder): well-scoped everyday coding, terminal work, and document work; $2/$10 per MTok, cache reads $0.20 | `sonnet` (Anthropic API, CC 2.1.284+) | **`medium`** in Claude Code and the apps; `high` on the API | `claude-sonnet-5-5-compatibility.md` (standalone) |
+| **Haiku 5.5** (`claude-haiku-5-5`, rel. 2026-10-07) | The low-cost tier below the routing ladder: narrowly scoped, checkable, high-volume or latency-sensitive work (classification, routing, extraction, summarisation, compaction, lookups, bounded read sweeps) and subagent work of that shape; $0.10/$0.50 per MTok for prompts up to 100,000 tokens and $0.50/$2.50 above, cache reads $0.01/$0.05 | `haiku` (Anthropic API, CC 2.1.293+) | **`medium`** on the API and in Claude Code | `claude-haiku-5-5-compatibility.md` (standalone) |
 | **Fable 5.1** (`claude-fable-5-1`, rel. 2026-09-01) | Frontier tier above Opus: hard, long-horizon work; the escalation tier outside the routing ladder; $10/$50 per MTok, cache reads $0.25 | `fable` | `high` | `claude-fable-5-1-compatibility.md` (layered on the Fable 5 file) |
 | Fable 5 (`claude-fable-5`, rel. 2026-06-09) | Superseded; Fable 5.1 is drop-in. Retained as the base (Parts 1–3) that the 5.1 file extends | — | `high` | `claude-fable-5-compatibility.md` |
 | **Opus 5.5** (`claude-opus-5-5`, rel. 2026-09-22) | The step-up tier (rungs 2–4 of the routing ladder): work that needs more quality than Sonnet 5.5, in-depth work, and oversight of large coding or agentic runs; also the `default` model everywhere except Microsoft Foundry (Sonnet 4.5); $4/$20 per MTok, cache reads $0.20 | `opus` (CC 2.1.280+) | **`medium`** | `claude-opus-5-5-compatibility.md` (layered on the Opus 5 file; see its § "Safety classifiers during authoring sessions") |
 | Opus 5 (`claude-opus-5`, rel. July 2026) | The previous Opus model; retained as the base (Parts 1–3) that the 5.5 file extends; $5/$25, cache reads $0.50 | — | `high` | `claude-opus-5-compatibility.md` |
 | Opus 4.8 (`claude-opus-4-8`) and earlier | Superseded; migrate through the Opus 5 then Opus 5.5 files. 4.8 file retained for the Core Rules rationale (Part 1) | — | `high` | `claude-opus-4-8-compatibility.md` |
 | Sonnet 5 (`claude-sonnet-5`, rel. 2026-06-30) | Legacy, superseded by Sonnet 5.5; still the Claude Code safety-fallback model for Sonnet 5.5's cyber-flagged requests | — | `high` | none; audit Sonnet 5 content straight against the Sonnet 5.5 file |
+| Haiku 4.5 (`claude-haiku-4-5`) | Legacy, superseded by Haiku 5.5 (retirement not sooner than 2026-10-15); still the `haiku` target on every provider except the Anthropic API. No effort levels | `haiku` (off the Anthropic API) | none (thinking budget, no effort) | none; migrate through Part 1 of the Haiku 5.5 file |
 
 ## Alias Targets (Claude Code)
 
@@ -26,10 +28,10 @@
 | `opus` | Opus 5.5 from CC 2.1.280 on the Anthropic API, Claude Platform on AWS, Bedrock, and Google Cloud's Agent Platform | Microsoft Foundry: still Opus 4.6. Before 2.1.280 it was Opus 5 (from 2.1.219). A subagent `opus` under an Opus-family main session inherits the main model's exact ID, including `[1m]` |
 | `fable` | Fable 5.1 (CC 2.1.257+) | Claude apps gateway sessions: Fable 5 |
 | `best` | The `fable` target where Fable is available to you; otherwise the `opus` target | Claude apps gateway sessions: Fable 5 |
-| `haiku` | The provider's fast, low-cost Haiku model (Haiku 4.5 today) | Haiku 5.5 is announced "in the coming weeks" |
+| `haiku` | Haiku 5.5 on the Anthropic API (which includes Claude subscriptions), from CC 2.1.293 | Claude Platform on AWS, Amazon Bedrock, Google Cloud's Agent Platform, and Microsoft Foundry: Haiku 4.5. Before 2.1.293 it was Haiku 4.5. A session saved on Haiku 4.5 resumes on Haiku 5.5 once the alias moves. Also the model Claude Code uses for background functionality. No `[1m]` suffix: Haiku 5.5 runs 1M natively, at a higher per-token price above 100K-token prompts |
 | `default` | A special value that clears any model override and reverts to the runtime default for your account; not itself a model alias. Resolves to Opus 5.5 on Pro, Max, Team, Enterprise, the API, Claude Platform on AWS, Bedrock, and Agent Platform | Foundry: Sonnet 4.5. An organisation default model replaces the account-type default |
 
-Aliases move with releases, which is why instruction files pin aliases, never version IDs. Pin a full ID (`claude-sonnet-5-5`, `claude-opus-5-5`) or set `ANTHROPIC_DEFAULT_SONNET_MODEL` / `ANTHROPIC_DEFAULT_OPUS_MODEL` only when a specific version is genuinely required. The `sonnet` row is why a portable skill cannot assume `model: sonnet` means Sonnet 5.5: see the provider caveat under the routing ladder. Source: https://code.claude.com/docs/en/model-config (alias table and version history, checked 2026-09-29).
+Aliases move with releases, which is why instruction files pin aliases, never version IDs. Pin a full ID (`claude-sonnet-5-5`, `claude-opus-5-5`) or set `ANTHROPIC_DEFAULT_SONNET_MODEL` / `ANTHROPIC_DEFAULT_OPUS_MODEL` / `ANTHROPIC_DEFAULT_HAIKU_MODEL` only when a specific version is genuinely required. The `sonnet` and `haiku` rows are why a portable skill cannot assume `model: sonnet` means Sonnet 5.5 or `model: haiku` means Haiku 5.5: see the provider caveats under the routing ladder. Source: https://code.claude.com/docs/en/model-config (alias table and version history, checked 2026-09-29; `haiku` row checked 2026-10-08).
 
 ## Delta Chain
 
@@ -42,21 +44,23 @@ Opus:   opus-4-8 (Core Rules rationale, checklist 1–7)
 Fable:  fable-5 (brevity-first; checklist 8–13)
           → fable-5-1 (API breaks, harness-injected split; checklist 14–23)
 Sonnet: sonnet-5-5 (standalone; checklist 1–10; cross-references Opus 5.5 Part 1)
+Haiku:  haiku-5-5 (standalone, against Haiku 4.5; checklist 1–13; cross-references Opus 5.5 Part 1 and the Sonnet 5.5 file)
 ```
 
-The Opus, Fable, and Sonnet chains number their checklists independently; the Opus 5 file restarted at 1.
+The Opus, Fable, Sonnet, and Haiku chains number their checklists independently; the Opus 5 file restarted at 1.
 
 ## Which File to Load When
 
 | Task | Load |
 |---|---|
 | Authoring or auditing for the `sonnet` alias today (Sonnet 5.5 pinned) | `claude-sonnet-5-5-compatibility.md`; it is standalone and points to Part 1 of the Opus 5.5 file where API mechanics are shared |
+| Authoring or auditing for the `haiku` alias, a pinned Haiku agent, or a Haiku 4.5 migration | `claude-haiku-5-5-compatibility.md`; it is standalone and points to the Opus 5.5 and Sonnet 5.5 files where API mechanics are shared |
 | Authoring or auditing for the `opus` alias today | `claude-opus-5-5-compatibility.md`, plus `claude-opus-5-compatibility.md` for its base Parts 1–3 |
 | Authoring or auditing for `fable` | `claude-fable-5-1-compatibility.md`, plus `claude-fable-5-compatibility.md` |
 | Instructions shared by Sonnet and Opus targets (a brief either tier may run) | Core Rules in SKILL.md + removal-first; Sonnet add-backs only when the instruction pins Sonnet 5.5 (Sonnet file Part 2B) |
 | Migrating pre-Opus-5 content | `claude-opus-4-8-compatibility.md` (steps 1–7), then Opus 5, then Opus 5.5 |
 | Mixed or unknown target model | Core Rules in SKILL.md + brevity-first/removal-first; skip model-specific snippets |
-| Hand-built API integration (not Claude Code) | Part 1 of the Sonnet 5.5, Opus 5.5, and Fable 5.1 files (shared API breaks, plus Sonnet 5.5's `between_tools`, account-bound thinking, and advisor limits) |
+| Hand-built API integration (not Claude Code) | Part 1 of the Sonnet 5.5, Opus 5.5, and Fable 5.1 files (shared API breaks, plus Sonnet 5.5's `between_tools`, account-bound thinking, and advisor limits); for Haiku 5.5, Part 1 of its file, whose 1.1 lists where it differs (forced `tool_choice` accepted, `thinking: disabled` accepted up to `high`, no fallback model) |
 | Why a Core Rule exists | Part 1 of `claude-opus-4-8-compatibility.md` |
 | Cache or pin consequences | `cache-and-token-efficiency.md` |
 
@@ -80,6 +84,24 @@ Same price as Sonnet 5, and Anthropic says existing Sonnet 5 prompts "should per
 | **Conditional add-backs run against removal-first** | Official guidance adds a think-first line for JSON reasoning, a real-check line at `low`, and crop/zoom tools for dense visuals | Add them only when the instruction pins Sonnet 5.5 (and the named effort); keep them out of Opus, Fable, and mixed-target instructions |
 
 Full detail: `claude-sonnet-5-5-compatibility.md`.
+
+### Haiku 5.5 (vs Haiku 4.5)
+
+About 90% cheaper than Haiku 4.5 for prompts up to 100,000 tokens, and Anthropic says existing Haiku 4.5 prompts "should perform well without changes". Five API breaks: manual `budget_tokens` thinking returns 400, non-default sampling parameters return 400, prefill is rejected even with thinking off, `computer_20250124` is replaced by `computer_toolset_20260801` on the Claude API and Google Cloud, and thinking blocks are bound to an append-only history. Unlike Opus 5.5 and Sonnet 5.5, it still accepts forced `tool_choice` and `thinking: disabled` (at `high` or below).
+
+| Delta | What changed | What to do in instructions |
+|---|---|---|
+| **First Haiku with effort levels, default `medium`** | Five levels replace the thinking budget; `medium` on the API and in Claude Code; scores move far more with effort than on the larger models (system card §8.11.3) | Pin `model: haiku` + `effort: medium`; raise to `high` for checked knowledge work; compare against Sonnet 5.5 before `xhigh`/`max` |
+| **Prompting for less thinking fails** | "telling the model in the prompt to answer directly didn't stop it from thinking" | **Remove** answer-directly lines; lower effort instead |
+| **`low` degrades under long prompts** | "In long agent prompts, the model is more likely to skip a search, stop early, or skip a check at this level"; reasoning-like text can appear in replies | No `effort: low` on a Claude Code Haiku agent without testing; `low` for short prompts and simple high-volume requests |
+| **Answers from memory; highest closed-book error rate of the recent models** | Needs "an extra nudge to search"; 32% incorrect on AA-Omniscience (figure; system card §6.3.3.1) | The official date line and search nudge where a search tool exists; **remove** blanket search rules; ground changeable facts in a source read during the run |
+| **Unverified "done" claims at `low`/`medium`; weaker reporting** | Sometimes reports a code change as done without a check; scores behind Sonnet 5.5 and Opus 5.5 on false completion claims and omissions, but discloses 95.9% of the time when asked (figure; system card §6.3.3.4) | The official verification snippet on Haiku agents that change code; every Haiku agent returns what was done, what changed, and what was not done or not checked |
+| **Reaches outside its sandbox on impossible tasks** | 30% of scenarios, falling to 1.8% with a short sandbox description in the system prompt; persistence loops were an effective tempter (system card §6.3.1) | State the boundary and a report-and-stop exit; **remove** "never give up" loops |
+| **Classifier refusals with no fallback model** | `stop_reason: "refusal"` is new for Haiku users; a retry "usually returns another refusal" | Handle the refusal in API clients and pipelines; no retry loops |
+| **Priced by prompt length** | Input and output prices step up 5x once a prompt passes 100,000 tokens; about 30% more tokens for the same text | Give Haiku workers bounded inputs; recount prompts and `max_tokens` |
+| **Mid-turn user text read as untrusted** | User text inside a `tool_result` can be ignored | Custom harnesses: append user text after the last `tool_result` |
+
+Full detail: `claude-haiku-5-5-compatibility.md`.
 
 ### Opus 5.5 (vs Opus 5)
 
@@ -146,7 +168,7 @@ One API break (thinking cannot be disabled — explicit `disabled` 400s; omit th
 
 ## Joint Model × Effort Routing
 
-Effort labels are **not comparable across models**: Opus 5.5 at `medium` matches or beats Opus 5 at `high`; Sonnet 5.5's levels are recalibrated against Sonnet 5; Fable 5.1 at `medium` scores about level with Fable 5 at `xhigh` on FrontierCode at roughly half the cost per task. Decide model and effort together.
+Effort labels are **not comparable across models**: Opus 5.5 at `medium` matches or beats Opus 5 at `high`; Sonnet 5.5's levels are recalibrated against Sonnet 5; Haiku 5.5 is the first Haiku with effort levels at all; Fable 5.1 at `medium` scores about level with Fable 5 at `xhigh` on FrontierCode at roughly half the cost per task. Decide model and effort together.
 
 ### Recommended routing ladder
 
@@ -161,23 +183,25 @@ Canonical copy: SKILL.md carries a summary table, and the Sonnet 5.5 and Opus 5.
 
 - **Why step the model, not Sonnet's effort:** Sonnet 5.5's cost advantage holds at `low` and `medium`; "at higher settings, it can perform comparably at a similar cost" (launch page, https://www.anthropic.com/claude-sonnet-5-5), and its system card shows `max` scoring below `xhigh` on FrontierCode at roughly 12x the output tokens (§8.4 p.111).
 - **Go straight to Opus (skip rung 1)** for: unattended workers with broad permissions (Sonnet 5.5 scores worse than Opus 5.5 on accepting unverifiable authorisation, approval-gate bypass, and misbehaviour in Claude Code sandboxes — card §6.2); long-context codebase work (ProgramBench long context 79.7 vs 91.2 — card §8.10.1); open-ended work that needs sustained judgement; factual answers that cannot be checked against a search or source (highest wrong-answer rate of the Claude models in the card's comparison, 27% — card §6.3.2.1).
-- **Outside the ladder:** `low` for mechanical, high-volume lookups; `haiku` for the cheapest ones; `max` rarely justified; **Fable 5.1** is the escalation tier for frontier-hard work — for example when Opus 5.5 at `xhigh` fails the same problem twice ("Don't wait for a third failure. If Opus 5.5 on xhigh hits the same problem twice, switch." — claude.dev, "What a task costs on Opus 5.5", https://claude.dev/blog/what-a-task-costs-on-opus-5-5/), or where the result matters more than the token price.
+- **Outside the ladder, below rung 1:** **Haiku 5.5** (`model: haiku` + `effort: medium`) is the low-cost tier for narrowly scoped, checkable, high-volume or latency-sensitive work: classification, routing, extraction, summarisation, compaction, lookups, bounded read sweeps, and subagent work of that shape. Effort is a real quality lever on Haiku 5.5, unlike rung 1: raise it to `high` for checked knowledge work (GDPval-AA 1420 at a charted $0.09 per task, against Sonnet 5.5's 1324 at $0.27 at `medium`); beyond `high`, compare against Sonnet 5.5 on your own evals first. Coding and implementation stay on rung 1 (Terminal-Bench 4.0: Sonnet 5.5 at `medium` 28.8% at $0.68, against Haiku 5.5's 20.3% at $0.68 at `medium` and 24.8% at $1.04 at `high`; launch page, https://www.anthropic.com/claude-haiku-5-5). Do not pin `low` on a Claude Code Haiku agent without testing, and keep each request under 100,000 prompt tokens, where its prices step up 5x. Not for complex agentic coding, open-ended judgement, uncheckable factual answers, GUI computer use on untrusted content, or unattended broad-permission workers. Evidence and the full list: Part 3 of `claude-haiku-5-5-compatibility.md`.
+- **Outside the ladder, other:** `low` for mechanical, high-volume work that still needs Sonnet or Opus; `max` rarely justified; **Fable 5.1** is the escalation tier for frontier-hard work — for example when Opus 5.5 at `xhigh` fails the same problem twice ("Don't wait for a third failure. If Opus 5.5 on xhigh hits the same problem twice, switch." — claude.dev, "What a task costs on Opus 5.5", https://claude.dev/blog/what-a-task-costs-on-opus-5-5/), or where the result matters more than the token price.
 - **Sessions:** `default` resolves to Opus 5.5 on every plan (Foundry aside), so rung 1 for a session means selecting it with `/model sonnet`.
-- **Provider caveat:** the `sonnet` alias is Sonnet 5.5 only on the Anthropic API (which includes Claude subscriptions); on Bedrock, Agent Platform, and Foundry it is Sonnet 4.5, and on Claude Platform on AWS Sonnet 4.6. Keep `model: sonnet`; teams on those providers set `ANTHROPIC_DEFAULT_SONNET_MODEL` to a Sonnet 5.5 ID their provider serves, or treat rung 1 as Opus 5.5 at `medium`.
+- **Provider caveat:** the `sonnet` alias is Sonnet 5.5 only on the Anthropic API (which includes Claude subscriptions); on Bedrock, Agent Platform, and Foundry it is Sonnet 4.5, and on Claude Platform on AWS Sonnet 4.6. Keep `model: sonnet`; teams on those providers set `ANTHROPIC_DEFAULT_SONNET_MODEL` to a Sonnet 5.5 ID their provider serves, or treat rung 1 as Opus 5.5 at `medium`. The `haiku` alias is Haiku 5.5 only on the Anthropic API from Claude Code 2.1.293; on every other provider it is Haiku 4.5, which has no effort levels, unless `ANTHROPIC_DEFAULT_HAIKU_MODEL` names a Haiku 5.5 ID the provider serves.
 - **Effort pins:** main-thread skills and commands carry no pin; any agent or forked skill that pins `model` pins `effort` with it. An unpinned agent inherits the session effort, so under an Opus `xhigh` oversight session an unpinned `model: sonnet` worker would run Sonnet at `xhigh`, where it loses its cost case, and an unpinned `model: opus` worker would run at `xhigh` too. Agent and `context: fork` pins are cache-safe (own context).
 
 | Dominant constraint | Better pick |
 |---|---|
-| Latency-sensitive / interactive | **Sonnet 5.5 at `medium` or `low`**: output over 30% faster than Sonnet 5, and Anthropic rates its latency "Fast" against Opus 5.5's "Moderate"; Haiku 4.5 ("Fastest") where quality allows. Fable's first token can take about a minute regardless of effort |
-| Routine high-volume | **Sonnet 5.5 at `medium`**; Haiku for the cheapest lookups |
+| Latency-sensitive / interactive | **Sonnet 5.5 at `medium` or `low`**: output over 30% faster than Sonnet 5, and Anthropic rates its latency "Fast" against Opus 5.5's "Moderate"; **Haiku 5.5** ("Fastest"; "Effort is its main control for speed and cost") where the task is narrowly scoped and checkable. Fable's first token can take about a minute regardless of effort |
+| Routine high-volume | **Haiku 5.5 at `medium`** for narrowly scoped, checkable work (classification, extraction, summarisation, lookups), `high` for checked knowledge work; **Sonnet 5.5 at `medium`** for anything that involves coding or judgement |
 | Capability ceiling, latency-tolerant | **Fable 5.1 at modest effort**: `medium`/`low` can beat Opus-tier `xhigh`, often at less than the sticker premium (measure, don't assume) |
 
 **Per-model effort starting points** (re-run an effort sweep on every upgrade rather than carrying pins forward):
 - **Sonnet 5.5:** `medium`, the Claude Code default (the API defaults to `high`). Don't raise it to buy quality; step the model up to Opus 5.5 instead. `low` for mechanical, high-volume work. Lower effort, not prompt text, to reduce thinking.
+- **Haiku 5.5:** `medium`, the default on the API and in Claude Code. `high` for checked knowledge work, longer agent tasks, and strict instruction following; `xhigh`/`max` only after comparing against Sonnet 5.5 on your evals; `low` for short system prompts and simple high-volume requests, not for Claude Code agents without testing. Lower effort, not prompt text, to reduce thinking.
 - **Opus 5.5:** `medium` (the default) for work that needs Opus; `high` for in-depth work; `xhigh` only for oversight of large runs (rung 4); `low` is credible on mechanical coding tasks; `max` rarely. Lower effort, not prompt text, to reduce thinking.
 - **Fable 5.1:** start at `high` (the default). `medium` roughly matches Fable 5 at lower cost; `low` is often competitive with Opus and Sonnet on cost per task; `xhigh`/`max` give the largest gains but add thinking time and, on coding, more out-of-scope edits. The 4.8-era "xhigh for coding/agentic" rule does not carry over.
 - **Opus 5:** default `high`; `low`/`medium` as the primary cost and latency control wherever quality holds; `xhigh`/`max` for demanding agentic coding.
 
 Cost comparisons between Fable 5.1 and Opus in the Fable 5.1 file were measured against Opus 5; re-measure against Opus 5.5 before relying on them.
 
-**Cache safety is the third axis.** See `cache-and-token-efficiency.md` for the (model, effort) cache key and the effort-change exception on Opus 5.5, Sonnet 5.5, and Fable 5.1.
+**Cache safety is the third axis.** See `cache-and-token-efficiency.md` for the (model, effort) cache key and the effort-change exception on Opus 5.5, Sonnet 5.5, Haiku 5.5, and Fable 5.1.

@@ -2,7 +2,7 @@
 
 Comprehensive checklists for file type selection, integration requirements, model selection, skill directory behaviour mapping, and sanitisation.
 
-**Updated:** 2026-09-29 (Model × Effort section: Sonnet 5.5, routing ladder, `sonnet` + `effort: medium` recommended default). 2026-09-24b (agent MUST list: contract + leaf-worker spawn bar replace TodoWrite). 2026-09-24 (Model × Effort section: Opus 5.5, harness vs recommended default, built-in agent models)
+**Updated:** 2026-10-08 (Model × Effort section: Haiku 5.5 as the low-cost tier below the ladder). 2026-09-29 (Model × Effort section: Sonnet 5.5, routing ladder, `sonnet` + `effort: medium` recommended default). 2026-09-24b (agent MUST list: contract + leaf-worker spawn bar replace TodoWrite). 2026-09-24 (Model × Effort section: Opus 5.5, harness vs recommended default, built-in agent models)
 
 ---
 
@@ -103,7 +103,7 @@ For each new agent/skill, evaluate:
 2. **Decision-Making Needs**: Rule-based vs judgment-based
 3. **Context Requirements**: Small focused tasks vs large context analysis
 4. **Performance Needs**: Speed-critical vs quality-critical (Fable's first token can still take ~a minute on 5.1 — capability and latency trade off explicitly)
-5. **Cost Considerations**: Usage frequency and budget (Sonnet 5.5 is $2/$10 with cache reads $0.20, the same read rate as Opus 5.5, so it saves on output and cache writes rather than cached input; Opus 5.5 is $4/$20 with cache reads $0.20; Fable 5.1 is $10/$50, 2.5× Opus 5.5 per token, with cache reads $0.25. Fable 5.1 was measured cheaper per task than Opus 5 at low to high effort on coding; that comparison predates Opus 5.5, so measure cost per task, not per token)
+5. **Cost Considerations**: Usage frequency and budget (Sonnet 5.5 is $2/$10 with cache reads $0.20, the same read rate as Opus 5.5, so it saves on output and cache writes rather than cached input; Opus 5.5 is $4/$20 with cache reads $0.20; Fable 5.1 is $10/$50, 2.5× Opus 5.5 per token, with cache reads $0.25; Haiku 5.5 is $0.10/$0.50 for prompts up to 100,000 tokens and $0.50/$2.50 above, with cache reads $0.01/$0.05. Fable 5.1 was measured cheaper per task than Opus 5 at low to high effort on coding; that comparison predates Opus 5.5, so measure cost per task, not per token)
 
 ### Model Capabilities
 | Model | Strengths | Use When |
@@ -111,15 +111,15 @@ For each new agent/skill, evaluate:
 | `fable` | Frontier reasoning, hardest long-horizon/agentic work, first-shot correctness on complex problems | Genuinely hard, latency-tolerant work where capability dominates; 2.5× Opus 5.5 per token (measured cheaper per task than Opus 5 at low to high effort on coding; re-measure against Opus 5.5); cache reads $0.25/MTok on 5.1; slow first token |
 | `opus` | The step-up tier (Opus 5.5 from CC 2.1.280): complex reasoning, nuanced judgement, long-context codebase work, open-ended work that needs sustained judgement | `medium` when Sonnet 5.5 falls short (the best cost/quality balance); `high` for in-depth work; `xhigh` normally only as the main thread or advisor over large runs with pinned Opus workers (those workers belong inside runs that already warrant Opus `xhigh` oversight; a standalone implementation agent stays on `sonnet`). Go straight to Opus for unattended broad-permission workers and uncheckable factual answers |
 | `sonnet` | Sonnet 5.5 (Anthropic API, CC 2.1.284+): well-scoped everyday coding, terminal work, bug fixes, documents, agentic tool use | **The recommended default at `medium` for almost all work**: sessions, authored agents, and forked skills; when quality falls short, step the model up rather than the effort |
-| `haiku` | Fast responses, simple patterns, rule-based operations, high-volume | File format detection, batch processing, the cheapest lookups |
+| `haiku` | Haiku 5.5 (Anthropic API, CC 2.1.293+; Haiku 4.5 on other providers): the lowest latency and price, five effort levels, 1M context; narrowly scoped, checkable, high-volume work | **Below the routing ladder at `medium`**: classification, routing, extraction, summarisation, compaction, lookups, bounded read sweeps, and subagent work of that shape; `high` for checked knowledge work. Keep coding, open-ended judgement, uncheckable factual answers, and unattended broad-permission work on `sonnet` or `opus`; bound each request under 100,000 prompt tokens |
 
 ### Joint Model × Effort Routing
 | Dominant constraint | Pick |
 |---|---|
 | Capability ceiling, latency-tolerant | Fable 5.1 at `high` (default) — and note `fable` at `medium`/`low` can beat `opus` at `xhigh`, often at lower cost per task |
-| Latency-sensitive / interactive | `sonnet` at `medium` or `low` — Sonnet 5.5 outputs over 30% faster than Sonnet 5, and Anthropic rates its latency "Fast" against Opus 5.5's "Moderate"; `haiku` for the lowest latency; Fable 5.1 is still slow to first token at any effort |
-| Routine high-volume | The routing ladder in `model-compatibility-index.md`: `sonnet` at `medium` by default, `haiku` for the cheapest lookups; step up to `opus` at `medium`, then `high`, when quality falls short; hard, long-horizon jobs → Fable 5.1 |
-| **Cache safety (mid-session)** | Pins are cache-safe only in subagent contexts — the CC cache is keyed by model and, on most models, effort, so a main-thread skill/command pin double cache-busts the session (an effort-only change keeps the cache on Opus 5.5, Sonnet 5.5, and Fable 5.1 on first-party auth; a model change never does). Agents: safe by construction. Pinned skills/commands: MUST set `context: fork`. Detail: `cache-and-token-efficiency.md` |
+| Latency-sensitive / interactive | `sonnet` at `medium` or `low` — Sonnet 5.5 outputs over 30% faster than Sonnet 5, and Anthropic rates its latency "Fast" against Opus 5.5's "Moderate"; `haiku` (Haiku 5.5, rated "Fastest") for the lowest latency on narrowly scoped, checkable tasks; Fable 5.1 is still slow to first token at any effort |
+| Routine high-volume | The routing ladder in `model-compatibility-index.md`: `sonnet` at `medium` by default, `haiku` at `medium` below it for narrowly scoped, checkable work (`high` for checked knowledge work); step up to `opus` at `medium`, then `high`, when quality falls short; hard, long-horizon jobs → Fable 5.1 |
+| **Cache safety (mid-session)** | Pins are cache-safe only in subagent contexts — the CC cache is keyed by model and, on most models, effort, so a main-thread skill/command pin double cache-busts the session (an effort-only change keeps the cache on Opus 5.5, Sonnet 5.5, Haiku 5.5, and Fable 5.1 on first-party auth; a model change never does). Agents: safe by construction. Pinned skills/commands: MUST set `context: fork`. Detail: `cache-and-token-efficiency.md` |
 
 ### Model Priority Order (highest to lowest)
 1. **Per-invocation `model` parameter** (Agent tool) - explicit override at invocation
@@ -142,8 +142,8 @@ Explore, Plan, and general-purpose inherit the main model (general-purpose only 
 Built-in definitions are not editable. To pin a built-in's model or effort, define a user or project agent of the same name, which overrides it (documented for Explore).
 
 ### Best Practices
-- Use aliases (`opus`, `fable`, `sonnet`, `haiku`) not version numbers; `sonnet` + `effort: medium` is the recommended default for authored agents; `opus` is the step-up
-- Aliases track each provider's target for the family, not always the latest model: `sonnet` is Sonnet 5.5 only on the Anthropic API (provider caveat in `model-compatibility-index.md`)
+- Use aliases (`opus`, `fable`, `sonnet`, `haiku`) not version numbers; `sonnet` + `effort: medium` is the recommended default for authored agents; `opus` is the step-up; `haiku` + `effort: medium` is the low-cost tier below the ladder
+- Aliases track each provider's target for the family, not always the latest model: `sonnet` is Sonnet 5.5, and `haiku` is Haiku 5.5, only on the Anthropic API (provider caveats in `model-compatibility-index.md`)
 - Document model selection rationale in design notes
 - Record the effort decision with every model pin (joint decision — see routing table above)
 - Note: If agent specifies `model: opus`/`model: fable` but the user lacks access to that tier, behaviour may be inconsistent

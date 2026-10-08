@@ -194,7 +194,7 @@ System card: 5.1 is cheaper per task than Fable 5 at every effort level, roughly
 |---|---|
 | Capability ceiling, latency-tolerant | **Fable 5.1 at `high`**, with `medium` credible: it roughly matches Fable 5 for less, and the FrontierCode scope-creep peak sits there |
 | Latency-sensitive or interactive | **Sonnet 5.5 or Opus 5.5, or smaller**. Fable's first token can still take about a minute at any effort |
-| Routine high-volume | **Sonnet 5.5 at `medium`, Haiku for the cheapest lookups**, stepping up to Opus 5.5 per the routing ladder in `model-compatibility-index.md`; **Fable 5.1 at `low` or `medium` still belongs in the cost-per-task comparison**, since per-task cost can land below Opus 5 at low to high effort |
+| Routine high-volume | **Sonnet 5.5 at `medium`, Haiku 5.5 at `medium` below it for narrowly scoped, checkable work**, stepping up to Opus 5.5 per the routing ladder in `model-compatibility-index.md`; **Fable 5.1 at `low` or `medium` still belongs in the cost-per-task comparison**, since per-task cost can land below Opus 5 at low to high effort |
 | Long written deliverables | **`high`**, not `xhigh` or `max` (2.10) |
 
 Cache safety remains the third axis: the Claude Code cache is keyed by model and, on most routes, by effort, so pins belong in subagent contexts. Since v2.1.260 an effort change on Fable 5.1 keeps the cache on first-party auth (Part 1), as it does on Opus 5.5 and Sonnet 5.5, but a model change never does. What changed is the dollar magnitude, since a 5.1 cache read costs a quarter of the Fable 5 rate. See `cache-and-token-efficiency.md`.
