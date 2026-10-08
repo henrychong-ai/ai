@@ -31,8 +31,15 @@ Autonomous domain specialists that handle complex, multi-step tasks. Copy to `~/
 | Agent | Description |
 |-------|-------------|
 | [codex-relay](claude-code/agents/codex-relay.md) | Mechanical relay to the OpenAI Codex plugin — one companion-CLI call, response returned verbatim |
+| [fable-worker](claude-code/agents/fable-worker.md) | Escalation-only worker pinned to the latest Fable at `xhigh` — a problem Opus has already failed, advice on a consequential design decision, adversarial review of a high-stakes change, or re-framing a stuck loop. One spawn per escalation; read-only unless briefed to fix. Needs Fable access on the account (otherwise re-dispatch with the per-call model `opus`) |
 | [file-converter](claude-code/agents/file-converter.md) | Intelligent file format conversion with auto-detection and validation |
+| [haiku-worker](claude-code/agents/haiku-worker.md) | Lowest-cost, fastest worker pinned to the latest Haiku at `medium` — quick, narrowly scoped, checkable tasks (classification, extraction, summarising a given file, lookups, running one command) kept under 100,000 prompt tokens, because Haiku's price steps up five-fold above that. New and lightly tested. Haiku 5.5 needs Claude Code v2.1.293 or later on the Anthropic API |
 | [media-downloader](claude-code/agents/media-downloader.md) | Download videos/audio from web URLs using yt-dlp |
+| [opus-worker](claude-code/agents/opus-worker.md) | General delegated worker pinned to the latest Opus at `medium` — implementation, codebase work, research, and analysis that need judgement; use instead of `general-purpose`, which inherits the session's model and effort |
+| [opus-worker-high](claude-code/agents/opus-worker-high.md) | High-effort worker pinned to the latest Opus at `high` — state and concurrency, live-data migrations and backfills, security-sensitive code, and fixes after a failed review round |
+| [sonnet-worker](claude-code/agents/sonnet-worker.md) | Lower-cost delegated worker pinned to the latest Sonnet at `medium` — well-specified, checkable volume work (mechanical edits, batch operations, conversions, doc updates) |
+
+The five worker agents (`haiku-worker`, `sonnet-worker`, `opus-worker`, `opus-worker-high`, `fable-worker`) are a set of leaf workers for a main session to delegate to: their descriptions route between each other, each pins a model family alias and an effort level so a spawn never inherits the session's, and none can spawn further subagents. `sonnet-worker`, `opus-worker`, `opus-worker-high`, and `fable-worker` belong together; `haiku-worker` is optional and the others do not route down to it. On Amazon Bedrock, Google Cloud's Agent Platform, Microsoft Foundry, or Claude Platform on AWS the aliases resolve to each provider's own target; see the `instruction-creator` skill's `references/model-compatibility-index.md`.
 
 ### Skills
 
