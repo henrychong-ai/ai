@@ -31,13 +31,23 @@ curl -s https://nodejs.org/dist/index.json | python3 -c "
 import json,sys; seen=set()
 for r in json.load(sys.stdin):
     m=r['version'].split('.')[0]
-    if m not in seen: seen.add(m); print(m, r['version'], r['date'], 'lts=',r['lts'])" | head -6
+    if m not in seen: seen.add(m); print(m, r['version'], r['date'], 'lts=',r['lts'], 'security=',r['security'])" | head -6
+# newest security release per line: the script in references/version-upgrade/node/migration-overview.md
 curl -s https://raw.githubusercontent.com/nodejs/Release/main/schedule.json   # LTS / maintenance / EOL dates
 npm view typescript dist-tags
 npm view <package> version
 ```
 
-Node patches: run the latest patch of the chosen line, and never one older than the line's newest `"security": true` release in `index.json` (lookup script: `references/version-upgrade/node/migration-overview.md`). Do not carry a single-CVE "minimum floor" forward.
+Node patches: run the latest patch of the chosen line, and never one older than the line's newest `"security": true` release in `index.json` (lookup script: `references/version-upgrade/node/migration-overview.md`; dated snapshot: `references/tech-stack/version-policy.md` → Node.js). Do not carry a single-CVE "minimum floor" forward.
+
+### Responding to a Node security release
+
+- **Find each line's fixed patch** from the `"security": true` entries in `index.json` (script above). Each line gets a different fix set, so read the advisory per line; an end-of-life line is always treated as affected. Then update the snapshot in `references/tech-stack/version-policy.md`.
+- **Images:** a major tag (`node:24-alpine`) picks up the fix only when the image is rebuilt with a fresh base pull (`docker build --pull`) and every service on that line is redeployed. A running container whose `node --version` is below the fixed patch is still exposed.
+- **Single executable applications and startup snapshots** (`--build-snapshot`) embed the Node binary or heap they were built with: rebuild them on the fixed patch (October 2026: CVE-2026-106074, `crypto.randomUUID()`/`randomInt()` entropy caches saved into snapshots).
+- **undici:** the undici behind global `fetch` is bundled with Node and updated by the release; an `undici` dependency installed from npm is separate and must be bumped on its own.
+- **Behaviour changes:** security patches can change behaviour (October 2026: TLS rejects non-canonical IP addresses and chains containing blocked public keys). Run integration tests against the real outbound TLS endpoints before rollout.
+- **Trust store:** Node's root store is compiled into the binary (NSS 3.131.1 in the October 2026 releases), and its blocked-key list applies even with `--use-system-ca`, `NODE_EXTRA_CA_CERTS` or a custom `ca`; a match reports `CERT_REVOKED`. TLS sessions resumed from before the upgrade are not re-verified until they expire. Node is one trust layer among several: the OS store (`ca-certificates`, used by curl, git, Go on Linux and OS-packaged runtimes), language bundles such as Python's certifi, Java's `cacerts`, and roots compiled into binaries each update separately. After a root-store or distrust change, update each layer the service uses (OS package in the image, runtime patch, bundled packages), rebuild the images, and test real TLS connections from the deployed environment.
 
 ## Detection Matrix
 
@@ -69,7 +79,7 @@ Detect from the lockfile, then confirm with `packageManager`. Use this table's c
 | `yarn.lock` only | Yarn 1 | `yarn install` | `yarn install --frozen-lockfile` | `npm rebuild` | `yarn <bin>` |
 | `bun.lock` / `bun.lockb` | Bun | `bun install` | `bun install --frozen-lockfile` | reinstall the package | `bunx <bin>` |
 
-pnpm 10 does not run dependency build scripts unless the package is allowed (`onlyBuiltDependencies`, or `pnpm approve-builds`); a native module that "rebuilt" silently may not have. Node 25 and later do not bundle Corepack: install a pinned Corepack, then enable it (`npm install -g corepack@<pinned> && corepack enable`), so Corepack installs and hash-verifies the package manager pinned in `packageManager` (pinned form: `references/tech-stack/version-policy.md`). Details: `references/version-upgrade/node/node-24-to-26.md`.
+pnpm does not run dependency build scripts unless the package is allowed (`pnpm approve-builds`; the allow-list is `onlyBuiltDependencies` in pnpm 10 and `allowBuilds` in pnpm 11 and later); a native module that "rebuilt" silently may not have. Node 25 and later do not bundle Corepack: install a pinned Corepack, then enable it (`npm install -g corepack@<pinned> && corepack enable`), so Corepack installs and hash-verifies the package manager pinned in `packageManager` (pinned form: `references/tech-stack/version-policy.md`). Details: `references/version-upgrade/node/node-24-to-26.md`.
 
 ## Upgrade Execution Protocol
 

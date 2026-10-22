@@ -31,7 +31,7 @@ Much Astro example code online predates the Content Layer. Current rules (Astro 
 | `Astro.glob()` | `import.meta.glob()` |
 | Lenient HTML | The compiler rejects unclosed non-void tags and invalid nesting |
 
-Astro 6+ needs Node 22.12 or later; use the runtime from `version-policy.md`.
+Astro 7.4 needs Node 22.23.4 or later (`astro@7.4.2` `engines`, checked 2026-10-22); use the runtime from `version-policy.md`.
 
 ## Content collections
 

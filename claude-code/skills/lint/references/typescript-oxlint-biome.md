@@ -133,7 +133,7 @@ Use `templates/biome.json`. For new repos it keeps Biome's own JavaScript defaul
 
 ```json
 {
-  "$schema": "https://biomejs.dev/schemas/2.5.14/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.6.2/schema.json",
   "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
   "files": {
     "includes": ["**", "!**/dist", "!**/build", "!**/coverage", "!**/.next", "!**/.pnpm-store"]
@@ -153,7 +153,7 @@ Use `templates/biome.json`. For new repos it keeps Biome's own JavaScript defaul
 - **Tailwind v4 CSS** (`@theme`, `@apply`, `@custom-variant`): add `"css": { "parser": { "tailwindDirectives": true } }`.
 - **`biome check` vs `biome format`:** `biome format` only formats. `biome check` (with the linter off) formats and applies the organise-imports assist, so scripts and hooks use `check`.
 
-### Language support (Biome 2.5)
+### Language support (checked on Biome 2.5; not re-checked on 2.6)
 
 | Language | Format | Notes |
 |----------|--------|-------|

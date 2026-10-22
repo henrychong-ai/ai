@@ -6,7 +6,7 @@ Primary source: https://devblogs.microsoft.com/typescript/announcing-typescript-
 
 ## Why not a straight upgrade
 
-- **No compiler API until 7.1.** Tools that `require('typescript')` for its API cannot use 7.0: typescript-eslint (peer `typescript <6.1.0` on 2026-09-28), ts-jest (`<7`), ts-node, tsup's `dts` build, API-based bundler plugins, and framework type-check steps that load the API. Check each: `npm view <tool> peerDependencies`.
+- **No stable compiler API.** 7.0 exports only an unstable API under `typescript/unstable/*`; the 7.1 beta (2026-10-20) moves it to `typescript/sync`, `typescript/async`, `typescript/fs` and `typescript/ast/*`, still with no stability promise (checked 2026-10-22). Tools that `require('typescript')` for the 6.x API cannot use 7.x: typescript-eslint (8.72 peers `typescript <6.1.0`, checked 2026-10-22), ts-jest (`<7`), ts-node, tsup's `dts` build, API-based bundler plugins, and framework type-check steps that load the API. Check each: `npm view <tool> peerDependencies`.
 - 6.0 deprecations become hard errors (`TS5102`/`TS5108` "has been removed"), and `ignoreDeprecations: "6.0"` is rejected.
 - Defaults from 6.0 hold; `stableTypeOrdering` is always on.
 
@@ -54,4 +54,4 @@ Run `typecheck:native` as an extra step and compare with the 6.0 result for a fe
 
 ## When to move fully to 7.x
 
-Move `typescript` itself to 7.x only when every API consumer in the repo supports it (typescript-eslint, test transformers, declaration bundlers, framework plugins) — expected from 7.1, which ships the new API. Record the decision in `../../tech-stack/version-policy.md` first.
+Move `typescript` itself to 7.x only when every API consumer in the repo supports it (typescript-eslint, test transformers, declaration bundlers, framework plugins). Revisit this at TypeScript 7.1 GA plus typescript-eslint TypeScript 7 support. Record the decision in `../../tech-stack/version-policy.md` first.

@@ -49,7 +49,7 @@ Generate migrations with `drizzle-kit generate` and apply them with `wrangler d1
 
 ## Testing Workers with Vitest
 
-Workers projects use **Vitest `^4.1`** with `@cloudflare/vitest-pool-workers` (0.22 peers `vitest ^4.1`; Vitest 5 is not supported by the pool yet). Since the Vitest 4 release of the pool, options live in the `cloudflareTest()` Vite plugin; `defineWorkersConfig` and `test.poolOptions.workers` are gone.
+Workers projects use **Vitest `^4.1`** with `@cloudflare/vitest-pool-workers` (0.23.0 still peers `vitest ^4.1.0`, checked 2026-10-22; Vitest 5 is not supported by the pool yet). Since the Vitest 4 release of the pool, options live in the `cloudflareTest()` Vite plugin; `defineWorkersConfig` and `test.poolOptions.workers` are gone.
 
 ```typescript
 // vitest.config.ts

@@ -1,6 +1,6 @@
 # Go Linting + Formatting with golangci-lint v2
 
-golangci-lint runs Go linters and formatters (gofmt, goimports, gofumpt) from one binary and one `.golangci.yml`. All configuration here targets **golangci-lint v2** (validated against v2.14.0); a v1 binary cannot read it.
+golangci-lint runs Go linters and formatters (gofmt, goimports, gofumpt) from one binary and one `.golangci.yml`. All configuration here targets **golangci-lint v2** (pinned v2.15.0; both templates pass `config verify` and `run` on v2.15.0, checked 2026-10-22; earlier validation on v2.14.0); a v1 binary cannot read it.
 
 ## Baseline vs Strict
 
@@ -17,7 +17,7 @@ Pin an exact v2 release in every install (local, CI, pre-commit) so all environm
 
 ```bash
 # Binary (upstream-recommended): installs the pinned version into $(go env GOPATH)/bin
-curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.14.0
+curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.15.0
 
 # macOS
 brew install golangci-lint
@@ -26,7 +26,7 @@ brew install golangci-lint
 golangci-lint version
 ```
 
-Source installs use the **v2 module path**: `go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0`. The old path without `/v2` installs v1. Upstream does not guarantee `go install`, `go get -tool` / `go tool`, or the "tools pattern" (results depend on the local Go version and untested dependency versions) and recommends the binary install.
+Source installs use the **v2 module path**: `go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.15.0`. The old path without `/v2` installs v1. Upstream does not guarantee `go install`, `go get -tool` / `go tool`, or the "tools pattern" (results depend on the local Go version and untested dependency versions) and recommends the binary install.
 
 ## Configuration
 
@@ -170,7 +170,7 @@ jobs:
           go-version-file: go.mod
       - uses: golangci/golangci-lint-action@v9   # v7+ supports golangci-lint v2 only
         with:
-          version: v2.14
+          version: v2.15
 ```
 
 ### Bitbucket Pipelines
@@ -179,7 +179,7 @@ jobs:
     name: Lint Go
     image: golang:1.27   # match the go directive in go.mod (1.25 and older are end of life)
     script:
-      - curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.14.0
+      - curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.15.0
       - golangci-lint run ./...
 ```
 
@@ -198,7 +198,7 @@ golangci-lint lints **packages, not file lists**, so hooks run it on `./...` rat
 ```yaml
 repos:
   - repo: https://github.com/golangci/golangci-lint
-    rev: v2.14.0
+    rev: v2.15.0
     hooks:
       - id: golangci-lint-full        # golangci-lint run --fix
       - id: golangci-lint-config-verify

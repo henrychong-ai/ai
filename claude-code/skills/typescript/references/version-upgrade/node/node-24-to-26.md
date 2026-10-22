@@ -1,6 +1,6 @@
 # Node.js 24 → 26
 
-Recommended: stay on Node 24 for existing services and start new projects on Node 26 once it is LTS (2026-10-28). Node 24 enters Maintenance on 2026-10-20 and reaches end-of-life 2028-04-30.
+Recommended: start new projects on Node 26 from 2026-10-28 (its Active LTS date); keep existing services on Node 24 and move them to 26 when next worked on (`../../tech-stack/version-policy.md`). Node 24 entered Maintenance on 2026-10-20 and reaches end-of-life 2028-04-30.
 
 Primary sources: the 26.0.0 changelog (https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V26.md) and https://nodejs.org/api/deprecations.html. At the time of writing nodejs.org has no v24-to-v26 migration page; check https://nodejs.org/en/learn/getting-started/userland-migrations for new codemods before starting.
 
@@ -14,7 +14,7 @@ Primary sources: the 26.0.0 changelog (https://github.com/nodejs/node/blob/main/
 
 ## Corepack is gone
 
-Node 25 and later do not ship Corepack, so a bare `corepack enable` / `corepack install` fails in `node:26` images and fresh Node 26 installs. Install a pinned Corepack from npm first, then enable it; Corepack keeps doing its job — it installs the package manager pinned in `packageManager` (e.g. `"pnpm@10.x.y+sha512.<hash>"`) and refuses a download whose hash does not match. The pinned form is set in `../../tech-stack/version-policy.md`.
+Node 25 and later do not ship Corepack, so a bare `corepack enable` / `corepack install` fails in `node:26` images and fresh Node 26 installs. Install a pinned Corepack from npm first, then enable it; Corepack keeps doing its job — it installs the package manager pinned in `packageManager` (e.g. `"pnpm@12.x.y+sha512.<hash>"`) and refuses a download whose hash does not match. The pinned form is set in `../../tech-stack/version-policy.md`.
 
 ```dockerfile
 FROM node:26-alpine AS builder

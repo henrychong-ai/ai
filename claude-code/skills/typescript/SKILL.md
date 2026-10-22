@@ -69,9 +69,9 @@ Templates are formatted with `/lint`'s Biome defaults (double quotes), so they p
 
 | Area | Default |
 |------|---------|
-| Runtime | Node 24 LTS now; Node 26 for new projects once it is LTS (2026-10-28) |
-| Compiler | `typescript@~6.0`, strict; TS 7 only as an optional type-check-only lane |
-| Package manager | pnpm (one pinned major), installed through a pinned Corepack from the hash-pinned `packageManager` field |
+| Runtime | New projects: Node 26 from 2026-10-28 (Node 24 until then); existing projects: Node 24, moving to 26 when next worked on; Node 22 only with a migration finished by 2027-01-31 |
+| Compiler | `typescript@~6.0`, strict, for new and existing projects (minimum 5.9); TS 7 only as an optional type-check-only lane |
+| Package manager | pnpm (one pinned major): pnpm 12 for new projects (after a one-repository pilot); existing projects on the latest pnpm 10 move straight to 12 by 2027-01-31 (skip 11). Installed through a pinned Corepack from the hash-pinned `packageManager` field |
 | Validation | Zod 4 at every boundary (requests, env, external data) |
 | API | `@hono/zod-openapi` Option-B for services and internal tools; tRPC for internal-only RPC; Next.js for product web apps; Fastify + Temporal for durable workflows |
 | ORM | Drizzle (internal tools, Workers) · Prisma 7 (product apps) |
@@ -79,7 +79,7 @@ Templates are formatted with `/lint`'s Biome defaults (double quotes), so they p
 | Test | Vitest `^4.1` (+ Playwright for E2E); Jest in NestJS codebases |
 | Lint / format | Oxlint + Biome via `/lint` |
 
-Never run an unpinned `pnpm add -D typescript`: npm's `latest` is TypeScript 7, which has no compiler API for typescript-eslint, ts-jest or declaration bundlers. Check live versions with the commands in `version-policy.md` before writing any version.
+Never run an unpinned `pnpm add -D typescript`: npm's `latest` is TypeScript 7, whose compiler API is unstable and not accepted by typescript-eslint, ts-jest or declaration bundlers. Check live versions with the commands in `version-policy.md` before writing any version.
 
 ## Testing expectations
 
@@ -93,7 +93,7 @@ Never run an unpinned `pnpm add -D typescript`: npm's `latest` is TypeScript 7, 
 ```bash
 # Add dependencies with explicit ranges (see version-policy.md)
 pnpm add zod@^4 hono@^4 @hono/zod-openapi@^1
-pnpm add -D typescript@~6.0 @types/node@^24 vitest@^4.1 @vitest/coverage-v8@^4.1 tsx@^4
+pnpm add -D typescript@~6.0 @types/node@^24 vitest@^4.1 @vitest/coverage-v8@^4.1 tsx@^4   # @types/node@^26 on Node 26
 # Lint, format and hooks: /lint.
 ```
 

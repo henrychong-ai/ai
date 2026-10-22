@@ -22,8 +22,8 @@ Versions for everything below: `version-policy.md`. Lint, format and hook config
 | Layer | Technology | Notes |
 |-------|------------|-------|
 | Language | TypeScript, strict | `typescript@~6.0`; tsconfig in `coding-standards/tooling.md` |
-| Runtime | Node.js LTS | Node 24 now, Node 26 for new projects once LTS (`version-policy.md`) |
-| Package manager | pnpm | One major pinned via `packageManager` (hash-checked by Corepack) |
+| Runtime | Node.js LTS | New projects Node 26 from 2026-10-28 (Node 24 until then); existing projects Node 24 (`version-policy.md`) |
+| Package manager | pnpm 12 (new projects, after a pilot); pnpm 10 → 12 by 2027-01-31 (existing) | One major pinned via `packageManager` (hash-checked by Corepack; `version-policy.md`) |
 | Validation | Zod 4 | Runtime validation + type inference at every boundary |
 | API — internal tools, services with a dashboard or MCP consumer | Hono + `@hono/zod-openapi` | **Recommended default** — the Option-B pattern below |
 | API — internal-only RPC, both ends in one TS monorepo, no external/MCP consumer | tRPC 11 | |
@@ -237,8 +237,8 @@ Bun is not part of the stack as a runtime. `bun install` is fast and usually com
 
 ```
 Language:            TypeScript strict (typescript ~6.0)
-Runtime:             Node.js 24 LTS (26 for new projects once LTS)
-Package manager:     pnpm (one pinned major)
+Runtime:             Node.js 26 LTS for new projects from 2026-10-28; 24 LTS for existing
+Package manager:     pnpm 12 for new projects (pilot first); existing 10 → 12 by 2027-01-31
 Validation:          Zod 4
 API (default):       Hono + @hono/zod-openapi single-source (Option-B)
 API (internal RPC):  tRPC 11

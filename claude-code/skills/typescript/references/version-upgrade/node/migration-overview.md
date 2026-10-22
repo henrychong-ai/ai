@@ -26,7 +26,7 @@ for m in list(latest)[:6]:
     print(m, 'latest', latest[m], '| last security', *sec.get(m, ('-', '-')))"
 ```
 
-Run the **latest patch** of the chosen line; never deploy one older than the line's latest security release from the script above. Cross-check the advisories at https://nodejs.org/en/blog/vulnerability for whether a given CVE affects your usage. Snapshot on 2026-09-28 (re-verify): Node 20 end-of-life since 2026-04-30; last security releases 24.18.1 and 22.23.2 (2026-07-28); Node 24 enters Maintenance 2026-10-20; Node 26 becomes LTS 2026-10-28.
+Run the **latest patch** of the chosen line; never deploy one older than the line's latest security release from the script above. Cross-check the advisories at https://nodejs.org/en/blog/vulnerability for whether a given CVE affects your usage. The skill's one dated snapshot of the newest security releases, and the status of each line, is in `../../tech-stack/version-policy.md` → Node.js. Release-model dates (checked 2026-10-22): Node 20 end-of-life since 2026-04-30; Node 24 entered Maintenance on 2026-10-20; Node 26 becomes Active LTS on 2026-10-28. Steps after a security release: `../upgrade-protocol.md` → "Responding to a Node security release".
 
 ## Migration strategy
 
@@ -44,7 +44,7 @@ find node_modules -name '*.node' -type f | head      # which packages ship nativ
 <pm> rebuild
 ```
 
-pnpm 10 blocks dependency build scripts unless allowed (`pnpm approve-builds`, or `onlyBuiltDependencies`). If a native package loads with "compiled against a different Node.js version", it was not rebuilt.
+pnpm blocks dependency build scripts unless allowed (`pnpm approve-builds`; the allow-list is `onlyBuiltDependencies` in pnpm 10 and `allowBuilds` in pnpm 11 and later). If a native package loads with "compiled against a different Node.js version", it was not rebuilt.
 
 ## `@types/node`
 

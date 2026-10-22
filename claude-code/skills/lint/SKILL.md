@@ -72,7 +72,7 @@ Details: `references/typescript-oxlint-biome.md` (Oxlint, Biome, scripts, editor
 
 ## Python
 
-Recommended standard for new Python work. `uv add --dev ruff mypy`, merge `templates/pyproject.toml`, then run `ruff check .`, `ruff format --check .` and `mypy src/`. Details: `references/python-ruff-mypy.md`.
+Recommended standard for new Python work. `uv add --dev ruff mypy`, merge `templates/pyproject.toml` (`target-version` and mypy `python_version` = the `requires-python` floor, never above it: `py315` / `3.15` for new projects), then run `ruff check .`, `ruff format --check .` and `mypy src/`. Details: `references/python-ruff-mypy.md`.
 
 ## Go
 
@@ -81,12 +81,12 @@ Recommended standard for new Python work. `uv add --dev ruff mypy`, merge `templ
 ### Quick Setup
 ```bash
 # Binary (upstream-recommended), pinned
-curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.14.0
+curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.15.0
 # or on macOS
 brew install golangci-lint
 ```
 
-Source installs must use the v2 module path (`go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0`); upstream does not guarantee `go install` or `go get -tool` / `go tool` installs and recommends the binary.
+Source installs must use the v2 module path (`go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.15.0`); upstream does not guarantee `go install` or `go get -tool` / `go tool` installs and recommends the binary.
 
 ### Configuration (.golangci.yml): Baseline or Strict
 
