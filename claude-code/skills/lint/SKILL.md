@@ -72,7 +72,7 @@ Details: `references/typescript-oxlint-biome.md` (Oxlint, Biome, scripts, editor
 
 ## Python
 
-Recommended standard for new Python work. `uv add --dev ruff mypy`, merge `templates/pyproject.toml` (`target-version` and mypy `python_version` = the `requires-python` floor, never above it: `py315` / `3.15` for new projects), then run `ruff check .`, `ruff format --check .` and `mypy src/`. Details: `references/python-ruff-mypy.md`.
+Recommended standard for new Python work. `uv add --dev ruff mypy`, merge `templates/pyproject.toml` (`target-version` and mypy `python_version` = the `requires-python` floor, never above it: `py314` / `3.14` for new projects), then run `ruff check .`, `ruff format --check .` and `mypy src/`. Details: `references/python-ruff-mypy.md`.
 
 ## Go
 

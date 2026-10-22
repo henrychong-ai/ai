@@ -1,6 +1,6 @@
 ---
 name: typescript
-description: "TypeScript development standards — strict tsconfig, style and type patterns, Zod 4 validation, async/error handling, Vitest/Jest testing, and the single owner of Node, TypeScript, pnpm and JS/TS tool version policy and upgrade protocol. Owns a back-to-front ironclad stack, default for services and internal tools: the Option-B @hono/zod-openapi pattern where ONE createRoute() drives runtime request validation, compile-time response typing, the OpenAPI doc (documented responses, API Shield guards), dashboard client types and MCP tool schemas. Also covers the ORM standard (Drizzle for internal tools/Workers, Prisma 7 for product apps), Fastify + Temporal services, Next.js apps, Cloudflare Workers, Astro sites and NestJS. Use when writing, reviewing or testing TypeScript, choosing versions or a stack, designing an API, or upgrading: bump Node, end-of-life runtime, Node CVE/security patch, Node Docker/CI images, TypeScript 5→6→7, React 19, Next.js 16, ES target/lib, or auditing runtime versions."
+description: "TypeScript development standards — strict tsconfig, style/type patterns, Zod 4 validation, async/error handling, Vitest/Jest testing, and sole owner of Node, TypeScript, pnpm and JS/TS tool version policy and upgrades. Owns a back-to-front ironclad stack, default for services and internal tools: the Option-B @hono/zod-openapi pattern where ONE createRoute() drives runtime request validation, compile-time response typing, the OpenAPI doc, dashboard client types and MCP tool schemas. Also covers the ORM standard (Drizzle for internal tools/Workers, Prisma 7 for product apps), Fastify + Temporal services, Next.js apps, Cloudflare Workers, Astro sites and NestJS. Use when writing, reviewing or testing TypeScript, choosing versions or stack, designing an API, or upgrading: bump Node, end-of-life runtime, Node CVE or npm advisory, Node images, TypeScript 5→6→7, React 19, Next.js 16, pnpm 12, Prisma 7, Zod 4, Tailwind 4, Vitest 4, ESLint 10, ES target/lib, or auditing runtime versions."
 ---
 
 # TypeScript Development Standards
@@ -49,6 +49,7 @@ Load what the task needs.
 - TypeScript: `references/version-upgrade/typescript/` — `typescript-legacy-to-5.md`, `typescript-5-to-6.md`, `typescript-6-to-7.md`
 - React: `references/version-upgrade/react/react-to-19.md`
 - Next.js: `references/version-upgrade/frameworks/nextjs-migrations.md`
+- Libraries: `references/version-upgrade/libraries/prisma-6-to-7.md`; every other library major (Zod, Tailwind CSS, Vitest, ESLint, Jest, Express, Astro, Hono) is a row in `upgrade-protocol.md` → Library majors, and pnpm 10 → 12 is its own step there
 - ECMAScript: `references/version-upgrade/ecmascript/` — `es-upgrade-checklist.md`, `es-version-features.md`, `browser-support.md`, `bundler-configuration.md`, `polyfill-strategies.md`
 - Safety: `references/version-upgrade/safety/ai-guardrails.md`, `references/version-upgrade/safety/testing-protocols.md`
 
@@ -113,7 +114,7 @@ type Status = (typeof Status)[keyof typeof Status];
 
 ## Upgrading
 
-For any Node, TypeScript, React, Next.js or ES target upgrade — including a Node security patch or an end-of-life runtime — follow `references/version-upgrade/upgrade-protocol.md` and load the per-step guide it names. Two rules win over anything in the guides:
+For any Node, TypeScript, React, Next.js, ES target, package-manager or library-major upgrade — including a Node security patch, an npm package advisory or an end-of-life runtime — follow `references/version-upgrade/upgrade-protocol.md` and load the per-step guide it names. Two rules win over anything in the guides:
 
 - **Approval** comes at phase checkpoints: after the plan, after version-file and dependency changes, and before commit.
 - **Test edits** are allowed only when the new version changes observable output that a test pins (an error message, a deprecation warning, a renamed import); list each one with its cause. Any other failing test is a behaviour change: stop and report it.

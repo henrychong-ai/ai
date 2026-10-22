@@ -17,13 +17,13 @@ Check current versions before pinning: `uvx ruff --version`, `curl -s https://py
 
 Template: `templates/pyproject.toml` (merge its tables into the project's `pyproject.toml`).
 
-`target-version` and `python_version` follow the project's `requires-python` floor: `py315` / `3.15` for new projects (the template's value), `py314` / `3.14` for a project on 3.14. Never set either above the floor: with `py314` or later, `ruff format` rewrites `except (A, B):` to PEP 758 `except A, B:` (a syntax error before 3.14).
+`target-version` and `python_version` follow the project's `requires-python` floor: `py314` / `3.14` for new projects (the template's value); a project on 3.15 uses `py315` / `3.15`. Never set either above the floor: with `py314` or later, `ruff format` rewrites `except (A, B):` to PEP 758 `except A, B:` (a syntax error before 3.14).
 
-Verified 2026-10-22: Ruff 0.17.1 with `--target-version py315` and mypy 2.4.0 with `--python-version 3.15` (run on Python 3.15) both run clean.
+For a project on 3.15: verified 2026-10-22, Ruff 0.17.1 with `--target-version py315` and mypy 2.4.0 with `--python-version 3.15` (run on Python 3.15) both run clean.
 
 ```toml
 [tool.ruff]
-target-version = "py315"   # the requires-python floor (never above it); a 3.14 project: "py314"
+target-version = "py314"   # the requires-python floor (never above it); a 3.15 project: "py315"
 line-length = 100
 src = ["src", "tests"]
 
@@ -43,7 +43,7 @@ quote-style = "double"
 indent-style = "space"
 
 [tool.mypy]
-python_version = "3.15"      # match target-version; a 3.14 project: "3.14"
+python_version = "3.14"      # match target-version; a 3.15 project: "3.15"
 strict = true
 warn_unreachable = true
 ```
