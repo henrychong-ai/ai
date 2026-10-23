@@ -252,8 +252,10 @@ op://company.1password.com/Work/Item/field
 
 3. **Test op run manually:**
    ```bash
-   op run --env-file=~/.config/mcp-credentials/kg.env -- env | grep -E 'NEO4J|OPENAI'
+   op run --env-file=~/.config/mcp-credentials/kg.env -- sh -c \
+     'for v in NEO4J_URL NEO4J_USERNAME NEO4J_PASSWORD OPENAI_API_KEY; do [ -n "$(printenv "$v")" ] && echo "$v set" || echo "$v MISSING"; done'
    ```
+   This reports whether each variable resolved, never its value. Do not print `env` or `printenv` output instead: that shows the secrets unless 1Password's output masking catches every one.
 
 4. **Check MCP server logs:**
    ```bash
