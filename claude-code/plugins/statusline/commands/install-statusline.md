@@ -24,4 +24,4 @@ After installation, restart Claude Code to see the new statusline displaying:
 - Current model
 - Daily/block costs with time remaining
 - Context window usage
-- Rate limit utilization (5h, 7d, Fable weekly)
+- Rate limit utilization (7d and Fable weekly; 5h only on plans that have a 5-hour window)
