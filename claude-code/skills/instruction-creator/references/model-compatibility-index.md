@@ -248,4 +248,4 @@ Canonical copy: SKILL.md carries a summary table, and the Sonnet 5.5, Opus 5.5, 
 
 Cost comparisons in the Fable 5.2 file are Anthropic's measurements on its benchmarks; re-measure Fable 5.2 at `medium`/`high` against Opus 5.5 at `high`/`xhigh` on your own work before relying on them.
 
-**Cache safety is the third axis.** See `cache-and-token-efficiency.md` for the (model, effort) cache key and the effort-change exception on Opus 5.5, Sonnet 5.5, Haiku 5.5, and Fable 5.1. Fable 5.2: effort-change cache behaviour in Claude Code is not re-checked; assume it matches 5.1 until verified.
+**Cache safety is the third axis.** See `cache-and-token-efficiency.md` for the (model, effort) cache key and the effort-change exception on Opus 5.5, Sonnet 5.5, Haiku 5.5, and Fable 5.1. Fable 5.2 is covered by the docs' "Fable 5.1 and later" wording (not tested live).
