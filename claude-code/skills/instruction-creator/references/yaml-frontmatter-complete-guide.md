@@ -1,7 +1,7 @@
 # YAML Frontmatter Complete Guide
 
 **Comprehensive reference for all instruction file YAML frontmatter fields**
-**Updated: 2026-10-08 (v2.1.293+; Haiku 5.5: `haiku` + `effort: medium` for the low-cost tier, effort levels and cache exception). 2026-09-29 (Claude Code v2.1.284+; Sonnet 5.5, `sonnet` + `effort: medium` recommended agent default). 2026-09-24 (v2.1.280+; `model`/`effort` defaults, Opus 5.5)**
+**Updated: 2026-11-10 (v2.1.321+; Fable 5.2 behind `fable`, `medium` default effort in Claude Code, cache exception not re-checked on 5.2). 2026-10-08 (v2.1.293+; Haiku 5.5: `haiku` + `effort: medium` for the low-cost tier, effort levels and cache exception). 2026-09-29 (Claude Code v2.1.284+; Sonnet 5.5, `sonnet` + `effort: medium` recommended agent default). 2026-09-24 (v2.1.280+; `model`/`effort` defaults, Opus 5.5)**
 
 ---
 
@@ -89,11 +89,12 @@ hooks:                              # Optional: lifecycle hooks scoped to agent
 - **Format:** String enum
 - **Purpose:** Override model effort level during agent execution
 - **Values:** `low` (○), `medium` (◐), `high` (●), `xhigh` (◉ — Fable 5.x / Opus 5.5 / Opus 5 / Opus 4.8/4.7 / Sonnet 5.5/5 / Haiku 5.5), `max` (◎ — Fable 5.x / Opus 5.5 / Opus 5 / Opus 4.8/4.7/4.6 / Sonnet 5.5/5/4.6 / Haiku 5.5; effort values are model-relative, see `model-compatibility-index.md`)
-- **Default:** Inherits session effort level (Opus 5.5, Sonnet 5.5, and Haiku 5.5 sessions default to `medium` in Claude Code)
-- **When to pin (agents):** with every model pin — any agent that pins `model` pins `effort` with it (routing ladder in `model-compatibility-index.md`). An unpinned agent under an Opus `xhigh` session runs at `xhigh`, where a Sonnet worker loses its cost case. Agent pins are cache-safe (own context)
+- **Default:** Inherits session effort level when the agent runs on the session's model (Opus 5.5, Sonnet 5.5, Haiku 5.5, and Fable 5.2 sessions default to `medium` in Claude Code). Since Claude Code 2.1.317 an agent on a different model from the session uses that model's saved effort level (`/effort` saves per model under `modelSettings`) or its default instead; `CLAUDE_CODE_SUBAGENT_EFFORT` (2.1.316) overrides both for any non-fork agent with no frontmatter or per-call `effort` (verified 2026-11-04 on 2.1.317).
+- **When to pin (agents):** with every model pin — any agent that pins `model` pins `effort` with it (routing ladder in `model-compatibility-index.md`). An unpinned agent on the session's model under a Fable 5.2 `high` session runs at `high`; a `model: opus` agent there gets Opus's saved or default effort, not one you chose. Agent pins are cache-safe (own context)
 - **Behaviour:** Overrides session effort while agent is active; reverts when complete
 - **Note:** Cannot override `CLAUDE_CODE_EFFORT_LEVEL` env var
-- **Priority:** env var > frontmatter > session `/effort` > settings (`modelSettings`; a top-level user `effortLevel` is ignored for Opus 5.5 and later models, including Sonnet 5.5) > model default
+- **Per-call override:** a per-call `effort` on the Agent tool (Claude Code 2.1.292+) replaces this pin for that spawn (verified on 2.1.300; the pinned `model` is unchanged unless `model` is also passed); conversation forks ignore both `model` and `effort`. Pass it to a pinned agent only for a deliberate one-off change you state to the user.
+- **Priority:** env var > per-call Agent `effort` (env-var interaction untested) > frontmatter > session `/effort` > settings (`modelSettings`; a top-level user `effortLevel` is ignored for Opus 5.5 and later models, including Sonnet 5.5) > model default
 
 #### `tools` (Optional)
 - **Format:** Comma-separated string or YAML list
@@ -225,10 +226,10 @@ hooks:                              # Optional: lifecycle hooks scoped to skill
 - **Format:** String enum
 - **Purpose:** Override model effort level when skill is invoked
 - **Values:** `low` (○), `medium` (◐), `high` (●), `xhigh` (◉ — Fable 5.x / Opus 5.5 / Opus 5 / Opus 4.8/4.7 / Sonnet 5.5/5 / Haiku 5.5), `max` (◎ — Fable 5.x / Opus 5.5 / Opus 5 / Opus 4.8/4.7/4.6 / Sonnet 5.5/5/4.6 / Haiku 5.5; effort values are model-relative, see `model-compatibility-index.md`)
-- **Default:** Inherits session effort level (Opus 5.5, Sonnet 5.5, and Haiku 5.5 sessions default to `medium`). Main-thread skills carry no pin; a forked skill that pins `model` pins `effort` with it (routing ladder in `model-compatibility-index.md`)
+- **Default:** Inherits session effort level (Opus 5.5, Sonnet 5.5, Haiku 5.5, and Fable 5.2 sessions default to `medium`). Main-thread skills carry no pin; a forked skill that pins `model` pins `effort` with it (routing ladder in `model-compatibility-index.md`)
 - **Behaviour:** Overrides session effort while skill is active; reverts when complete
 - **Note:** Cannot override `CLAUDE_CODE_EFFORT_LEVEL` env var
-- **⚠️ Cache:** on most models the same (model, effort) cache-key rule as `model` — a main-thread effort pin double cache-busts the session, with the entry re-read billed at the active model's rate. On Opus 5.5, Sonnet 5.5, Haiku 5.5, and Fable 5.1 with an API key or subscription an effort change keeps the cache (not on Bedrock, Agent Platform, a Claude apps gateway, disabled experimental betas, or HIPAA). Pin only with `context: fork` so the skill stays safe on every model and route; a pin equal to the already-active level keeps the cache. Detail: `cache-and-token-efficiency.md`
+- **⚠️ Cache:** on most models the same (model, effort) cache-key rule as `model` — a main-thread effort pin double cache-busts the session, with the entry re-read billed at the active model's rate. On Opus 5.5, Sonnet 5.5, Haiku 5.5, and Fable 5.1 with an API key or subscription an effort change keeps the cache (Fable 5.2 not re-checked; not on Bedrock, Agent Platform, a Claude apps gateway, disabled experimental betas, or HIPAA). Pin only with `context: fork` so the skill stays safe on every model and route; a pin equal to the already-active level keeps the cache. Detail: `cache-and-token-efficiency.md`
 
 #### `context` (Optional)
 - **Format:** String
@@ -345,9 +346,9 @@ hooks:                                  # Optional: lifecycle hooks
 - **Format:** String enum
 - **Purpose:** Override model effort level when command is invoked
 - **Values:** `low` (○), `medium` (◐), `high` (●), `xhigh` (◉ — Fable 5.x / Opus 5.5 / Opus 5 / Opus 4.8/4.7 / Sonnet 5.5/5 / Haiku 5.5), `max` (◎ — Fable 5.x / Opus 5.5 / Opus 5 / Opus 4.8/4.7/4.6 / Sonnet 5.5/5/4.6 / Haiku 5.5; effort values are model-relative, see `model-compatibility-index.md`)
-- **Default:** Inherits session effort level (Opus 5.5, Sonnet 5.5, and Haiku 5.5 sessions default to `medium`). Main-thread commands carry no pin; a forked command that pins `model` pins `effort` with it (routing ladder in `model-compatibility-index.md`)
+- **Default:** Inherits session effort level (Opus 5.5, Sonnet 5.5, Haiku 5.5, and Fable 5.2 sessions default to `medium`). Main-thread commands carry no pin; a forked command that pins `model` pins `effort` with it (routing ladder in `model-compatibility-index.md`)
 - **Behaviour:** Overrides session effort while command is active; reverts when complete
-- **⚠️ Cache:** same rule as the skill `effort` field — main-thread pins double cache-bust on most models (the effort exception on Opus 5.5, Sonnet 5.5, Haiku 5.5, and Fable 5.1 aside); pin only with `context: fork`. Detail: `cache-and-token-efficiency.md`
+- **⚠️ Cache:** same rule as the skill `effort` field — main-thread pins double cache-bust on most models (the effort exception on Opus 5.5, Sonnet 5.5, Haiku 5.5, and Fable 5.1 aside; Fable 5.2 not re-checked); pin only with `context: fork`. Detail: `cache-and-token-efficiency.md`
 
 #### `context` (Optional)
 - **Format:** String
@@ -496,7 +497,7 @@ Is your skill/command doing complex work?
 | `name` | Yes | - | kebab-case identifier |
 | `description` | Yes | - | Specialization + "Use PROACTIVELY" |
 | `model` | No | Main conversation's model (recommended: `sonnet` + `effort: medium`; `opus` to step up) | opus/fable/sonnet/haiku/full ID/inherit |
-| `effort` | No | Inherit (pin it with every `model` pin; `medium` with `sonnet`) | low/medium/high/xhigh/max effort override |
+| `effort` | No | Inherit (pin it with every `model` pin; `medium` with `sonnet`) | low/medium/high/xhigh/max effort override; a per-call Agent `effort` (2.1.292+) overrides it, forks ignore it |
 | `tools` | No | All | Tools agent can use |
 | `disallowedTools` | No | None | Tools to deny |
 | `permissionMode` | No | `default` | Permission behavior |

@@ -3,7 +3,8 @@
 *Companion reference to the Model-Aware Instruction Authoring section in SKILL.md. Delta file, not a rewrite.*
 
 **Fable 5.1 released:** 2026-09-01 (a point release over Fable 5)
-**Last updated:** 2026-09-29 (alias version, Sonnet 5.5 in the per-message-effort row and cache exception, and two routing rows only). 2026-09-24 (per-message-effort row, Opus 5.5 cache-read comparison, and Related References only)
+**Superseded:** Fable 5.2 (released 2026-11-09) replaces Fable 5.1 as the `fable` alias from Claude Code 2.1.321; pin `claude-fable-5-1` to keep 5.1. This file is now a base for `claude-fable-5-2-compatibility.md`, which replaces its two finish-the-task blocks (2.3), its Claude Code injected list (Part 2A), and its effort table (Part 2B); the rest still applies.
+**Last updated:** 2026-11-10 (supersession note and Related References only). 2026-09-29 (alias version, Sonnet 5.5 in the per-message-effort row and cache exception, and two routing rows only). 2026-09-24 (per-message-effort row, Opus 5.5 cache-read comparison, and Related References only)
 **Model IDs:** `claude-fable-5-1`; `claude-mythos-5-1` is the same weights with permissive safeguards, restricted to vetted partners.
 **Aliases:** `fable` resolves to Fable 5.1 on Claude Code 2.1.257+ (Claude apps gateway sessions: Fable 5); new `best` alias resolves to Fable 5.1 where available, else `opus`. `fable[1m]` still accepted, but 5.1 runs 1M natively without it.
 **Pricing:** $10 / $50 per MTok, unchanged. **Cache reads $0.25 / MTok** (0.025x base), against $1 on Fable 5, $0.50 on Opus 5, and $0.20 on Opus 5.5. Announcement: roughly 25% lower total cost on typical workloads, up to 45% on agentic tasks.
@@ -351,6 +352,7 @@ All read 2026-09-01.
 
 # Related References in This Skill
 
+- `claude-fable-5-2-compatibility.md`: the current Fable model; a delta file layered on this one
 - `claude-fable-5-compatibility.md`: the base this file extends; Parts 1 to 3 remain current
 - `claude-opus-5-5-compatibility.md`: the current Opus model; shares three of this file's API breaks
 - `model-compatibility-index.md`: current models and which compatibility file to load when
