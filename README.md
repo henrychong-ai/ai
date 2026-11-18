@@ -48,7 +48,7 @@ Bundled knowledge packages with reference materials. Copy entire folder to `~/.c
 | Skill | Description |
 |-------|-------------|
 | [1password](claude-code/skills/1password/) | 1Password CLI, secrets management, op run setup |
-| [codex](claude-code/skills/codex/) | Route work to OpenAI GPT-6 (Astra/Sol/Luna) through the official Codex plugin — second opinions and code review (requires the Codex plugin and the `codex-relay` agent) |
+| [codex](claude-code/skills/codex/) | Route work to OpenAI Astra 6.2 / Sol 6.2 / Luna through the official Codex plugin — second opinions and code review (requires the Codex plugin and the `codex-relay` agent) |
 | [ffmpeg](claude-code/skills/ffmpeg/) | Video/audio processing with ffmpeg |
 | [gemini-gem-creator](claude-code/skills/gemini-gem-creator/) | Create and convert Gemini Custom Gems |
 | [images](claude-code/skills/images/) | Image processing and manipulation |

@@ -35,9 +35,9 @@ mkdir -p ~/.codex
 cat > ~/.codex/config.toml << 'EOF'
 sandbox_mode           = "workspace-write"
 approval_policy        = "never"
-model                  = "gpt-6-sol"     # gpt-6-astra (frontier) | gpt-6-sol (this config's default) | gpt-6-luna
+model                  = "gpt-6.2-sol"     # gpt-6.2-astra (frontier) | gpt-6.2-sol (this config's default) | gpt-6-luna
 model_reasoning_effort = "xhigh"          # none | minimal | low | medium | high | xhigh
-service_tier           = "default"        # "default" = standard processing; "fast" = priority routing (catalogue: Astra 2x speed with increased usage; GPT-6 Sol/Luna 1.5x speed)
+service_tier           = "default"        # standard processing
 
 [features]
 web_search_request = true
@@ -53,9 +53,9 @@ Keys used by the plugin path:
 |-----|--------|
 | `model` | Model when a call omits `--model` |
 | `model_reasoning_effort` | Effort when a call omits `--effort`; the companion accepts `none`/`minimal`/`low`/`medium`/`high`/`xhigh` and rejects `max`/`ultra`, which the model catalogue lists but this path cannot request |
-| `service_tier` | **Config-global** — the plugin exposes no per-call tier flag, so switching between standard and priority routing means editing this value. Fast is not free on ChatGPT-plan auth: the catalogue lists "2x speed, increased usage" on Astra and "1.5x speed" on GPT-6 Sol and Luna (API-key auth ignores the key). The Desktop app keeps its own `[desktop] default-service-tier` (`priority` = Fast) — leave it to the app |
+| `service_tier` | Config-global. The companion exposes no per-call tier flag. Consult the installed catalogue for current availability and usage costs. |
 
-These config values apply only when a call omits the flag. `/codex` and the `codex-relay` agent both pass `--model` and `--effort` explicitly, so the skill default (`gpt-6-astra` at `medium`) holds regardless of what `model` and `model_reasoning_effort` say here.
+These config values apply only when a call omits the flag. `/codex` and the `codex-relay` agent both pass `--model` and `--effort` explicitly, so the skill default (`gpt-6.2-astra` at `medium`) holds regardless of what `model` and `model_reasoning_effort` say here.
 
 Two config shapes to keep clear of: `approvals_reviewer = "auto_review"`, which auto-approved a destructive sandbox escalation in headless `codex exec`; and a key whose type the CLI does not expect (a map where a boolean belongs, such as `features.context_management`), which crashes the runtime on parse.
 

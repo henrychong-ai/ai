@@ -6,7 +6,7 @@ allowed-tools: Agent, Bash
 
 # Codex Skill — OpenAI GPT-6 (Astra / Sol / Luna)
 
-Second opinions, hard problems, and code review via GPT-6 Astra, Sol, or Luna. **Dispatch runs in the background via the Agent tool** — the main thread stays free while Codex thinks; the harness notifies on completion and Claude integrates the response then.
+Second opinions, hard problems, and code review via Astra 6.2, Sol 6.2, or Luna. **Dispatch runs in the background via the Agent tool** — the main thread stays free while Codex thinks; the harness notifies on completion and Claude integrates the response then.
 
 **Transport (since 2026-09-09):** the official **Codex plugin for Claude Code** (`codex@openai-codex`, marketplace `openai/codex-plugin-cc`). Its companion CLI talks to the Codex **app-server** runtime, a shared local daemon started on demand, which inherits `~/.codex/config.toml` and the existing ChatGPT login. This replaces the stdio MCP server (`codex mcp-server`, deprecated in Codex CLI 0.149.1 and dropped by this skill on 2026-09-09) — the tools `mcp__codex__codex` and `mcp__codex__codex-reply` no longer exist. Setup, upgrade, and troubleshooting: `references/codex-plugin-setup.md`.
 
@@ -23,19 +23,21 @@ Grammar: `/codex [model] [reasoning] [foreground]` — arguments in any order; a
 | `/codex sol xhigh` | sol | xhigh |
 | `/codex luna low` | luna | low |
 
-**Models** (tier names are durable; each name resolves to the latest generation of that tier — GPT-6 since 2026-09-23. Terra has no GPT-6 successor and is retired from this skill; the GPT-5.6 models remain callable by full ID):
+**Models** (tier names resolve to these explicit IDs, updated 2026-11-18):
 
 | Arg | Model ID | Use for (illustrative — not required outputs) |
 |-----|----------|-----------------------------------------------|
-| `astra` *(default)* | `gpt-6-astra` | Frontier flagship (released 2026-09-03), succeeding Sol — the catalogue's "most capable model for complex, demanding work". Strongest agentic execution, roughly 1.9x faster task completion than Sol on Mind2Web, shorter and less verbose reasoning, stronger long-context retrieval. Catalogue default effort `medium`. $10 in / $50 out per million tokens, against Sol's $5 / $30. On ChatGPT Pro, Business, and Enterprise plus the API. Source: [DataCamp GPT-6 Astra overview](https://www.datacamp.com/blog/gpt-6-astra) |
-| `sol` | `gpt-6-sol` | Workhorse for coding and everyday work (released 2026-09-23; API prices 50% below GPT-5.6). Catalogue default effort `medium`. Also the capacity fallback when Astra is busy (at `xhigh`) |
-| `luna` | `gpt-6-luna` | Fastest/cheapest — high-volume or simple checks (released 2026-09-23). Catalogue default effort `medium` |
+| `astra` *(default)* | `gpt-6.2-astra` | Complex reasoning, second opinions, and code review; pass the workflow's explicit effort |
+| `sol` | `gpt-6.2-sol` | Coding and everyday work; the capacity fallback for Astra uses `xhigh` |
+| `luna` | `gpt-6-luna` | High-volume or simple checks |
+
+Terra (`gpt-6.1-terra`) remains available for visual and everyday work through native Codex routes. This skill's named argument grammar remains `astra` / `sol` / `luna`.
 
 `spark` is a plugin alias for `gpt-5.3-codex-spark`, an ultra-fast coding model outside this skill's grammar; pass it explicitly as `--model spark` when a call genuinely wants it.
 
-**Reasoning:** `none` → `minimal` → `low` → `medium` → `high` → `xhigh`, defaulting to `medium` (Astra's own catalogue default). These six are the full set the **companion** accepts — the model catalogue also lists `max` (and `ultra` on Astra and Sol), but the companion rejects both with `Unsupported reasoning effort`, so route work needing them to the Codex Desktop app or the native CLI. Omitting `--effort` falls back to `model_reasoning_effort` in `~/.codex/config.toml`.
+**Reasoning:** `none` → `minimal` → `low` → `medium` → `high` → `xhigh`, defaulting to `medium` under this workflow's policy. These six are the full set the **companion** accepts — the model catalogue also lists `max` (and `ultra` on Astra and Sol), but the companion rejects both with `Unsupported reasoning effort`, so route work needing them to the Codex Desktop app or the native CLI. The installed 6.2 catalogue supports `low` / `medium` / `high` / `xhigh` / `max` / `ultra`; select an effort supported by both the model and the companion. Omitting `--effort` falls back to `model_reasoning_effort` in `~/.codex/config.toml`.
 
-**Service tier is config-global.** There is no per-call flag: the tier comes from `service_tier` in `~/.codex/config.toml` (`"default"` for standard processing, `"fast"` for priority routing — on ChatGPT-plan auth the model catalogue lists Fast as "2x speed, increased usage" on Astra and "1.5x speed" on GPT-6 Sol and Luna — treat it as not free). A user asking for `fast` or `standard` per call gets the configured tier — say so, and point at config.toml as the place to change it.
+**Service tier is config-global.** The companion has no per-call tier flag. Use the configured standard tier and consult the installed catalogue for current tier availability and usage costs.
 
 Extract model tier and reasoning level from user input in any order; any dimension the user omits takes its default (astra / medium).
 
@@ -57,7 +59,7 @@ The plugin ships slash commands of its own. Prefer them where they fit; use `/co
 Call the companion through a wrapper script you create once (these docs use `~/scripts/codex-companion`; substitute your own path), which resolves the version-volatile plugin root for you:
 
 ```bash
-~/scripts/codex-companion task --model gpt-6-astra --effort medium --cwd "$PWD" "prepared prompt"
+~/scripts/codex-companion task --model gpt-6.2-astra --effort medium --cwd "$PWD" "prepared prompt"
 ```
 
 The wrapper body, and the inline alternative without one, are in `references/codex-plugin-setup.md` → Plugin Root Resolution.
@@ -109,7 +111,7 @@ Agent({
   run_in_background: true,
   // Relay behaviour (verbatim pass-through, single Bash call, leaf-only) lives in the
   // agent's own system prompt — the task prompt carries only the call parameters:
-  prompt: "Run the Codex companion once with:\n\n--model gpt-6-astra        // default; gpt-6-sol | gpt-6-luna when the user names sol/luna\n--effort medium            // default; none/minimal/low/medium/high/xhigh\n--cwd [working dir]\n[--write]                  // only when Codex must modify or run something; omit for read-only review and reasoning\n[--resume-last]            // only for a follow-up on the previous thread\n\nPrompt:\n[prepared prompt]"
+  prompt: "Run the Codex companion once with:\n\n--model gpt-6.2-astra        // default; gpt-6.2-sol | gpt-6-luna when the user names sol/luna\n--effort medium            // default; none/minimal/low/medium/high/xhigh\n--cwd [working dir]\n[--write]                  // only when Codex must modify or run something; omit for read-only review and reasoning\n[--resume-last]            // only for a follow-up on the previous thread\n\nPrompt:\n[prepared prompt]"
 })
 ```
 

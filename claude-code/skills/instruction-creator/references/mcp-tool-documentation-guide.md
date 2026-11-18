@@ -193,7 +193,7 @@ Use inline comments to explain parameter choices:
 mcp__service__call({
   prompt: "[prepared prompt]",
   config: {
-    "model": "gpt-6-astra",
+    "model": "gpt-6.2-astra",
     "reasoning": "high",    // user-specified: none/low/medium/xhigh
     "tier": "fast"           // default; use "standard" only when user requests
   }
